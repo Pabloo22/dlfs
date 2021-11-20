@@ -24,3 +24,6 @@ class Softmax(ActivationFunction):
 
     def gradient(self, x):
         return self.__derivative(x)
+
+    def __str__(self):
+        return self.name
