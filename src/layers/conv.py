@@ -17,6 +17,8 @@ class Conv2D(Layer):
         self.padding = padding
         self.weights = np.random.randn(filters, *kernel_size)
         self.bias = np.random.randn(filters)
+        self.input = None
+        self.output = None
 
     def forward(self, x: np.ndarray) -> np.ndarray:
         """
