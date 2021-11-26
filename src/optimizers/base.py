@@ -1,3 +1,4 @@
+import numpy as np
 
 
 class Optimizer:
@@ -14,6 +15,10 @@ class Optimizer:
     def learning_rate(self, learning_rate):
         self.__learning_rate = learning_rate
 
-    def update(self, parameters, gradients):
-        """Update parameters based on gradients."""
+    def update(self, parameters: np.ndarray, gradients: np.ndarray):
+        """Update parameters based on gradients.
+        Args:
+            parameters: Parameters to update.
+            gradients: Gradients of the parameters.
+        """
         raise NotImplementedError

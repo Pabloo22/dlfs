@@ -17,8 +17,7 @@ class Conv2D(Layer):
     __output_shape: Tuple[int, int]
     __input_shape: Tuple[int, int]
 
-
-    def __init__(self, kernel_size: tuple, filters: int, stride: int = 1, padding: int = 0, activation: str = None,
+    def __init__(self, kernel_size: tuple, filters: int, stride: int = 1, padding: bool = False, activation: str = None,
                  name: str = None):
 
         super().__init__(input_shape=(2, 2), output_shape=(1, 1), name=name)
@@ -138,6 +137,42 @@ class Conv2D(Layer):
                             i, j, k, L]
                         gradients_b[L] += gradients[i, j, k, L]
         return gradients_w, gradients_b
+
+    @staticmethod
+    def convolve_2d(image: np.ndarray, kernel: np.ndarray, padding: bool = False, stride: int = 1) -> np.ndarray:
+        """
+        Performs a valid convolution on an image with a kernel.
+
+        Args:
+            image: A grayscale image.
+            kernel: A kernel.
+            padding: Whether to pad the image.
+            stride: convolution stride size.
+
+        Returns:
+            A grayscale image.
+        """
+        # Get the dimensions of the image and kernel
+        image_height, image_width = image.shape
+        kernel_height, kernel_width = kernel.shape
+
+        # Pad the image if padding is True
+        if padding:
+            image = np.pad(image, ((kernel_height // 2, kernel_height // 2), (kernel_width // 2, kernel_width // 2)),
+                           mode='constant', constant_values=0)
+
+        # Create the output image
+        output_height = (image_height - kernel_height) // stride + 1
+        output_width = (image_width - kernel_width) // stride + 1
+        convolved_image = np.zeros((output_height, output_width))
+
+        # Perform the convolution
+        for i in range(output_height):
+            for j in range(output_width):
+                convolved_image[i, j] = np.sum(
+                    image[i * stride:i * stride + kernel_height, j * stride:j * stride + kernel_width] * kernel)
+
+        return convolved_image
 
     def summary(self):
         print(f"Layer: {self.name}, Output shape: {self.output.shape}")

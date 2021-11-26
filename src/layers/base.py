@@ -16,6 +16,7 @@ class Layer:
         self.__input_shape = input_shape
         self.__output_shape = output_shape
         self.__name = name
+        self.__trainable = True
 
     @property
     def input_shape(self) -> tuple:
@@ -32,6 +33,14 @@ class Layer:
     @name.setter
     def name(self, name: str):
         self.__name = name
+
+    @property
+    def trainable(self) -> bool:
+        return self.__trainable
+
+    @trainable.setter
+    def trainable(self, trainable: bool):
+        self.__trainable = trainable
 
     def forward(self, inputs: np.ndarray) -> np.ndarray:
         """

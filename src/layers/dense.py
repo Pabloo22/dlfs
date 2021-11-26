@@ -41,22 +41,6 @@ class Dense(Layer):
         self.bias_gradients = np.sum(gradients, axis=0)
         return gradients
 
-    def update_weights(self, learning_rate: float, momentum: float = 0.0, decay: float = 0.0, nesterov: bool = False):
-        """
-        Update the weights of the layer.
-        """
-        self.weights -= learning_rate * self.weights_gradients
-        self.bias -= learning_rate * self.bias_gradients
-        if momentum > 0.0:
-            self.weights_momentum = momentum * self.weights_momentum + (1.0 - momentum) * self.weights_gradients
-            self.bias_momentum = momentum * self.bias_momentum + (1.0 - momentum) * self.bias_gradients
-            if nesterov:
-                self.weights -= learning_rate * (self.weights_momentum + momentum * self.weights_momentum)
-                self.bias -= learning_rate * (self.bias_momentum + momentum * self.bias_momentum)
-        if decay > 0.0:
-            self.weights -= decay * self.weights
-            self.bias -= decay * self.bias
-
     def reset_gradients(self):
         """
         Reset the gradients of the layer.
