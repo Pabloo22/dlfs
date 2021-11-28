@@ -7,6 +7,15 @@ from base import Layer
 class Conv2D(Layer):
     """
     Convolutional layer
+
+    Args:
+        kernel_size (int): Size of the convolutional kernel
+        filters (int): Number of filters
+        stride (int): Stride of the convolutional kernel
+        padding (str): Padding type
+        activation (str): Activation function
+        use_bias (bool): Whether to use bias
+        name (str): Name of the layer
     """
 
     __kernel_size: Tuple[int, int]
@@ -17,7 +26,13 @@ class Conv2D(Layer):
     __output_shape: Tuple[int, int]
     __input_shape: Tuple[int, int]
 
-    def __init__(self, kernel_size: tuple, filters: int, stride: int = 1, padding: bool = False, activation: str = None,
+    def __init__(self,
+                 kernel_size: tuple,
+                 filters: int,
+                 stride: int = 1,
+                 padding: bool = False,
+                 activation: str = None,
+                 use_bias: bool = True,
                  name: str = None):
 
         super().__init__(input_shape=(2, 2), output_shape=(1, 1), name=name)
@@ -29,8 +44,11 @@ class Conv2D(Layer):
         self.__bias = np.random.randn(filters)
         self.__input = None
         self.__output = None
-
         self.__activation = activation
+        self.__use_bias = use_bias
+
+    # Getters
+    # -------------------------------------------------------------------------
 
     @property
     def kernel_size(self) -> tuple:
@@ -43,11 +61,6 @@ class Conv2D(Layer):
     @property
     def params(self) -> list:
         return [self.__weights, self.__bias]
-
-    @params.setter
-    def params(self, params: list):
-        self.__weights = params[0]
-        self.__bias = params[1]
 
     @property
     def n_params(self):
@@ -69,17 +82,9 @@ class Conv2D(Layer):
     def weights(self) -> np.ndarray:
         return self.__weights
 
-    @weights.setter
-    def weights(self, weights: np.ndarray):
-        self.__weights = weights
-
     @property
     def bias(self) -> np.ndarray:
         return self.__bias
-
-    @bias.setter
-    def bias(self, bias: np.ndarray):
-        self.__bias = bias
 
     @property
     def activation(self) -> str:
@@ -93,9 +98,36 @@ class Conv2D(Layer):
     def input(self) -> np.ndarray:
         return self.__input
 
+    @property
+    def use_bias(self):
+        return self.__use_bias
+
+    # Setters
+    # -------------------------------------------------------------------------
+
+    @weights.setter
+    def weights(self, weights: np.ndarray):
+        self.__weights = weights
+
+    @bias.setter
+    def bias(self, bias: np.ndarray):
+        self.__bias = bias
+
+    @params.setter
+    def params(self, params: list):
+        self.__weights = params[0]
+        self.__bias = params[1]
+
     @input.setter
     def input(self, x: np.ndarray):
         self.__input = x
+
+    @use_bias.setter
+    def use_bias(self, use_bias: bool):
+        self.__use_bias = use_bias
+
+    # Methods
+    # -------------------------------------------------------------------------
 
     def forward(self, x: np.ndarray) -> np.ndarray:
         """

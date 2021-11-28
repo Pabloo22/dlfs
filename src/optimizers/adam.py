@@ -4,6 +4,15 @@ from base import Optimizer
 
 
 class Adam(Optimizer):
+    """
+    Adam optimizer.
+
+    Args:
+        lr (float): learning rate
+        beta1 (float): first moment decay
+        beta2 (float): second moment decay
+        epsilon (float): epsilon for numerical stability
+    """
 
     def __init__(self, lr=0.001, beta1=0.9, beta2=0.999, epsilon=1e-8):
 

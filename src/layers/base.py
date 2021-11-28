@@ -4,19 +4,19 @@ import numpy as np
 class Layer:
     """
     Base class for all layers.
-    """
-    __input_shape: tuple
-    __output_shape: tuple
-    __weights: np.ndarray
-    __bias: np.ndarray
-    __activation: str
-    __name: str
 
-    def __init__(self, input_shape: tuple, output_shape: tuple, name: str = None):
+    Args:
+        input_shape (tuple): Shape of the input.
+        output_shape (tuple): Shape of the output.
+        name (str): Name of the layer.
+        trainable (bool): Whether the layer is trainable.
+    """
+
+    def __init__(self, input_shape: tuple, output_shape: tuple, name: str = None, trainable: bool = True):
         self.__input_shape = input_shape
         self.__output_shape = output_shape
         self.__name = name
-        self.__trainable = True
+        self.__trainable = trainable
 
     @property
     def input_shape(self) -> tuple:

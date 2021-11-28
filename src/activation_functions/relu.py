@@ -10,6 +10,9 @@ class ReLU(ActivationFunction):
         self.__function = lambda x: max(0, x)
         self.__derivative = lambda x: 1 if x > 0 else 0
 
+    # Getters:
+    # -----------------------------------------------------------------
+
     @property
     def function(self):
         return self.__function
@@ -17,6 +20,9 @@ class ReLU(ActivationFunction):
     @property
     def derivative(self):
         return self.__derivative
+
+    # Methods:
+    # -----------------------------------------------------------------
 
     def forward(self, x):
         return self.__function(x)

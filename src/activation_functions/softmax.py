@@ -3,6 +3,9 @@ import numpy as np
 
 
 class Softmax(ActivationFunction):
+    """
+    Softmax activation function.
+    """
 
     def __init__(self):
         super().__init__()
@@ -11,6 +14,8 @@ class Softmax(ActivationFunction):
         self.__function = lambda x: np.exp(x) / np.sum(np.exp(x), axis=1, keepdims=True)
         self.__derivative = lambda x: self.__function(x) * (1 - self.__function(x))
 
+    # Getters
+    # -------------------------------------------------------------------------------------------------
     @property
     def function(self):
         return self.__function
@@ -18,6 +23,9 @@ class Softmax(ActivationFunction):
     @property
     def derivative(self):
         return self.__derivative
+
+    # Methods
+    # -------------------------------------------------------------------------------------------------
 
     def forward(self, x):
         return self.__function(x)
