@@ -1,0 +1,40 @@
+import numpy as np
+
+from base import LossFunction
+
+
+class CrossEntropy(LossFunction):
+    """
+    Cross entropy loss function.
+    """
+
+    def __init__(self, name="cross_entropy"):
+        super(CrossEntropy, self).__init__(name)
+
+    @staticmethod
+    def loss(y_true: np.ndarray, y_pred: np.ndarray) -> float:
+        """
+
+        Args:
+            y_pred: (np.array)
+            y_true: (np.array)
+
+        Returns:
+            (float)
+        """
+        return -np.sum(y_true * np.log(y_pred))
+
+    @staticmethod
+    def gradient(y_true: np.ndarray, y_pred: np.ndarray) -> np.ndarray:
+        """
+
+        Args:
+            y_pred: (np.array)
+            y_true: (np.array)
+
+        Returns:
+            (np.array)
+        """
+        return -y_true / y_pred
+
+

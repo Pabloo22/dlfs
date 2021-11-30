@@ -52,5 +52,18 @@ class Layer:
         """
         raise NotImplementedError
 
+    def backward(self, gradients: np.ndarray) -> np.ndarray:
+        """
+        Backward pass of the layer.
+        Args:
+            gradients: gradients of the layer.
+        Returns:
+            gradients of the input.
+        """
+        raise NotImplementedError
+
+    def summary(self) -> str:
+        return f"{self.__class__.__name__}({self.__name})"
+
     def __str__(self) -> str:
         return f"{self.__class__.__name__}({self.__name})"

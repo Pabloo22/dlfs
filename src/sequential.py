@@ -1,11 +1,19 @@
 import numpy as np
+from sklearn.model_selection import train_test_split
 from typing import List
 
-from activation_functions.base import ActivationFunction
+
 from layers.base import Layer
 
 
 class Sequential:
+    """
+    A sequential model is a linear stack of layers.
+
+    Args:
+        layers (List[Layer]): A list of layers.
+        name (str): The name of the model.
+    """
 
     def __init__(self, layers: List[Layer] = None, name: str = None):
         self.layers = layers
@@ -74,14 +82,86 @@ class Sequential:
             x_train, x_val, y_train, y_val = train_test_split(x, y, test_size=validation_split)
 
         # initialize the history
-        history = {'loss': [], 'val_loss': [], 'acc': [], 'val_acc': []}
+        history = {'loss': [], 'val_loss': []}
+
+        for metric in self.metrics:
+            history[metric] = []
+            history['val_' + metric] = []
 
         # loop over the number of epochs
         for epoch in range(initial_epoch, epochs):
             # initialize the total loss for the epoch
             epoch_loss = 0.0
-            epoch_acc = 0.0
+            if 'acc' in self.metrics:
+                epoch_acc = 0.0
+            # loop over the data in batches
+            for x_batch, y_batch in self.batch_generator(x, y, batch_size, shuffle):
+                # get the gradients for the batch
+                grads = self.optimizer.get_gradients(self, x_batch, y_batch)
+                # update the parameters
+                self.optimizer.update_params(self, grads)
+                # compute the loss for the batch
+                loss = self.loss.compute_loss(self, x_batch, y_batch)
+                # update the total loss
+                epoch_loss += loss
+                if 'acc' in self.metrics:
+                    acc = self.metrics['acc'].compute_metric(self, x_batch, y_batch)
+                    epoch_acc += acc
+                # update the history
+                history['loss'].append(loss)
+                if 'acc' in self.metrics:
+                    history['acc'].append(acc)
+            # compute the average loss for the epoch
+            epoch_loss /= len(x)
+            if 'acc' in self.metrics:
+                epoch_acc /= len(x)
+            # update the history
+            history['val_loss'].append(epoch_loss)
+            if 'acc' in self.metrics:
+                history['val_acc'].append(epoch_acc)
+            # print the metrics
+            if verbose:
+                print(f"Epoch {epoch + 1}/{epochs}")
+                print(f"\tTrain loss: {epoch_loss}")
+                if 'acc' in self.metrics:
+                    print(f"\tTrain acc: {epoch_acc}")
+                if validation_data is not None:
+                    val_loss = self.loss.compute_loss(self, x_val, y_val)
+                    val_acc = self.metrics['acc'].compute_metric(self, x_val, y_val)
+                    print(f"\tValidation loss: {val_loss}")
+                    print(f"\tValidation acc: {val_acc}")
+                print("")
 
+        return history
+
+    @staticmethod
+    def batch_generator(x: np.ndarray, y: np.ndarray, batch_size: int, shuffle: bool = True):
+        """
+
+        Args:
+            x: the input data
+            y: the labels
+            batch_size: the batch size
+            shuffle: whether to shuffle the data
+
+        Yields:
+            x_batch: the batch of input data
+            y_batch: the batch of labels
+        """
+        # get the number of batches
+        n_batches = len(x) // batch_size
+
+        if shuffle:
+            x = np.random.permutation(x)
+            y = np.random.permutation(y)
+
+        # loop over the batches
+        for i in range(0, n_batches * batch_size, batch_size):
+            # get the batch data
+            x_batch = x[i:i + batch_size]
+            y_batch = y[i:i + batch_size]
+            # yield the batch
+            yield x_batch, y_batch
 
     def evaluate(self, x: np.ndarray, y: np.ndarray, batch_size: int = 32, verbose: int = 1):
         """

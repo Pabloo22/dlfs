@@ -112,4 +112,3 @@ class Dense(Layer):
             gradients = self.__activation.gradient(self.__outputs) * gradients
         gradients = np.dot(gradients, self.__weights.T)
         return gradients
-
