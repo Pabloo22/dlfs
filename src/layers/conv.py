@@ -152,7 +152,6 @@ class Conv2D(Layer):
         """
         Backward pass
         Args:
-            x: input data
             gradients: gradients of the loss with respect to the output of this layer
         Returns:
             gradients with respect to the input of this layer
