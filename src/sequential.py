@@ -4,6 +4,8 @@ from typing import List
 
 
 from layers.layer import Layer
+from optimizers.optimizer import Optimizer
+from loss_functions.loss_function import LossFunction
 
 
 class Sequential:
@@ -13,6 +15,14 @@ class Sequential:
     Args:
         layers (List[Layer]): A list of layers.
         name (str): The name of the model.
+
+    Attributes:
+        layers (List[Layer]): A list of layers.
+        name (str): The name of the model.
+        loss (LossFunction): The loss function.
+        optimizer (Optimizer): The optimizer.
+        metrics (List[str]): A list of metrics.  # provisional
+        trainable (bool): Whether the model is trainable.
     """
 
     def __init__(self, layers: List[Layer] = None, name: str = None):
@@ -84,6 +94,7 @@ class Sequential:
         # initialize the history
         history = {'loss': [], 'val_loss': []}
 
+        # provisional, metrics classes may be added
         for metric in self.metrics:
             history[metric] = []
             history['val_' + metric] = []
@@ -123,8 +134,9 @@ class Sequential:
             if verbose:
                 print(f"Epoch {epoch + 1}/{epochs}")
                 print(f"\tTrain loss: {epoch_loss}")
-                if 'acc' in self.metrics:
-                    print(f"\tTrain acc: {epoch_acc}")
+
+                # TODO: print the metrics
+
                 if validation_data is not None:
                     val_loss = self.loss.compute_loss(self, x_val, y_val)
                     val_acc = self.metrics['acc'].compute_metric(self, x_val, y_val)
@@ -229,10 +241,14 @@ class Sequential:
         Returns:
             y_pred : the predictions
         """
-        y_pred = []
 
-        for i in range(len(x)):
-            # TODO: get the prediction for the sample
-            pass
+        last_input = x
+        for layer in self.layers:
+            last_input = layer.forward(last_input)
+        return last_input
 
-        return np.array(y_pred)
+    def save(self, path: str):
+        """
+        Args:
+            path: the path to save the model
+        """
