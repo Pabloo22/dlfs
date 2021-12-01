@@ -1,13 +1,15 @@
 import numpy as np
 
+from loss_function import LossFunction
 
-class MSE:
+
+class MSE(LossFunction):
     """
     Class that defines the Mean Squared Error loss function
     """
 
     @staticmethod
-    def loss(y_true, y_pred):
+    def compute_loss(y_true, y_pred):
         """
         Calculates the Mean Squared Error loss
 

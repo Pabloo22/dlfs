@@ -1,13 +1,15 @@
 import numpy as np
 
+from loss_function import LossFunction
 
-class MAE:
+
+class MAE(LossFunction):
     """
     Class that calculates the Mean Absolute Error loss
     """
 
     @staticmethod
-    def loss(y_true: np.ndarray, y_pred: np.ndarray):
+    def compute_loss(y_true: np.ndarray, y_pred: np.ndarray):
         """
         Calculates the Mean Absolute Error loss
         :param y_true: labels
