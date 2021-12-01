@@ -1,7 +1,8 @@
+from abc import ABC, abstractmethod
 import numpy as np
 
 
-class Layer:
+class Layer(ABC):
     """
     Base class for all layers.
 
@@ -42,6 +43,7 @@ class Layer:
     def trainable(self, trainable: bool):
         self.__trainable = trainable
 
+    @abstractmethod
     def forward(self, inputs: np.ndarray) -> np.ndarray:
         """
         Forward pass of the layer.
@@ -52,6 +54,7 @@ class Layer:
         """
         raise NotImplementedError
 
+    @abstractmethod
     def backward(self, gradients: np.ndarray) -> np.ndarray:
         """
         Backward pass of the layer.
@@ -62,8 +65,9 @@ class Layer:
         """
         raise NotImplementedError
 
+    @abstractmethod
     def summary(self) -> str:
-        return f"{self.__class__.__name__}({self.__name})"
+        raise NotImplementedError
 
     def __str__(self) -> str:
         return f"{self.__class__.__name__}({self.__name})"

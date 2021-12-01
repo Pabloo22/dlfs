@@ -1,6 +1,7 @@
+from abc import ABC, abstractmethod
 
 
-class ActivationFunction:
+class ActivationFunction(ABC):
     """
     Base class for activation functions.
     """
@@ -8,9 +9,11 @@ class ActivationFunction:
     def __init__(self):
         pass
 
+    @abstractmethod
     def forward(self, x):
         raise NotImplementedError
 
+    @abstractmethod
     def gradient(self, x):
         raise NotImplementedError
 

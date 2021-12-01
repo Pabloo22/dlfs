@@ -1,7 +1,8 @@
+from abc import ABC, abstractmethod
 import numpy as np
 
 
-class Optimizer:
+class Optimizer(ABC):
     """Base class for all optimizers."""
 
     def __init__(self, learning_rate):
@@ -15,6 +16,7 @@ class Optimizer:
     def learning_rate(self, learning_rate):
         self.__learning_rate = learning_rate
 
+    @abstractmethod
     def update(self, parameters: np.ndarray, gradients: np.ndarray):
         """Update parameters based on gradients.
         Args:
