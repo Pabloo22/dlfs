@@ -148,7 +148,7 @@ class Conv2D(Layer):
                                              self.__bias[L]
         return output
 
-    def backward(self, x: np.ndarray, gradients: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def backward(self, gradients: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """
         Backward pass
         Args:
@@ -157,17 +157,18 @@ class Conv2D(Layer):
         Returns:
             gradients with respect to the input of this layer
         """
-
+        x = self.__input
         gradients = gradients.reshape((x.shape[0], x.shape[1], x.shape[2], self.__filters))
         gradients_w = np.zeros(self.__weights.shape)
         gradients_b = np.zeros(self.__bias.shape)
-        for i in range(x.shape[0]):
-            for j in range(x.shape[1]):
-                for k in range(x.shape[2]):
-                    for L in range(self.__filters):
-                        gradients_w[L] += x[i, j:j + self.__kernel_size[0], k:k + self.__kernel_size[1]] * gradients[
-                            i, j, k, L]
+        for i in range(x.shape[0]):  # batch
+            for j in range(x.shape[1]):  # height
+                for k in range(x.shape[2]):  # width
+                    for L in range(self.__filters):  # filters
+                        gradients_w[L] += np.sum(
+                            x[i, j:j + self.__kernel_size[0], k:k + self.__kernel_size[1]] * gradients[i, j, k, L])
                         gradients_b[L] += gradients[i, j, k, L]
+
         return gradients_w, gradients_b
 
     @staticmethod
