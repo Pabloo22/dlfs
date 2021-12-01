@@ -9,14 +9,34 @@ class MaxPooling2D(Layer):
 
         output_shape = ...
         super(MaxPooling2D, self).__init__(input_shape, output_shape, name)
-        self.pool_size = pool_size
-        self.stride = stride
-        self.padding = padding
+        self.__pool_size = pool_size
+        self.__stride = stride
+        self.__padding = padding
+
+    # Getters
+    # ------------------------------------------------------------
+
+    @property
+    def pool_size(self):
+        return self.__pool_size
+
+    @property
+    def stride(self):
+        return self.__stride
+
+    @property
+    def padding(self):
+        return self.__padding
+
+    # Methods
+    # ------------------------------------------------------------
 
     def forward(self, x: np.ndarray):
+        # TODO: Implement forward pass
         pass
 
     def backward(self, gradients: np.ndarray):
+        # TODO: Implement backward pass
         pass
 
     def summary(self) -> str:
