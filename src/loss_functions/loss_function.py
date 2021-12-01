@@ -11,7 +11,7 @@ class LossFunction(ABC):
 
     @staticmethod
     @abstractmethod
-    def loss(y_true, y_pred):
+    def compute_loss(y_true, y_pred):
         raise NotImplementedError
 
     @staticmethod

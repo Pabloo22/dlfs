@@ -12,7 +12,7 @@ class CrossEntropy(LossFunction):
         super(CrossEntropy, self).__init__(name)
 
     @staticmethod
-    def loss(y_true: np.ndarray, y_pred: np.ndarray) -> float:
+    def compute_loss(y_true: np.ndarray, y_pred: np.ndarray) -> float:
         """
 
         Args:
