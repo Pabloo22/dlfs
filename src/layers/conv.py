@@ -1,7 +1,7 @@
 import numpy as np
 from typing import Tuple
 
-from layer import Layer
+from layers.layer import Layer
 
 
 class Conv2D(Layer):
@@ -186,7 +186,7 @@ class Conv2D(Layer):
         """
         # Get the dimensions of the image and kernel
         image_height, image_width = image.shape
-        kernel_height, kernel_width = kernel.shape
+        kernel_height, kernel_width = kernel[0], kernel[1]
 
         # Pad the image if padding is True
         if padding:
