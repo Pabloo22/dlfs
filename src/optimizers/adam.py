@@ -1,6 +1,6 @@
 import numpy as np
 
-from base import Optimizer
+from optimizer import Optimizer
 
 
 class Adam(Optimizer):

@@ -1,6 +1,6 @@
 import numpy as np
 
-from base import Layer
+from layer import Layer
 from src.activation_functions.utils import get_activation_function
 
 

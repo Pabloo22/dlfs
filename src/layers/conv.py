@@ -1,7 +1,7 @@
 import numpy as np
 from typing import Tuple
 
-from base import Layer
+from layer import Layer
 
 
 class Conv2D(Layer):

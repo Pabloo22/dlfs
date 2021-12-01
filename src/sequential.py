@@ -3,7 +3,7 @@ from sklearn.model_selection import train_test_split
 from typing import List
 
 
-from layers.base import Layer
+from layers.layer import Layer
 
 
 class Sequential:

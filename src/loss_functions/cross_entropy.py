@@ -1,6 +1,6 @@
 import numpy as np
 
-from base import LossFunction
+from loss_function import LossFunction
 
 
 class CrossEntropy(LossFunction):
