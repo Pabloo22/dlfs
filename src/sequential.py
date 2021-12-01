@@ -163,7 +163,7 @@ class Sequential:
             # yield the batch
             yield x_batch, y_batch
 
-    def evaluate(self, x: np.ndarray, y: np.ndarray, batch_size: int = 32, verbose: int = 1):
+    def evaluate(self, x: np.ndarray, y: np.ndarray, batch_size: int = 32, verbose: int = 1) -> float:
         """
         Args:
             x: the input data
@@ -171,6 +171,26 @@ class Sequential:
             batch_size: the batch size
             verbose: the verbosity mode (0 or 1)
         """
+        # initialize the total loss and the number of batches
+        total_loss = 0.0
+        n_batches = len(x) // batch_size
+
+        # loop over the batches
+        for i in range(0, n_batches * batch_size, batch_size):
+            # get the batch data
+            x_batch = x[i:i + batch_size]
+            y_batch = y[i:i + batch_size]
+            # compute the loss for the batch
+            loss = self.loss.compute_loss(self, x_batch, y_batch)
+            # update the total loss
+            total_loss += loss
+        # compute the average loss
+        total_loss /= len(x)
+        # print the metrics
+        if verbose:
+            # TODO: print the metrics
+            pass
+        return total_loss
 
     def predict(self, x: np.ndarray, batch_size: int = 32, verbose: int = 1):
         """
@@ -180,3 +200,39 @@ class Sequential:
             batch_size: the batch size
             verbose: the verbosity mode (0 or 1)
         """
+
+        # initialize the predictions
+        y_pred = []
+
+        # loop over the batches
+        for i in range(0, len(x), batch_size):
+            # get the batch data
+            x_batch = x[i:i + batch_size]
+            # get the predictions for the batch
+            y_batch_pred = self.predict_batch(x_batch)
+            # update the predictions
+            y_pred.append(y_batch_pred)
+        # concatenate the predictions
+        y_pred = np.concatenate(y_pred)
+        # print the metrics
+        if verbose:
+            # TODO: print the metrics
+            pass
+
+        return y_pred
+
+    def predict_batch(self, x: np.ndarray) -> np.ndarray:
+        """
+
+        Args:
+            x : the input data
+        Returns:
+            y_pred : the predictions
+        """
+        y_pred = []
+
+        for i in range(len(x)):
+            # TODO: get the prediction for the sample
+            pass
+
+        return np.array(y_pred)
