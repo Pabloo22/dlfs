@@ -3,9 +3,9 @@ from sklearn.model_selection import train_test_split
 from typing import List
 
 
-from layers.layer import Layer
-from optimizers.optimizer import Optimizer
-from loss_functions.loss_function import LossFunction
+from .layers.layer import Layer
+from .optimizers.optimizer import Optimizer
+from .loss_functions.loss_function import LossFunction
 
 
 class Sequential:

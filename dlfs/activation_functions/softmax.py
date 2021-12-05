@@ -1,5 +1,6 @@
-from activation_function import ActivationFunction
 import numpy as np
+
+from .activation_function import ActivationFunction
 
 
 class Softmax(ActivationFunction):

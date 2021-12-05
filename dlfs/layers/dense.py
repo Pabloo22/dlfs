@@ -1,7 +1,7 @@
 import numpy as np
 
-from layer import Layer
-from src.activation_functions.utils import get_activation_function
+from .layer import Layer
+from dlfs.activation_functions.utils import get_activation_function
 
 
 class Dense(Layer):
@@ -112,3 +112,14 @@ class Dense(Layer):
             gradients = self.__activation.gradient(self.__outputs) * gradients
         gradients = np.dot(gradients, self.__weights.T)
         return gradients
+
+    def summary(self) -> str:
+        """
+        Summary of the layer.
+
+        Returns:
+            str: summary of the layer
+        """
+        return f"Dense: {self.__n_neurons} neurons"
+
+

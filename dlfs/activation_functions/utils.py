@@ -1,6 +1,6 @@
-from activation_function import ActivationFunction
-from relu import ReLU
-from softmax import Softmax
+from .activation_function import ActivationFunction
+from .relu import ReLU
+from .softmax import Softmax
 
 
 def get_activation_function(activation_function_name: str) -> ActivationFunction:
