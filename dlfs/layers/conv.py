@@ -202,7 +202,8 @@ class Conv2D(Layer):
         for i in range(output_height):
             for j in range(output_width):
                 convolved_image[i, j] = np.sum(
-                    image[i * stride:i * stride + kernel_height, j * stride:j * stride + kernel_width] * kernel)
+                    image[i * stride:i * stride + kernel_height,
+                          j * stride:j * stride + kernel_width] * kernel)
 
         return convolved_image
 
