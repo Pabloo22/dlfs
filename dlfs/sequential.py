@@ -3,7 +3,7 @@ from sklearn.model_selection import train_test_split
 from typing import List
 
 
-from .layers.layer import Layer
+from .layers import Layer, Input
 from .optimizers.optimizer import Optimizer
 from .loss_functions.loss_function import LossFunction
 
@@ -11,22 +11,18 @@ from .loss_functions.loss_function import LossFunction
 class Sequential:
     """
     A sequential model is a linear stack of layers.
-
-    Args:
-        layers (List[Layer]): A list of layers.
-        name (str): The name of the model.
-
-    Attributes:
-        layers (List[Layer]): A list of layers.
-        name (str): The name of the model.
-        loss (LossFunction): The loss function.
-        optimizer (Optimizer): The optimizer.
-        metrics (List[str]): A list of metrics.  # provisional
-        trainable (bool): Whether the model is trainable.
     """
 
-    def __init__(self, layers: List[Layer] = None, name: str = None):
-        self.layers = layers if layers is not None else []
+    layers: List[Layer]
+    name: str
+    loss: LossFunction or None
+    optimizer: Optimizer or None
+    metrics: List[str] or None
+    trainable: bool
+
+    def __init__(self, input_shape: tuple = None, name: str = "Sequential Model"):
+
+        self.layers = [] if input_shape is None else [Input(input_shape)]
         self.name = name
         self.loss = None
         self.optimizer = None
@@ -39,8 +35,18 @@ class Sequential:
         Args:
             layer (Layer): the layer to add
         """
+
         if self.layers:
+            if isinstance(layer, Input):
+                raise ValueError("An Input layer is already present in the model")
+
+            # if the layer output depends on the output of the previous layer,
+            # it is updated while setting the input shape in the setter method.
             layer.input_shape = self.layers[-1].output_shape
+
+        elif not isinstance(layer, Input):
+            raise ValueError("The first layer must be an Input layer")
+
         self.layers.append(layer)
 
     def compile(self, optimizer, loss, metrics=None):

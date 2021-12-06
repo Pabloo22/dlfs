@@ -10,7 +10,7 @@ class Conv2D(Layer):
 
     Args:
         kernel_size (int): Size of the convolutional kernel
-        filters (int): Number of filters
+        n_filters (int): Number of filters
         stride (int): Stride of the convolutional kernel
         padding (str): Padding type
         activation (str): Activation function
@@ -28,20 +28,20 @@ class Conv2D(Layer):
 
     def __init__(self,
                  kernel_size: tuple,
-                 filters: int,
+                 n_filters: int,
                  stride: int = 1,
                  padding: bool = False,
                  activation: str = None,
                  use_bias: bool = True,
                  name: str = None):
 
-        super().__init__(input_shape=(2, 2), output_shape=(1, 1), name=name)
+        super().__init__(name=name)
         self.__kernel_size = kernel_size
-        self.__filters = filters
+        self.__n_filters = n_filters
         self.__stride = stride
         self.__padding = padding
-        self.__weights = np.random.randn(filters, *kernel_size)
-        self.__bias = np.random.randn(filters)
+        self.__weights = np.random.randn(n_filters, *kernel_size)
+        self.__bias = np.random.randn(n_filters)
         self.__input = None
         self.__output = None
         self.__activation = activation
@@ -56,7 +56,7 @@ class Conv2D(Layer):
 
     @property
     def filters(self) -> int:
-        return self.__filters
+        return self.__n_filters
 
     @property
     def params(self) -> list:
@@ -102,6 +102,10 @@ class Conv2D(Layer):
     def use_bias(self):
         return self.__use_bias
 
+    @property
+    def input_shape(self) -> tuple:
+        return self.input_shape
+
     # Setters
     # -------------------------------------------------------------------------
 
@@ -122,6 +126,11 @@ class Conv2D(Layer):
     def input(self, x: np.ndarray):
         self.__input = x
 
+    @input_shape.setter
+    def input_shape(self, input_shape: tuple):
+        self.input_shape = input_shape
+        self.output_shape = self._get_output_shape()
+
     @use_bias.setter
     def use_bias(self, use_bias: bool):
         self.__use_bias = use_bias
@@ -138,11 +147,11 @@ class Conv2D(Layer):
             output data
         """
 
-        output = np.zeros((x.shape[0], x.shape[1], x.shape[2], self.__filters))
+        output = np.zeros((x.shape[0], x.shape[1], x.shape[2], self.__n_filters))
         for i in range(x.shape[0]):
             for j in range(x.shape[1]):
                 for k in range(x.shape[2]):
-                    for L in range(self.__filters):
+                    for L in range(self.__n_filters):
                         output[i, j, k, L] = np.sum(
                             x[i, j:j + self.__kernel_size[0], k:k + self.__kernel_size[1]] * self.__weights[L]) + \
                                              self.__bias[L]
@@ -157,18 +166,27 @@ class Conv2D(Layer):
             gradients with respect to the input of this layer
         """
         x = self.__input
-        gradients = gradients.reshape((x.shape[0], x.shape[1], x.shape[2], self.__filters))
+        gradients = gradients.reshape((x.shape[0], x.shape[1], x.shape[2], self.__n_filters))
         gradients_w = np.zeros(self.__weights.shape)
         gradients_b = np.zeros(self.__bias.shape)
         for i in range(x.shape[0]):  # batch
             for j in range(x.shape[1]):  # height
                 for k in range(x.shape[2]):  # width
-                    for L in range(self.__filters):  # filters
+                    for L in range(self.__n_filters):  # filters
                         gradients_w[L] += np.sum(
                             x[i, j:j + self.__kernel_size[0], k:k + self.__kernel_size[1]] * gradients[i, j, k, L])
                         gradients_b[L] += gradients[i, j, k, L]
 
         return gradients_w, gradients_b
+
+    def _get_output_shape(self) -> tuple:
+        """
+        Get the output shape
+        Returns:
+            tuple: output shape
+        """
+        return (self.input_shape[0], self.input_shape[1] - self.__kernel_size[0] + 1,
+                self.input_shape[2] - self.__kernel_size[1] + 1, self.__n_filters)
 
     @staticmethod
     def convolve_2d(image: np.ndarray, kernel: np.ndarray, padding: bool = False, stride: int = 1) -> np.ndarray:

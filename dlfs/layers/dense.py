@@ -10,15 +10,15 @@ class Dense(Layer):
 
     Args:
         n_neurons (int): number of neurons
-        activation_name (str): activation function
+        activation (str): activation function
         name (str): layer name
     """
 
-    def __init__(self, n_neurons: int, activation_name: str = None, name: str = "Dense"):
+    def __init__(self, n_neurons: int, activation: str = None, name: str = "Dense"):
 
-        super(Dense, self).__init__(name=name)
+        super(Dense, self).__init__(output_shape=(1, n_neurons), name=name)
         self.__n_neurons = n_neurons
-        self.__activation = get_activation_function(activation_name)
+        self.__activation = get_activation_function(activation) if activation else None
         self.__weights = None
         self.__bias = np.zeros((1, n_neurons))
         self.__inputs = None
@@ -76,7 +76,6 @@ class Dense(Layer):
 
     # Methods
     # ----------------------------------------------------------------------------------------------------
-
     def forward(self, inputs) -> np.ndarray:
         """
         Forward pass of the layer.

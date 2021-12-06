@@ -54,7 +54,10 @@ class Layer(ABC):
     @input_shape.setter
     def input_shape(self, input_shape: tuple):
         self.__input_shape = input_shape
-        self.__output_shape = None
+
+    @output_shape.setter
+    def output_shape(self, output_shape: tuple):
+        self.__output_shape = output_shape
 
     @trainable.setter
     def trainable(self, trainable: bool):
@@ -82,13 +85,6 @@ class Layer(ABC):
             gradients: gradients of the layer.
         Returns:
             gradients of the input.
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    def _get_output_shape(self) -> tuple:
-        """
-        Returns the shape of the output of the layer. The input_shape must have been set before.
         """
         raise NotImplementedError
 
