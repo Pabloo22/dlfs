@@ -1,5 +1,5 @@
 from .adam import Adam
-from optimizer import Optimizer
+from .optimizer import Optimizer
 
 
 def get_optimizer(optimizer_name: str, learning_rate: float, **kwargs) -> Optimizer:
