@@ -5,7 +5,7 @@ from .layer import Layer
 
 class MaxPool2D(Layer):
 
-    def __init__(self, input_shape, pool_size=2, stride=2, padding=0, name="MaxPooling2D"):
+    def __init__(self, input_shape, pool_size=2, stride=2, padding=0, name="MaxPool2D"):
 
         output_shape = ...
         super(MaxPool2D, self).__init__(input_shape, output_shape, name)
