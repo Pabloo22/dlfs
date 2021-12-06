@@ -1,7 +1,7 @@
 import numpy as np
 
 from .layer import Layer
-from dlfs.activation_functions.utils import get_activation_function
+from dlfs.activation_functions import get_activation_function
 
 
 class Dense(Layer):
@@ -9,28 +9,23 @@ class Dense(Layer):
     Dense layer class
 
     Args:
-        n_inputs (int): number of inputs
         n_neurons (int): number of neurons
         activation_name (str): activation function
+        name (str): layer name
     """
 
-    def __init__(self, n_inputs: int, n_neurons: int, activation_name: str = None):
+    def __init__(self, n_neurons: int, activation_name: str = None, name: str = "Dense"):
 
-        super(Dense, self).__init__(input_shape=(n_inputs,), output_shape=(n_neurons,))
-        self.__n_inputs = n_inputs
+        super(Dense, self).__init__(name=name)
         self.__n_neurons = n_neurons
         self.__activation = get_activation_function(activation_name)
-        self.__weights = np.random.randn(n_inputs, n_neurons)
+        self.__weights = None
         self.__bias = np.zeros((1, n_neurons))
         self.__inputs = None
         self.__outputs = None
 
     # Getters
     # ----------------------------------------------------------------------------------------------------
-
-    @property
-    def n_inputs(self):
-        return self.__n_inputs
 
     @property
     def n_neurons(self):

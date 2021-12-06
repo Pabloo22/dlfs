@@ -1,4 +1,6 @@
 from abc import ABC, abstractmethod
+from typing import Optional
+
 import numpy as np
 
 
@@ -7,13 +9,18 @@ class Layer(ABC):
     Base class for all layers.
 
     Args:
-        input_shape (tuple): Shape of the input.
+        input_shape (tuple or None): Shape of the input.
         output_shape (tuple): Shape of the output.
         name (str): Name of the layer.
         trainable (bool): Whether the layer is trainable.
     """
 
-    def __init__(self, input_shape: tuple, output_shape: tuple, name: str = None, trainable: bool = True):
+    def __init__(self,
+                 input_shape: Optional[tuple] = None,
+                 output_shape: Optional[tuple] = None,
+                 name: str = None,
+                 trainable: bool = True):
+
         self.__input_shape = input_shape
         self.__output_shape = output_shape
         self.__name = name

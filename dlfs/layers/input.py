@@ -5,7 +5,7 @@ from .layer import Layer
 
 class Input(Layer):
 
-    def __init__(self, input_shape, name="input"):
+    def __init__(self, input_shape: tuple, name="input"):
         super().__init__(input_shape, input_shape, name)
         self.input = None
         self.output = None
