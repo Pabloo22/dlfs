@@ -26,6 +26,9 @@ class Layer(ABC):
         self.__name = name
         self.__trainable = trainable
 
+    # Getters
+    # -------------------------------------------------------------------------
+
     @property
     def input_shape(self) -> tuple:
         return self.__input_shape
@@ -46,9 +49,19 @@ class Layer(ABC):
     def trainable(self) -> bool:
         return self.__trainable
 
+    # Setters
+    # -------------------------------------------------------------------------
+    @input_shape.setter
+    def input_shape(self, input_shape: tuple):
+        self.__input_shape = input_shape
+        self.__output_shape = None
+
     @trainable.setter
     def trainable(self, trainable: bool):
         self.__trainable = trainable
+
+    # Abstract methods
+    # -------------------------------------------------------------------------
 
     @abstractmethod
     def forward(self, inputs: np.ndarray) -> np.ndarray:
@@ -69,6 +82,13 @@ class Layer(ABC):
             gradients: gradients of the layer.
         Returns:
             gradients of the input.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def _get_output_shape(self) -> tuple:
+        """
+        Returns the shape of the output of the layer. The input_shape must have been set before.
         """
         raise NotImplementedError
 

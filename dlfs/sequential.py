@@ -26,7 +26,7 @@ class Sequential:
     """
 
     def __init__(self, layers: List[Layer] = None, name: str = None):
-        self.layers = layers
+        self.layers = layers if layers is not None else []
         self.name = name
         self.loss = None
         self.optimizer = None
@@ -37,8 +37,10 @@ class Sequential:
         """
         Add a layer to the model
         Args:
-            layer: the layer to add
+            layer (Layer): the layer to add
         """
+        if self.layers:
+            layer.input_shape = self.layers[-1].output_shape
         self.layers.append(layer)
 
     def compile(self, optimizer, loss, metrics=None):
