@@ -69,6 +69,7 @@ class Dense(Layer):
     @inputs.setter
     def inputs(self, inputs: np.ndarray):
         self.__inputs = inputs
+        self._init()
 
     @outputs.setter
     def outputs(self, outputs: np.ndarray):
@@ -76,6 +77,16 @@ class Dense(Layer):
 
     # Methods
     # ----------------------------------------------------------------------------------------------------
+    def _init(self):
+        """
+        Initialize the layer. Should be called after the input shape is set.
+        """
+
+        # we use Xavier initialization [https://www.deeplearning.ai/ai-notes/initialization/]
+        self.__weights = np.random.randn(self.input_shape[1], self.n_neurons) * np.sqrt(2 / self.input_shape[1] +
+                                                                                        self.n_neurons)
+        self.__bias = np.zeros((1, self.n_neurons))
+
     def forward(self, inputs) -> np.ndarray:
         """
         Forward pass of the layer.
@@ -114,6 +125,5 @@ class Dense(Layer):
         Returns:
             str: summary of the layer
         """
-        return f"Dense: {self.__n_neurons} neurons"
-
-
+        return f"Dense: {self.__n_neurons} neurons\t output_shape={self.output_shape}\t " \
+               f"n_params={self.weights.size + self.__bias.size}"

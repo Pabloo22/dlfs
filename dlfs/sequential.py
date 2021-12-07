@@ -70,10 +70,8 @@ class Sequential:
         print("-" * len(self.name))
         print("Layers:")
         for layer in self.layers:
-            print(f"{layer.name}")
-            print("-" * len(layer.name))
+            print("-" * len(layer.summary()))
             print(f"{layer.summary()}")
-            print("")
 
     def fit(self, x: np.ndarray, y: np.ndarray, epochs: int = 1, batch_size: int = 32, verbose: int = 1,
             validation_data: np.ndarray = None, validation_split: float = 0.0, shuffle: bool = True, initial_epoch=0):
