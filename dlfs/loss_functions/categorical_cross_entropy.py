@@ -3,13 +3,13 @@ import numpy as np
 from .loss_function import LossFunction
 
 
-class CrossEntropy(LossFunction):
+class CategoricalCrossEntropy(LossFunction):
     """
     Cross entropy loss function.
     """
 
     def __init__(self, name="cross_entropy"):
-        super(CrossEntropy, self).__init__(name)
+        super(CategoricalCrossEntropy, self).__init__(name)
 
     @staticmethod
     def compute_loss(y_true: np.ndarray, y_pred: np.ndarray) -> float:
@@ -36,5 +36,3 @@ class CrossEntropy(LossFunction):
             (np.array)
         """
         return -y_true / y_pred
-
-
