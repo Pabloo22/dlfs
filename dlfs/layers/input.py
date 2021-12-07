@@ -10,6 +10,12 @@ class Input(Layer):
         self.input = None
         self.output = None
 
+    def initialize(self, input_shape: tuple):
+        """
+        Implemented for consistency with other layers.
+        """
+        pass
+
     def forward(self, x: np.ndarray):
         self.input = x
         self.output = x

@@ -67,6 +67,10 @@ class Layer(ABC):
     # -------------------------------------------------------------------------
 
     @abstractmethod
+    def initialize(self, input_shape: tuple):
+        raise NotImplementedError
+
+    @abstractmethod
     def forward(self, inputs: np.ndarray) -> np.ndarray:
         """
         Forward pass of the layer.

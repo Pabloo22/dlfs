@@ -138,6 +138,10 @@ class Conv2D(Layer):
     # Methods
     # -------------------------------------------------------------------------
 
+    def initialize(self, input_shape: tuple):
+        self.input_shape = input_shape
+        self.output_shape = self._get_output_shape()
+
     def forward(self, x: np.ndarray) -> np.ndarray:
         """
         Forward pass

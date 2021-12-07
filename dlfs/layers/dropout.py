@@ -7,9 +7,12 @@ class Dropout(Layer):
 
     def __init__(self, p=0.5, name="Dropout"):
 
-        super(Dropout, self).__init__(None, None, name)
+        super(Dropout, self).__init__(name=name)
         self.p = p
         self.mask = None
+
+    def initialize(self, input_shape: tuple):
+        pass
 
     def forward(self, x, training=True):
         if training:
@@ -18,5 +21,8 @@ class Dropout(Layer):
         else:
             return x
 
-    def backward(self, dout):
-        return dout * self.mask
+    def backward(self, gradients):
+        return gradients * self.mask
+
+    def summary(self):
+        return f"{self.name} (p={self.p})"

@@ -5,12 +5,19 @@ from .layer import Layer
 
 class Flatten(Layer):
 
-    def __init__(self, input_shape, name):
+    def __init__(self, name="Flatten"):
 
-        super(Flatten, self).__init__(input_shape=input_shape, output_shape=(np.prod(input_shape),), name=name)
+        super(Flatten, self).__init__(name=name)
 
-    def forward(self, x):
-        pass
+    def initialize(self, input_shape: tuple):
+        self.input_shape = input_shape
+        self.output_shape = (input_shape[0], np.prod(input_shape[1:]))
 
-    def backward(self, dout):
-        pass
+    def forward(self, x: np.ndarray) -> np.ndarray:
+        return np.reshape(x, self.output_shape)
+
+    def backward(self, gradients: np.ndarray) -> np.ndarray:
+        return np.reshape(gradients, self.input_shape)
+
+    def summary(self) -> str:
+        return f"{self.name} ({self.input_shape} -> {self.output_shape})"
