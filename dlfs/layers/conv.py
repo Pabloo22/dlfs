@@ -2,6 +2,7 @@ import numpy as np
 from typing import Tuple
 
 from .layer import Layer
+from dlfs.activation_functions import get_activation_function, ActivationFunction
 
 
 class Conv2D(Layer):
@@ -13,18 +14,19 @@ class Conv2D(Layer):
         n_filters (int): Number of filters
         stride (int): Stride of the convolutional kernel
         padding (str): Padding type
-        activation (str): Activation function
+        activation (ActivationFunction): Activation function
         use_bias (bool): Whether to use bias
         name (str): Name of the layer
     """
 
     __kernel_size: Tuple[int, int]
+    __n_filters: int
     __stride: int
     __padding: int
     __weights: np.ndarray
     __bias: np.ndarray
-    __output_shape: Tuple[int, int]
-    __input_shape: Tuple[int, int]
+    __activation: ActivationFunction
+    __use_bias: bool
 
     def __init__(self,
                  kernel_size: tuple,
@@ -44,7 +46,7 @@ class Conv2D(Layer):
         self.__bias = np.random.randn(n_filters)
         self.__input = None
         self.__output = None
-        self.__activation = activation
+        self.__activation = get_activation_function(activation)
         self.__use_bias = use_bias
 
     # Getters
@@ -181,7 +183,7 @@ class Conv2D(Layer):
                             x[i, j:j + self.__kernel_size[0], k:k + self.__kernel_size[1]] * gradients[i, j, k, L])
                         gradients_b[L] += gradients[i, j, k, L]
 
-        return gradients_w, gradients_b
+        return self.activation.gradients(gradients_w), gradients_b
 
     def _get_output_shape(self) -> tuple:
         """

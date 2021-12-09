@@ -42,7 +42,7 @@ class Sequential:
 
             # if the layer output depends on the output of the previous layer,
             # it is updated while setting the input shape in the setter method.
-            layer.initialize(self.layers[-1].output_shape)
+            layer.initialize(input_shape=self.layers[-1].output_shape)
 
         elif not isinstance(layer, Input):
             raise ValueError("The first layer must be an Input layer")

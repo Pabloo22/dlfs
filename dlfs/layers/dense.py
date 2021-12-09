@@ -82,9 +82,7 @@ class Dense(Layer):
         """
         self.input_shape = input_shape
         # we use Xavier initialization [https://www.deeplearning.ai/ai-notes/initialization/]
-        self.__weights = np.random.randn(self.input_shape[1], self.n_neurons) * np.sqrt(2 / self.input_shape[1] +
-                                                                                        self.n_neurons)
-        self.__bias = np.zeros((1, self.n_neurons))
+        self.__weights = np.random.randn(self.input_shape[1], self.n_neurons) * np.sqrt(1 / self.input_shape[1])
 
     def forward(self, inputs) -> np.ndarray:
         """
