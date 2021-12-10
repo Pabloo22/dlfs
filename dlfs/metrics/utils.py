@@ -1,4 +1,4 @@
-from . import Metric, Accuracy
+from dlfs.metrics import Metric, Accuracy
 
 
 def get_metric(name: str) -> Metric:
