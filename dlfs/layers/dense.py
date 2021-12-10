@@ -14,9 +14,9 @@ class Dense(Layer):
         name (str): layer name
     """
 
-    def __init__(self, n_neurons: int, activation: str = None, name: str = "Dense"):
+    def __init__(self, n_neurons: int, activation: str = None, name: str = "Dense", input_shape: tuple = None):
 
-        super(Dense, self).__init__(output_shape=(1, n_neurons), name=name)
+        super(Dense, self).__init__(input_shape=input_shape, output_shape=(n_neurons,), name=name)
         self.__n_neurons = n_neurons
         self.__activation = get_activation_function(activation) if activation else None
         self.__weights = None
@@ -79,10 +79,19 @@ class Dense(Layer):
     def initialize(self, input_shape: tuple):
         """
         Initialize the layer. Should be called after the input shape is set.
+
+        Args:
+            input_shape (tuple): input shape of the layer, it has the form (n_samples, n_features)
         """
         self.input_shape = input_shape
         # we use Xavier initialization [https://www.deeplearning.ai/ai-notes/initialization/]
-        self.__weights = np.random.randn(self.input_shape[1], self.n_neurons) * np.sqrt(1 / self.input_shape[1])
+        # the weights has the shape (n_features, n_neurons)
+        # For instance, if the number of features is 3 and the number of neurons is 5,
+        # each column of the weights matrix represents a neuron and the values of the column are its weights
+        # of the neuron.
+        # the biases has the shape (1, n_neurons)
+        self.weights = np.random.randn(input_shape[1], self.__n_neurons) * np.sqrt(1 / input_shape[1])
+        self.biases = np.zeros((1, self.__n_neurons))
 
     def forward(self, inputs) -> np.ndarray:
         """
@@ -95,6 +104,7 @@ class Dense(Layer):
             np.ndarray: outputs of the layer
         """
         self.__inputs = inputs
+        # inputs has the shape (n_samples, n_features) and weights has the shape (n_features, n_neurons)
         self.__outputs = np.dot(inputs, self.__weights) + self.__bias
         if self.__activation:
             self.__outputs = self.__activation.forward(self.__outputs)

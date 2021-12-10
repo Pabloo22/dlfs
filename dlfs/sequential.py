@@ -3,9 +3,9 @@ from sklearn.model_selection import train_test_split
 from typing import List
 
 
-from .layers import Layer, Input
-from .optimizers.optimizer import Optimizer
-from .loss_functions.loss_function import LossFunction
+from dlfs.layers import Layer, Input
+from dlfs.optimizers.optimizer import Optimizer
+from dlfs.loss_functions.loss_function import LossFunction
 
 
 class Sequential:
@@ -20,9 +20,9 @@ class Sequential:
     metrics: List[str] or None
     trainable: bool
 
-    def __init__(self, input_shape: tuple = None, name: str = "Sequential Model"):
+    def __init__(self, layers: List[Layer] = None, name: str = "Sequential Model"):
 
-        self.layers = [] if input_shape is None else [Input(input_shape)]
+        self.layers = [] if layers is None else layers
         self.name = name
         self.loss = None
         self.optimizer = None
@@ -49,18 +49,21 @@ class Sequential:
 
         self.layers.append(layer)
 
-    def compile(self, optimizer, loss, metrics=None):
+    def compile(self, optimizer: Optimizer, loss: LossFunction, metrics: List[str] = None):
         """
         Compile the model
 
         Args:
             optimizer: the optimizer to use
             loss: the loss function to use
-            metrics: the metrics to use
+            metrics: the metrics to use. The metrics by default are the ones used by the loss function
+            Allowed values are:
+                - "accuracy"
+                - "binary_accuracy"
         """
         self.optimizer = optimizer
         self.loss = loss
-        self.metrics = metrics
+        self.metrics = [] if metrics is None else metrics
 
     def summary(self):
         """
@@ -72,6 +75,32 @@ class Sequential:
         for layer in self.layers:
             print("-" * len(layer.summary()))
             print(f"{layer.summary()}")
+
+    def backpropagation(self, x: np.ndarray, y: np.ndarray):
+        """
+        Args:
+            x: the input data
+            y: the labels
+
+        Returns:
+            gradients: the gradients of the loss with respect to the weights and biases
+        """
+
+        # forward pass
+        for layer in self.layers:
+            x = layer.forward(x)
+
+        # backward pass
+        # initialize the gradients
+        gradients = [np.ndarray([])] * len(self.layers)
+        gradients[-1] = self.loss.backward(x, y)
+
+        # compute the gradients
+        for i in range(len(self.layers) - 1, 0, -1):
+            gradients[i - 1] = self.layers[i].backward(gradients[i])
+            gradients[i] = self.layers[i].backward(gradients[i + 1])
+
+        return gradients
 
     def fit(self, x: np.ndarray, y: np.ndarray, epochs: int = 1, batch_size: int = 32, verbose: int = 1,
             validation_data: np.ndarray = None, validation_split: float = 0.0, shuffle: bool = True, initial_epoch=0):
@@ -92,6 +121,7 @@ class Sequential:
         if self.optimizer is None or self.loss is None:
             raise ValueError("You must compile the model before training")
 
+        # if validation data is not provided, split the data into train and validation
         if validation_split > 0:
             if validation_data is None:
                 raise ValueError("If validation_split is set, validation_data must be specified")
@@ -100,7 +130,6 @@ class Sequential:
         # initialize the history
         history = {'loss': [], 'val_loss': []}
 
-        # provisional, metrics classes may be added
         for metric in self.metrics:
             history[metric] = []
             history['val_' + metric] = []
@@ -109,25 +138,33 @@ class Sequential:
         for epoch in range(initial_epoch, epochs):
             # initialize the total loss for the epoch
             epoch_loss = 0.0
-            if 'acc' in self.metrics:
+            if 'accuracy' in self.metrics:
                 epoch_acc = 0.0
+            if 'binary_accuracy' in self.metrics:
+                epoch_binary_acc = 0.0
+
             # loop over the data in batches
             for x_batch, y_batch in self.batch_generator(x, y, batch_size, shuffle):
+
                 # get the gradients for the batch
-                grads = self.optimizer.get_gradients(self, x_batch, y_batch)
+                grads = self.backpropagation(x_batch, y_batch)
+
                 # update the parameters
                 self.optimizer.update_params(self, grads)
+
                 # compute the loss for the batch
                 loss = self.loss.compute_loss(self, x_batch, y_batch)
                 # update the total loss
                 epoch_loss += loss
-                if 'acc' in self.metrics:
-                    acc = self.metrics['acc'].compute_metric(self, x_batch, y_batch)
+
+                # compute the metrics
+                if 'accuracy' in self.metrics:
+                    acc = self.metrics['accuracy'].compute_metric(self, x_batch, y_batch)
                     epoch_acc += acc
                 # update the history
                 history['loss'].append(loss)
-                if 'acc' in self.metrics:
-                    history['acc'].append(acc)
+                if 'accuracy' in self.metrics:
+                    history['accuracy'].append(acc)
             # compute the average loss for the epoch
             epoch_loss /= len(x)
             if 'acc' in self.metrics:
@@ -155,7 +192,7 @@ class Sequential:
     @staticmethod
     def batch_generator(x: np.ndarray, y: np.ndarray, batch_size: int, shuffle: bool = True):
         """
-
+        Generates batches of data
         Args:
             x: the input data
             y: the labels
@@ -258,3 +295,14 @@ class Sequential:
         Args:
             path: the path to save the model
         """
+
+#
+# if __name__ == '__main__':
+#     length = 10
+#     array = np.zeros(length)
+#     print(array)
+#     array[-1] = 1
+#
+#     for i in range(length - 2, -1, -1):
+#         array[i] = array[i + 1] + 1
+#     print(array)
