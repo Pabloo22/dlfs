@@ -21,7 +21,8 @@ class Optimizer(ABC):
     def update(self, parameters: Tuple[np.ndarray, np.ndarray], gradients: Tuple[np.ndarray, np.ndarray]):
         """Update parameters based on gradients.
         Args:
-            parameters: Parameters to update.
-            gradients: Gradients of the parameters.
+            parameters: Parameters to update passed as a tuple of two numpy arrays composed of the weights and biases.
+            gradients: Gradients of the parameters passed as a tuple of two numpy arrays composed of the gradients of
+                the weights and biases.
         """
         raise NotImplementedError
