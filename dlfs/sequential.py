@@ -98,8 +98,16 @@ class Sequential:
 
         return gradients
 
-    def fit(self, x: np.ndarray, y: np.ndarray, epochs: int = 1, batch_size: int = 32, verbose: int = 1,
-            validation_data: np.ndarray = None, validation_split: float = 0.0, shuffle: bool = True, initial_epoch=0):
+    def fit(self,
+            x: np.ndarray,
+            y: np.ndarray,
+            epochs: int = 1,
+            batch_size: int = 32,
+            verbose: int = 1,
+            validation_data: np.ndarray = None,
+            validation_split: float = 0.0,
+            shuffle: bool = True,
+            initial_epoch: int = 0) -> Dict[str, List[float]]:
         """
         Fit the model to the data
 
