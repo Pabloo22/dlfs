@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 import numpy as np
+from typing import Tuple
 
 
 class Optimizer(ABC):
@@ -17,7 +18,7 @@ class Optimizer(ABC):
         self.__learning_rate = learning_rate
 
     @abstractmethod
-    def update(self, parameters: np.ndarray, gradients: np.ndarray):
+    def update(self, parameters: Tuple[np.ndarray], gradients: np.ndarray):
         """Update parameters based on gradients.
         Args:
             parameters: Parameters to update.
