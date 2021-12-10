@@ -175,7 +175,9 @@ class Sequential:
                 gradients = self.get_gradients(y_pred, y_batch)
 
                 # update the parameters
-                self.optimizer.update_params(self, gradients)
+                for i, layer in enumerate(self.layers):
+                    if layer.trainable:
+                        layer.update(gradients[i])
 
                 # compute the loss for the batch
                 loss = self.loss.compute_loss(self, y_pred, y_batch)

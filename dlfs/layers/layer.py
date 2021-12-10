@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
+import numpy as np
 from typing import Optional
 
-import numpy as np
+from dlfs.optimizers import Optimizer
 
 
 class Layer(ABC):
@@ -26,6 +27,7 @@ class Layer(ABC):
         self.__name = name
         self.__trainable = trainable
         self.__initialized = False
+        self.__optimizer = None
 
     # Getters
     # -------------------------------------------------------------------------
@@ -54,6 +56,10 @@ class Layer(ABC):
     def initialized(self) -> bool:
         return self.__initialized
 
+    @property
+    def optimizer(self) -> Optimizer:
+        return self.__optimizer
+
     # Setters
     # -------------------------------------------------------------------------
     @input_shape.setter
@@ -72,11 +78,15 @@ class Layer(ABC):
     def initialized(self, initialized: bool):
         self.__initialized = initialized
 
+    @optimizer.setter
+    def optimizer(self, optimizer: Optimizer):
+        self.__optimizer = optimizer
+
     # Abstract methods
     # -------------------------------------------------------------------------
 
     @abstractmethod
-    def initialize(self, input_shape: tuple):
+    def initialize(self, input_shape: tuple, optimizer: Optimizer):
         raise NotImplementedError
 
     @abstractmethod
@@ -104,6 +114,10 @@ class Layer(ABC):
 
     @abstractmethod
     def summary(self) -> str:
+        raise NotImplementedError
+
+    @abstractmethod
+    def update(self, gradients: np.ndarray):
         raise NotImplementedError
 
     def __str__(self) -> str:
