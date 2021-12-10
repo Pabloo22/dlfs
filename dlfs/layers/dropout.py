@@ -12,7 +12,7 @@ class Dropout(Layer):
         self.mask = None
 
     def initialize(self, input_shape: tuple):
-        pass
+        self.initialized = True
 
     def forward(self, x, training=True):
         if training:

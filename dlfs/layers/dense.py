@@ -92,6 +92,7 @@ class Dense(Layer):
         # the biases has the shape (1, n_neurons)
         self.weights = np.random.randn(input_shape[1], self.__n_neurons) * np.sqrt(1 / input_shape[1])
         self.biases = np.zeros((1, self.__n_neurons))
+        self.initialized = True
 
     def forward(self, inputs, training: bool = False) -> np.ndarray:
         """

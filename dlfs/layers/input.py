@@ -14,7 +14,7 @@ class Input(Layer):
         """
         Implemented for consistency with other layers.
         """
-        pass
+        self.initialized = True
 
     def forward(self, x: np.ndarray):
         self.input = x

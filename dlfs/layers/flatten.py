@@ -12,6 +12,7 @@ class Flatten(Layer):
     def initialize(self, input_shape: tuple):
         self.input_shape = input_shape
         self.output_shape = (input_shape[0], np.prod(input_shape[1:]))
+        self.initialized = True
 
     def forward(self, x: np.ndarray) -> np.ndarray:
         return np.reshape(x, self.output_shape)

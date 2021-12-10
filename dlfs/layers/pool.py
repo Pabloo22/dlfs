@@ -47,6 +47,7 @@ class MaxPool2D(Layer):
     def initialize(self, input_shape: tuple):
         self.input_shape = input_shape
         self.output_shape = self._get_output_shape(input_shape)
+        self.initialized = True
 
     def forward(self, x: np.ndarray) -> np.ndarray:
         """
