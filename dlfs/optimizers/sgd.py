@@ -5,7 +5,7 @@ from dlfs.optimizers import Optimizer
 
 class SGD(Optimizer):
     """
-    Stochastic gradient descent optimizer.
+    Mini-batch stochastic gradient descent.
     """
 
     def __init__(self, lr: float = 0.01):
