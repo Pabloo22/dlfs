@@ -25,6 +25,7 @@ class Layer(ABC):
         self.__output_shape = output_shape
         self.__name = name
         self.__trainable = trainable
+        self.__initialized = False
 
     # Getters
     # -------------------------------------------------------------------------
@@ -49,6 +50,10 @@ class Layer(ABC):
     def trainable(self) -> bool:
         return self.__trainable
 
+    @property
+    def initialized(self) -> bool:
+        return self.__initialized
+
     # Setters
     # -------------------------------------------------------------------------
     @input_shape.setter
@@ -63,6 +68,10 @@ class Layer(ABC):
     def trainable(self, trainable: bool):
         self.__trainable = trainable
 
+    @initialized.setter
+    def initialized(self, initialized: bool):
+        self.__initialized = initialized
+
     # Abstract methods
     # -------------------------------------------------------------------------
 
@@ -71,11 +80,12 @@ class Layer(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def forward(self, inputs: np.ndarray) -> np.ndarray:
+    def forward(self, inputs: np.ndarray, training: bool = False) -> np.ndarray:
         """
         Forward pass of the layer.
         Args:
             inputs: input to the layer.
+            training: whether the layer is in training mode.
         Returns:
             output of the layer.
         """

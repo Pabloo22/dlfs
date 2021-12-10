@@ -93,12 +93,13 @@ class Dense(Layer):
         self.weights = np.random.randn(input_shape[1], self.__n_neurons) * np.sqrt(1 / input_shape[1])
         self.biases = np.zeros((1, self.__n_neurons))
 
-    def forward(self, inputs) -> np.ndarray:
+    def forward(self, inputs, training: bool = False) -> np.ndarray:
         """
         Forward pass of the layer.
 
         Args:
             inputs (np.ndarray): inputs of the layer
+            training (bool): for compatibility with other layers
 
         Returns:
             np.ndarray: outputs of the layer

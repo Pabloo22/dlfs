@@ -89,7 +89,7 @@ class Conv2D(Layer):
         return self.__bias
 
     @property
-    def activation(self) -> str:
+    def activation(self) -> ActivationFunction:
         return self.__activation
 
     @property
@@ -144,11 +144,12 @@ class Conv2D(Layer):
         self.input_shape = input_shape
         self.output_shape = self._get_output_shape()
 
-    def forward(self, x: np.ndarray) -> np.ndarray:
+    def forward(self, x: np.ndarray, training: bool = False) -> np.ndarray:
         """
         Forward pass
         Args:
             x: input data
+            training: for compatibility with other layers
         Returns:
             output data
         """
@@ -161,6 +162,9 @@ class Conv2D(Layer):
                         output[i, j, k, L] = np.sum(
                             x[i, j:j + self.__kernel_size[0], k:k + self.__kernel_size[1]] * self.__weights[L]) + \
                                              self.__bias[L]
+
+        self.__input = x
+        self.__output = output
         return output
 
     def backward(self, gradients: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
@@ -172,6 +176,7 @@ class Conv2D(Layer):
             gradients with respect to the input of this layer
         """
         x = self.__input
+        # the input x has the shape (batch_size, height, width, n_filters)
         gradients = gradients.reshape((x.shape[0], x.shape[1], x.shape[2], self.__n_filters))
         gradients_w = np.zeros(self.__weights.shape)
         gradients_b = np.zeros(self.__bias.shape)
@@ -183,7 +188,7 @@ class Conv2D(Layer):
                             x[i, j:j + self.__kernel_size[0], k:k + self.__kernel_size[1]] * gradients[i, j, k, L])
                         gradients_b[L] += gradients[i, j, k, L]
 
-        return self.activation.gradients(gradients_w), gradients_b
+        return self.activation.gradient(gradients_w), gradients_b
 
     def _get_output_shape(self) -> tuple:
         """
@@ -230,6 +235,16 @@ class Conv2D(Layer):
                           j * stride:j * stride + kernel_width] * kernel)
 
         return convolved_image
+
+    def compute_weights_gradients(self, gradients: np.ndarray) -> np.ndarray:
+        """
+
+        Args:
+             gradients: The gradients of the loss with respect to the output of this layer.
+        Returns:
+            The gradients of the loss with respect to the weights of this layer.
+        """
+        return self.activation.gradient(gradients)
 
     def summary(self):
         print(f"Layer: {self.name}, Output shape: {self.output.shape}")
