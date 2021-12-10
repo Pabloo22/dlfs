@@ -4,6 +4,9 @@ from dlfs.optimizers import Optimizer
 
 
 class SGD(Optimizer):
+    """
+    Stochastic gradient descent optimizer.
+    """
 
     def __init__(self, lr: float = 0.01):
         super(SGD, self).__init__(learning_rate=lr)
