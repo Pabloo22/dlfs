@@ -24,6 +24,10 @@ class Sequential:
 
     def __init__(self, layers: List[Layer] = None, name: str = "Sequential Model"):
 
+        # check that the first layers has set the input shape
+        if layers and layers[0].input_shape is None:
+            raise ValueError("The first layer must have an input shape")
+
         self.layers = [] if layers is None else layers
         self.name = name
         self.loss = None
@@ -38,16 +42,15 @@ class Sequential:
             layer (Layer): the layer to add
         """
 
-        if self.layers:
-            if isinstance(layer, Input):
-                raise ValueError("An Input layer is already present in the model")
+        # check that the first layers has set the input shape
+        if not self.layers and layer.input_shape is None:
+            raise ValueError("The first layer must have an input shape")
 
-            # if the layer output depends on the output of the previous layer,
-            # it is updated while setting the input shape in the setter method.
+        # initialize the layer
+        if layer.input_shape is None:
             layer.initialize(input_shape=self.layers[-1].output_shape)
-
-        elif not isinstance(layer, Input):
-            raise ValueError("The first layer must be an Input layer")
+        else:
+            layer.initialize(input_shape=layer.input_shape)
 
         self.layers.append(layer)
 
@@ -143,10 +146,10 @@ class Sequential:
 
         # if the layers are not initialized, initialize them
         if not self.layers[0].initialized:
-            self.layers[0].initialize(input_shape=(batch_size, *x.shape[1:]))
+            self.layers[0].initialize(input_shape=(batch_size, *x.shape[1:]), optimizer=self.optimizer)
 
         for i in range(1, len(self.layers)):
-            self.layers[i].initialize(input_shape=self.layers[i - 1].output_shape)
+            self.layers[i].initialize(input_shape=self.layers[i - 1].output_shape, optimizer=self.optimizer)
 
         # initialize the history
         history = {'loss': [], 'val_loss': []}

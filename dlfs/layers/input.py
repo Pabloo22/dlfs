@@ -1,7 +1,6 @@
 import numpy as np
 
 from .layer import Layer
-from dlfs.optimizers import Optimizer
 
 
 class Input(Layer):
@@ -11,7 +10,7 @@ class Input(Layer):
         self.input = None
         self.output = None
 
-    def initialize(self, input_shape: tuple, optimizer: Optimizer = None):
+    def initialize(self, input_shape: tuple):
         """
         Implemented for consistency with other layers.
         """

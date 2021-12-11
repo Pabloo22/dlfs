@@ -22,7 +22,7 @@ class Layer(ABC):
                  name: str = None,
                  trainable: bool = True):
 
-        self.__input_shape = input_shape
+        self.__input_shape = (None, *input_shape) if input_shape else None
         self.__output_shape = output_shape
         self.__name = name
         self.__trainable = trainable
@@ -80,13 +80,17 @@ class Layer(ABC):
 
     @optimizer.setter
     def optimizer(self, optimizer: Optimizer):
+
+        if not isinstance(optimizer, Optimizer):
+            raise TypeError(f"{optimizer} is not an instance of Optimizer")
+
         self.__optimizer = optimizer
 
     # Abstract methods
     # -------------------------------------------------------------------------
 
     @abstractmethod
-    def initialize(self, input_shape: tuple, optimizer: Optimizer):
+    def initialize(self, input_shape: tuple):
         raise NotImplementedError
 
     @abstractmethod
