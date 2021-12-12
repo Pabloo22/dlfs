@@ -8,6 +8,9 @@ class MSE(LossFunction):
     Class that defines the Mean Squared Error loss function
     """
 
+    def __init__(self):
+        super(MSE, self).__init__(name="MSE")
+
     @staticmethod
     def compute_loss(y_true, y_pred):
         """

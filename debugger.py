@@ -9,6 +9,7 @@ from dlfs.layers import Dense
 from dlfs.losses import MSE
 from dlfs.optimizers import SGD
 
+
 def test1():
     # Generating the dataset
     def f(x_0, x_1):
@@ -25,6 +26,9 @@ def test1():
     model.add(Dense(1))
 
     model.summary()
+
+    # Compiling the model
+    model.compile(loss=MSE(), optimizer=SGD(lr=0.01))
 
 
 # def test2():
