@@ -1,8 +1,7 @@
 import numpy as np
 from sklearn.model_selection import train_test_split
-from typing import List, Dict
+from typing import List, Dict, Tuple
 from tqdm import tqdm
-
 
 from dlfs.layers import Layer, Input
 from dlfs.optimizers.optimizer import Optimizer
@@ -101,10 +100,12 @@ class Sequential:
         # backward pass
         # initialize the gradients
         gradients = [np.ndarray([])] * len(self.layers)
-        gradients[-1] = self.loss.backward(y_pred, y_true)
+        gradients[-1] = self.loss.compute_loss(y_pred, y_true)
 
         # compute the gradients
         for i in range(len(self.layers) - 1, 0, -1):
+            # store in gradients[i -1] the gradient of the loss function with respect to the output of the layer i
+            # gradients[i - 1] = (with respect to weights, with respect to biases)
             gradients[i - 1] = self.layers[i].backward(gradients[i])
 
         return gradients
@@ -115,7 +116,7 @@ class Sequential:
             epochs: int = 1,
             batch_size: int = 32,
             verbose: int = 1,
-            validation_data: np.ndarray = None,
+            validation_data: Tuple[np.ndarray, np.ndarray] = None,
             validation_split: float = 0.0,
             shuffle: bool = True,
             initial_epoch: int = 0) -> Dict[str, List[float]]:
@@ -156,12 +157,9 @@ class Sequential:
         # INITIALIZATION:
         # --------------------------------------------------
 
-        # if the layers are not initialized, initialize them
-        if not self.layers[0].initialized:
-            self.layers[0].initialize(input_shape=(batch_size, *x.shape[1:]))
-
-        for i in range(1, len(self.layers)):
-            self.layers[i].initialize(input_shape=self.layers[i - 1].output_shape)
+        # Update the input_shape of the layers to take into account the batch_size
+        for layer in self.layers:
+            layer.input_shape = (batch_size, *layer.input_shape[1:])
 
         # initialize the history
         history = {'loss': [], 'val_loss': []}
@@ -182,12 +180,15 @@ class Sequential:
         # loop over the number of epochs
         for epoch in range_epochs:
             # initialize the total loss for the epoch if verbose is 2
-            if verbose == 2:
+            if verbose > 0:
                 epoch_loss = 0.0
                 epoch_metrics = {metric: 0.0 for metric in self.metrics}
 
             # loop over the data in batches
+            total_data_used_per_epoch = 0
             for x_batch, y_batch in self.batch_generator(x, y, batch_size, shuffle):
+
+                total_data_used_per_epoch += x_batch.shape[0]
 
                 # forward pass
                 y_pred = self.predict(x_batch, training=True)
@@ -201,10 +202,10 @@ class Sequential:
                         layer.update(gradients[i])
 
                 # compute the loss for the batch
-                loss = self.loss.compute_loss(self, y_pred, y_batch)
+                loss = self.loss.compute_loss(y_pred, y_batch)
 
                 # update the total loss (if verbose is 2)
-                if verbose == 2:
+                if verbose > 0:
                     epoch_loss += loss
                     for metric in self.metrics:
                         epoch_metrics[metric] += self.metrics[metric].compute_metric(self, x_batch, y_batch)
@@ -212,8 +213,9 @@ class Sequential:
                 # print the loss and the metrics per batch (if verbose is 1)
                 if verbose == 1:
                     print(f"Epoch {epoch + 1}/{epochs}: loss = {loss:.4f}")
-                    for metric in self.metrics:
-                        print(f"\t{metric} = {self.metrics[metric].compute_metric(self, y_pred, y_batch):.4f}")
+                    metrics_list = [f'{metric}: {self.metrics[metric].compute_metric(y_pred, y_batch):.4f}'
+                                    for metric in self.metrics]
+                    print(f"\t{', '.join(metrics_list)}")
 
             # print the metrics (if verbose is 1 or 2)
             if verbose > 0:
@@ -224,7 +226,7 @@ class Sequential:
 
                 if using_validation_data:
                     y_pred_val = self.predict(x_val)
-                    val_loss = self.loss.compute_loss(self, y_pred_val, y_val)
+                    val_loss = self.loss.compute_loss(y_pred_val, y_val)
                     print(f"\tValidation loss: {val_loss}")
                     # add the validation loss to the history
                     history['val_loss'].append(epoch_loss)
@@ -238,7 +240,7 @@ class Sequential:
                     # append the val_loss and val_metrics to the history
                     history['val_loss'].append(val_loss)
                     for metric in self.metrics:
-                        history['val_' + metric].append(self.metrics[metric].compute_metric(self, y_pred_val, y_val))
+                        history['val_' + metric].append(self.metrics[metric].compute_metric(y_pred_val, y_val))
             print("")
 
             # save the history

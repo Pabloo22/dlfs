@@ -30,6 +30,9 @@ def test1():
     # Compiling the model
     model.compile(loss=MSE(), optimizer=SGD(lr=0.01))
 
+    # Training the model
+    model.fit(train_x, train_y, epochs=2, batch_size=10, verbose=1, validation_data=(test_x, test_y))
+
 
 # def test2():
 #     model = tf.keras.Sequential([
