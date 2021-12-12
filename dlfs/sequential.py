@@ -215,7 +215,8 @@ class Sequential:
                 # print the loss and the metrics per batch (if verbose is 1)
                 if verbose == 1:
                     if using_validation_data:
-                        print(f"Batch ({total_data_used_per_epoch}/{x.shape[0]}) - loss: {loss:.4f} - val_loss: {val_loss:.4f}")
+                        print(f"Batch ({total_data_used_per_epoch}/{x.shape[0]}) "
+                              f"- loss: {loss:.4f} - val_loss: {val_loss:.4f}")
                     else:
                         print(f"Batch ({total_data_used_per_epoch}/{x.shape[0]}) - loss: {loss:.4f}")
                     metrics_list = [f'{metric}: {self.metrics[metric].compute_metric(y_pred, y_batch):.4f}'
@@ -320,6 +321,7 @@ class Sequential:
             x: the input data
             batch_size: the batch size
             verbose: the verbosity mode (0 or 1)
+            training: whether the model is in training mode
         """
 
         # initialize the predictions
@@ -330,7 +332,7 @@ class Sequential:
             # get the batch data
             x_batch = x[i:i + batch_size]
             # get the predictions for the batch
-            y_batch_pred = self.predict_batch(x_batch)
+            y_batch_pred = self.predict_batch(x_batch, training)
             # update the predictions
             y_pred.append(y_batch_pred)
         # concatenate the predictions
@@ -342,18 +344,19 @@ class Sequential:
 
         return y_pred
 
-    def predict_batch(self, x: np.ndarray) -> np.ndarray:
+    def predict_batch(self, x: np.ndarray, training: bool = False) -> np.ndarray:
         """
 
         Args:
             x : the input data
+            training: whether the model is in training mode
         Returns:
             y_pred : the predictions
         """
 
         last_input = x
         for layer in self.layers:
-            last_input = layer.forward(last_input)
+            last_input = layer.forward(last_input, training)
         return last_input
 
     def save(self, path: str):
