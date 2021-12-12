@@ -6,7 +6,7 @@ import numpy as np
 
 from dlfs import Sequential
 from dlfs.layers import Dense
-from dlfs.losses import MSE
+from dlfs.losses import MSE, MAE
 from dlfs.optimizers import SGD
 
 
@@ -28,7 +28,7 @@ def test1():
     model.summary()
 
     # Compiling the model
-    model.compile(loss=MSE(), optimizer=SGD(lr=0.01))
+    model.compile(loss=MAE(), optimizer=SGD(lr=0.0001))
 
     # Training the model
     model.fit(train_x, train_y, epochs=2, batch_size=10, verbose=1, validation_data=(test_x, test_y))

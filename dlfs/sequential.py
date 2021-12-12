@@ -203,6 +203,8 @@ class Sequential:
 
                 # compute the loss for the batch
                 loss = self.loss.compute_loss(y_pred, y_batch)
+                if using_validation_data:
+                    val_loss = self.loss.compute_loss(self.predict(x_val, training=False), y_val)
 
                 # update the total loss (if verbose is 2)
                 if verbose > 0:
@@ -212,7 +214,10 @@ class Sequential:
 
                 # print the loss and the metrics per batch (if verbose is 1)
                 if verbose == 1:
-                    print(f"Epoch {epoch + 1}/{epochs}: loss = {loss:.4f}")
+                    if using_validation_data:
+                        print(f"Epoch {epoch + 1}/{epochs}: loss = {loss:.4f}, val_loss = {val_loss:.4f}")
+                    else:
+                        print(f"Epoch {epoch + 1}/{epochs}: loss = {loss:.4f}")
                     metrics_list = [f'{metric}: {self.metrics[metric].compute_metric(y_pred, y_batch):.4f}'
                                     for metric in self.metrics]
                     print(f"\t{', '.join(metrics_list)}")
