@@ -27,10 +27,10 @@ class ActivationFunction(ABC):
     # -------------------------------------------------------------------------
 
     def forward(self, x):
-        raise self.forward(x)
+        return self.__function(x)
 
     def gradient(self, x):
-        raise self.gradient(x)
+        return self.__derivative(x)
 
     def __call__(self, x):
         return self.forward(x)
