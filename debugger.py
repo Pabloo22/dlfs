@@ -4,11 +4,10 @@ will be removed in the future.
 """
 import numpy as np
 
-from dlfs.layers import Input, Dense
 from dlfs import Sequential
-
-
-
+from dlfs.layers import Dense
+from dlfs.losses import MSE
+from dlfs.optimizers import SGD
 
 def test1():
     # Generating the dataset

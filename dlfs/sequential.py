@@ -6,7 +6,7 @@ from tqdm import tqdm
 
 from dlfs.layers import Layer, Input
 from dlfs.optimizers.optimizer import Optimizer
-from dlfs.loss_functions.loss_function import LossFunction
+from dlfs.losses.loss_function import LossFunction
 from dlfs.metrics import Metric, get_metric
 
 
