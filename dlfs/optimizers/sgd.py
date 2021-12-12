@@ -22,6 +22,11 @@ class SGD(Optimizer):
         w, b = params
         # The sum is squashing the results down to a single update
         db = np.sum(grads, axis=0, keepdims=True)
+        # take the average of the gradients if there are multiple
+        if len(grads.shape) > 1:
+            dw = np.sum(grads, axis=0, keepdims=True) / grads.shape[0]
+        else:
+            dw = np.sum(grads, axis=0, keepdims=True)
 
-        w -= self.learning_rate * grads
+        w -= self.learning_rate * dw
         b -= self.learning_rate * db

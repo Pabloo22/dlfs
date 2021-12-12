@@ -57,6 +57,10 @@ class Dense(Layer):
         Args:
             input_shape (tuple): input shape of the layer, it has the form (n_samples (None), n_features)
         """
+        # check if the input shape is correct
+        if len(input_shape) != 2:
+            raise ValueError("The input shape is incorrect")
+
         self.input_shape = input_shape
         # We use Xavier initialization [https://www.deeplearning.ai/ai-notes/initialization/]
         # the weights has the shape (n_features, n_neurons) and the bias has the shape (1, n_neurons).
@@ -77,6 +81,13 @@ class Dense(Layer):
         Returns:
             np.ndarray: outputs of the layer
         """
+        # check if the layer is initialized
+        if not self.initialized:
+            raise ValueError("The layer is not initialized")
+        # check if the input shape is correct
+        if inputs.shape[1:] != self.input_shape[1:]:
+            raise ValueError("The input shape is incorrect")
+        # save the inputs
         self.inputs = inputs
         # inputs has the shape (n_samples, n_features) and weights has the shape (n_features, n_neurons)
         self.outputs = np.dot(inputs, self.weights) + self.bias
@@ -84,16 +95,17 @@ class Dense(Layer):
             self.outputs = self.__activation.forward(self.outputs)
         return self.outputs
 
-    def backward(self, gradients: Tuple[np.ndarray, np.ndarray]) -> np.ndarray:
+    def backward(self, gradients: np.ndarray) -> np.ndarray:
         """
         Backward pass of the layer.
 
         Args:
-            gradients (tuple[np.ndarray, np.ndarray]) : gradients of the next layer
+            gradients (np.ndarray) : gradients of the next layer
 
         Returns:
-            tuple[np.ndarray, np.ndarray]: gradients of the current layer
+            np.ndarray: gradients of the current layer
         """
+        # gradients has the shape (n_samples, n_neurons) and weights has the shape (n_features, n_neurons)
         if self.__activation:
             gradients = self.__activation.gradient(self.outputs) * gradients
         gradients = np.dot(gradients, self.weights.T)
