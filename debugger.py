@@ -8,6 +8,8 @@ from dlfs.layers import Input, Dense
 from dlfs import Sequential
 
 
+
+
 def test1():
     # Generating the dataset
     def f(x_0, x_1):
@@ -24,6 +26,15 @@ def test1():
     model.add(Dense(1))
 
     model.summary()
+
+
+# def test2():
+#     model = tf.keras.Sequential([
+#         tf.keras.layers.Dense(8, activation='relu', input_shape=(2,)),
+#         tf.keras.layers.Dense(1)
+#     ])
+#
+#     model.summary()
 
 
 if __name__ == '__main__':

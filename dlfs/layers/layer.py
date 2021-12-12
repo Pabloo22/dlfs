@@ -124,5 +124,9 @@ class Layer(ABC):
     def update(self, gradients: np.ndarray):
         raise NotImplementedError
 
+    @abstractmethod
+    def count_params(self) -> int:
+        raise NotImplementedError
+
     def __str__(self) -> str:
         return f"{self.__class__.__name__}({self.__name})"

@@ -22,7 +22,7 @@ class Sequential:
     metrics: Dict[str, Metric] or None
     trainable: bool
 
-    def __init__(self, layers: List[Layer] = None, name: str = "Sequential Model"):
+    def __init__(self, layers: List[Layer] = None, name: str = "Sequential"):
 
         # check that the first layers has set the input shape
         if layers and layers[0].input_shape is None:
@@ -73,12 +73,17 @@ class Sequential:
         """
         Print the summary of the model as a table
         """
-        print(f"{self.name}")
+        print(f"Model: {self.name}")
         print("-" * len(self.name))
         print("Layers:")
         for layer in self.layers:
             print("-" * len(layer.summary()))
             print(f"{layer.summary()}")
+
+        print("-" * len(layer.summary()))
+        print("Total params:", sum(layer.count_params() for layer in self.layers))
+        print("Trainable params:", sum(layer.count_params() for layer in self.layers if layer.trainable))
+        print("-" * len(layer.summary()))
 
     def get_gradients(self, y_pred: np.ndarray, y_true: np.ndarray) -> List[np.ndarray]:
         """

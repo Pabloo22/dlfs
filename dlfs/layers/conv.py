@@ -191,6 +191,14 @@ class Conv2D(Layer):
 
         return self.activation.gradient(gradients_w), gradients_b
 
+    def count_params(self) -> int:
+        """
+        Counts the number of parameters of this layer
+        Returns:
+            number of parameters
+        """
+        return self.__weights.size + self.__bias.size
+
     def _get_output_shape(self) -> tuple:
         """
         Get the output shape

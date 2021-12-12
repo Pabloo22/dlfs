@@ -21,7 +21,8 @@ class Dense(Layer):
         if n_neurons <= 0:
             raise ValueError("The number of neurons should be greater than 0")
 
-        super(Dense, self).__init__(input_shape=(None, *input_shape), output_shape=(None, n_neurons), name=name)
+        input_shape = None if input_shape is None else (None, *input_shape)
+        super(Dense, self).__init__(input_shape=input_shape, output_shape=(None, n_neurons), name=name)
         self.__n_neurons = n_neurons
         self.__activation = get_activation_function(activation) if activation else None
         self.weights = None
@@ -40,22 +41,12 @@ class Dense(Layer):
     def activation(self):
         return self.__activation
 
-    @property
-    def input_shape(self) -> tuple:
-        return self.input_shape
-
     # Setters
     # ----------------------------------------------------------------------------------------------------
 
     @activation.setter
     def activation(self, activation_name: str):
         self.__activation = get_activation_function(activation_name)
-
-    @input_shape.setter
-    def input_shape(self, input_shape: tuple):
-        if len(input_shape) != 2:
-            raise ValueError("The input shape should be a tuple of the form (n_samples, n_features)")
-        self.input_shape = input_shape
 
     # Methods
     # ----------------------------------------------------------------------------------------------------
@@ -122,6 +113,15 @@ class Dense(Layer):
         params: tuple = (self.weights, self.bias)
 
         self.optimizer.update(params, gradients)
+
+    def count_params(self) -> int:
+        """
+        Count the number of parameters of the layer.
+
+        Returns:
+            int: number of parameters of the layer
+        """
+        return self.weights.size + self.bias.size
 
     def summary(self) -> str:
         """
