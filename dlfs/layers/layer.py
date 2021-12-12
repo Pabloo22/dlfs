@@ -22,7 +22,7 @@ class Layer(ABC):
                  name: str = None,
                  trainable: bool = True):
 
-        self.__input_shape = (None, *input_shape) if input_shape else None
+        self.__input_shape = input_shape if input_shape else None
         self.__output_shape = output_shape
         self.__name = name
         self.__trainable = trainable

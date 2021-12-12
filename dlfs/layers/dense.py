@@ -1,4 +1,5 @@
 import numpy as np
+from typing import Tuple
 
 from .layer import Layer
 from dlfs.activation_functions import get_activation_function
@@ -20,7 +21,7 @@ class Dense(Layer):
         if n_neurons <= 0:
             raise ValueError("The number of neurons should be greater than 0")
 
-        super(Dense, self).__init__(input_shape=input_shape, output_shape=(None, n_neurons), name=name)
+        super(Dense, self).__init__(input_shape=(None, *input_shape), output_shape=(None, n_neurons), name=name)
         self.__n_neurons = n_neurons
         self.__activation = get_activation_function(activation) if activation else None
         self.weights = None
@@ -92,22 +93,22 @@ class Dense(Layer):
             self.outputs = self.__activation.forward(self.outputs)
         return self.outputs
 
-    def backward(self, gradients: np.ndarray) -> np.ndarray:
+    def backward(self, gradients: Tuple[np.ndarray, np.ndarray]) -> np.ndarray:
         """
         Backward pass of the layer.
 
         Args:
-            gradients (np.ndarray): gradients of the next layer
+            gradients (tuple[np.ndarray, np.ndarray]) : gradients of the next layer
 
         Returns:
-            np.ndarray: gradients of the current layer
+            tuple[np.ndarray, np.ndarray]: gradients of the current layer
         """
         if self.__activation:
             gradients = self.__activation.gradient(self.outputs) * gradients
         gradients = np.dot(gradients, self.weights.T)
         return gradients
 
-    def update(self, gradients: np.ndarray):
+    def update(self, gradients: Tuple[np.ndarray, np.ndarray]):
         """
         Update the weights and biases of the layer.
 
