@@ -17,6 +17,9 @@ class Dense(Layer):
 
     def __init__(self, n_neurons: int, activation: str = None, name: str = "Dense", input_shape: tuple = None):
 
+        if n_neurons <= 0:
+            raise ValueError("The number of neurons should be greater than 0")
+
         super(Dense, self).__init__(input_shape=input_shape, output_shape=(None, n_neurons), name=name)
         self.__n_neurons = n_neurons
         self.__activation = get_activation_function(activation) if activation else None
