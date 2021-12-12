@@ -20,7 +20,8 @@ class SGD(Optimizer):
             grads (np.ndarray): gradients of parameters
         """
         w, b = params
-        dw, db = grads
+        # The sum is squashing the results down to a single update
+        db = np.sum(grads, axis=0, keepdims=True)
 
-        w -= self.learning_rate * dw
+        w -= self.learning_rate * grads
         b -= self.learning_rate * db
