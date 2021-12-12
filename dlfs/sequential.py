@@ -3,8 +3,8 @@ from sklearn.model_selection import train_test_split
 from typing import List, Dict, Tuple
 from tqdm import tqdm
 
-from dlfs.layers import Layer, Input
-from dlfs.optimizers.optimizer import Optimizer
+from dlfs.layers import Layer
+from dlfs.optimizers import Optimizer
 from dlfs.losses.loss_function import LossFunction
 from dlfs.metrics import Metric, get_metric
 
