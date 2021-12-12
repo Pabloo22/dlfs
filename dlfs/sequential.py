@@ -28,7 +28,10 @@ class Sequential:
         if layers and layers[0].input_shape is None:
             raise ValueError("The first layer must have an input shape")
 
-        self.layers = [] if layers is None else layers
+        self.layers = []
+        if layers is not None:
+            for layer in layers:
+                self.add(layer)
         self.name = name
         self.loss = None
         self.optimizer = None
@@ -130,6 +133,7 @@ class Sequential:
             shuffle: whether to shuffle the data
             initial_epoch: the initial epoch
         """
+        # CHECKS:
         # check if the model has been compiled
         if self.optimizer is None or self.loss is None:
             raise ValueError("You must compile the model before training")
@@ -149,12 +153,15 @@ class Sequential:
         if using_validation_data and verbose == 0:
             raise ValueError("validation_data and verbose=0 cannot be used together")
 
+        # INITIALIZATION:
+        # --------------------------------------------------
+
         # if the layers are not initialized, initialize them
         if not self.layers[0].initialized:
-            self.layers[0].initialize(input_shape=(batch_size, *x.shape[1:]), optimizer=self.optimizer)
+            self.layers[0].initialize(input_shape=(batch_size, *x.shape[1:]))
 
         for i in range(1, len(self.layers)):
-            self.layers[i].initialize(input_shape=self.layers[i - 1].output_shape, optimizer=self.optimizer)
+            self.layers[i].initialize(input_shape=self.layers[i - 1].output_shape)
 
         # initialize the history
         history = {'loss': [], 'val_loss': []}
@@ -162,6 +169,12 @@ class Sequential:
             history[metric] = []
             history['val_' + metric] = []
 
+        # set the optimizers
+        for layer in self.layers:
+            layer.optimizer = self.optimizer
+
+        # TRAINING:
+        # --------------------------------------------------
         # create the progress bar if verbose is 0
         r = range(initial_epoch, epochs)
         range_epochs = r if verbose > 0 else tqdm(r)
