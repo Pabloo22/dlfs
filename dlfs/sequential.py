@@ -68,9 +68,8 @@ class Sequential:
             Allowed values are:
                 - "accuracy"
         """
-        if isinstance(optimizer, str):
-            optimizer = get_optimizer(optimizer)
-        self.loss = loss
+        self.optimizer = get_optimizer(optimizer) if isinstance(optimizer, str) else optimizer
+        self.loss = get_loss_function(loss) if isinstance(loss, str) else loss
         self.metrics = {} if metrics is None else {metric: get_metric(metric) for metric in metrics}
 
     def summary(self):
