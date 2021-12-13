@@ -1,3 +1,4 @@
+from copy import deepcopy
 import numpy as np
 from sklearn.model_selection import train_test_split
 from typing import List, Dict, Tuple
@@ -161,6 +162,10 @@ class Sequential:
         for layer in self.layers:
             layer.input_shape = (batch_size, *layer.input_shape[1:])
 
+        # Update the output_shape of the layers to take into account the batch_size
+        for layer in self.layers:
+            layer.output_shape = (batch_size, *layer.output_shape[1:])
+
         # initialize the history
         history = {'loss': [], 'val_loss': []}
         for metric in self.metrics:
@@ -169,7 +174,7 @@ class Sequential:
 
         # set the optimizers
         for layer in self.layers:
-            layer.optimizer = self.optimizer
+            layer.optimizer = deepcopy(self.optimizer)
 
         # TRAINING:
         # --------------------------------------------------
