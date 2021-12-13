@@ -5,8 +5,8 @@ from typing import List, Dict, Tuple
 from tqdm import tqdm
 
 from dlfs.layers import Layer
-from dlfs.optimizers import Optimizer
-from dlfs.losses.loss_function import LossFunction
+from dlfs.optimizers import Optimizer, get_optimizer
+from dlfs.losses import LossFunction, get_loss_function
 from dlfs.metrics import Metric, get_metric
 
 
@@ -57,7 +57,7 @@ class Sequential:
 
         self.layers.append(layer)
 
-    def compile(self, optimizer: Optimizer, loss: LossFunction, metrics: List[str] = None):
+    def compile(self, optimizer: Optimizer or str, loss: LossFunction or str, metrics: List[str] = None):
         """
         Compile the model
 
@@ -68,7 +68,8 @@ class Sequential:
             Allowed values are:
                 - "accuracy"
         """
-        self.optimizer = optimizer
+        if isinstance(optimizer, str):
+            optimizer = get_optimizer(optimizer)
         self.loss = loss
         self.metrics = {} if metrics is None else {metric: get_metric(metric) for metric in metrics}
 
