@@ -35,15 +35,19 @@ def test1():
 
     model.summary()
 
+    # Visualize layers of the model
+    for layer in model.layers:
+        print(f"layer weights: {layer.weights}")
+
     # Compiling the model
     model.compile(loss=MAE(), optimizer=SGD(lr=0.0001))
 
     # Training the model
-    model.fit(train_x, train_y, epochs=10, batch_size=10, verbose=2, validation_data=(test_x, test_y))
+    model.fit(train_x, train_y, epochs=10, batch_size=1, verbose=1, validation_data=(test_x, test_y))
 
     # Evaluating the model
     print(test_x[:5])
-    print(model.predict_batch(test_x[:5]))
+    print(model.predict(test_x[:5]))
     print(test_y[:5])
 
 
@@ -69,4 +73,4 @@ def test2():
 
 
 if __name__ == '__main__':
-    test2()
+    test1()
