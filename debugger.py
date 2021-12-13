@@ -7,7 +7,6 @@ import tensorflow.keras as keras
 
 from dlfs import Sequential
 from dlfs.layers import Dense
-from dlfs.losses import MSE, MAE
 from dlfs.optimizers import SGD
 
 
@@ -29,8 +28,8 @@ def test1():
     # Creating the model
     model = Sequential()
     # model.add(Input(input_shape=(2,)))
-    model.add(Dense(16, activation='relu', input_shape=(2,)))
-    model.add(Dense(8, activation='relu'))
+    model.add(Dense(16, activation="relu", input_shape=(2,)))
+    model.add(Dense(8, activation="relu"))
     model.add(Dense(1))
 
     model.summary()
@@ -40,7 +39,7 @@ def test1():
         print(f"layer weights: {layer.weights}")
 
     # Compiling the model
-    model.compile(loss=MAE(), optimizer=SGD(lr=0.0001))
+    model.compile(loss="mae", optimizer=SGD(lr=0.0001))
 
     # Training the model
     model.fit(train_x, train_y, epochs=10, batch_size=1, verbose=1, validation_data=(test_x, test_y))
@@ -56,8 +55,8 @@ def test2():
     train_x, train_y, test_x, test_y = get_dataset()
 
     model = keras.Sequential([
-        keras.layers.Dense(16, activation='relu', input_shape=(2,)),
-        keras.layers.Dense(8, activation='relu'),
+        keras.layers.Dense(16, activation="relu", input_shape=(2,)),
+        keras.layers.Dense(8, activation="relu"),
         keras.layers.Dense(1)
     ])
 
