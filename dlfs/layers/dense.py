@@ -105,13 +105,12 @@ class Dense(Layer):
         Returns:
             np.ndarray: gradients of the current layer
         """
-        # gradients has the shape (n_samples, n_neurons) and weights has the shape (n_features, n_neurons)
         if self.__activation:
             gradients = self.__activation.gradient(self.outputs) * gradients
         gradients = np.dot(gradients, self.weights.T)
         return gradients
 
-    def update(self, gradients: Tuple[np.ndarray, np.ndarray]):
+    def update(self, gradients: np.ndarray):
         """
         Update the weights and biases of the layer.
 

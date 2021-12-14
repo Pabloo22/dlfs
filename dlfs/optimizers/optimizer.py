@@ -18,7 +18,7 @@ class Optimizer(ABC):
         self.__learning_rate = learning_rate
 
     @abstractmethod
-    def update(self, parameters: Tuple[np.ndarray, np.ndarray], gradients: Tuple[np.ndarray, np.ndarray]):
+    def update(self, parameters: Tuple[np.ndarray, np.ndarray], gradients: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """Update parameters based on gradients.
         Args:
             parameters: Parameters to update passed as a tuple of two numpy arrays composed of the weights and biases.

@@ -18,7 +18,7 @@ class MAE(LossFunction):
         :param y_pred: predictions
         :return: Mean Absolute Error loss
         """
-        return np.mean(np.abs(y_true - y_pred))
+        return np.mean(np.abs(y_true - y_pred), axis=0)
 
     @staticmethod
     def gradient(y_true: np.ndarray, y_pred: np.ndarray):
@@ -30,4 +30,4 @@ class MAE(LossFunction):
             y_pred: predictions
         
         """
-        return (y_true - y_pred) / y_true.size
+        return np.sign(y_pred - y_true)

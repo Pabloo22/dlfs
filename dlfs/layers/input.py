@@ -49,5 +49,8 @@ class Input(Layer):
         """
         pass
 
+    def count_params(self) -> int:
+        return 0
+
     def summary(self) -> str:
         return f"Input: {self.input_shape}"

@@ -3,10 +3,10 @@ Temporal file used to debug the code. Feel free to add more tests. This file
 will be removed in the future.
 """
 import numpy as np
-import tensorflow.keras as keras
+# import tensorflow.keras as keras
 
 from dlfs import Sequential
-from dlfs.layers import Dense
+from dlfs.layers import Dense, Input
 from dlfs.optimizers import SGD
 
 
@@ -27,26 +27,22 @@ def test1():
 
     # Creating the model
     model = Sequential()
-    # model.add(Input(input_shape=(2,)))
-    model.add(Dense(16, activation="relu", input_shape=(2,)))
-    model.add(Dense(8, activation="relu"))
-    model.add(Dense(1))
+    # model.add(Input(input_shape=(None, 2)))
+    model.add(Dense(16, activation="relu", input_shape=(2,)))  # weight_shape: (2, 16)
+    model.add(Dense(8, activation="relu"))  # weight_shape: (16, 8)
+    model.add(Dense(1))  # weight_shape: (8, 1)
 
     model.summary()
 
-    # Visualize layers of the model
-    for layer in model.layers:
-        print(f"layer weights: {layer.weights}")
-
     # Compiling the model
-    model.compile(loss="mae", optimizer=SGD(lr=0.0001))
+    model.compile(loss="mse", optimizer=SGD(lr=0.0001))
 
     # Training the model
-    model.fit(train_x, train_y, epochs=10, batch_size=1, verbose=1, validation_data=(test_x, test_y))
+    model.fit(train_x, train_y, epochs=10, batch_size=10, verbose=2, validation_data=(test_x, test_y))
 
     # Evaluating the model
-    print(test_x[:5])
-    print(model.predict(test_x[:5]))
+    print(train_x[:5])
+    print(model.predict(train_x[:5]))
     print(test_y[:5])
 
 

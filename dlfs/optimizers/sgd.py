@@ -28,8 +28,8 @@ class SGD(Optimizer):
         else:
             dw = np.sum(grads, axis=0, keepdims=True)
 
-        if dw.shape != w.shape:
-            raise ValueError(f"Shape of dw and w do not match: {dw.shape} != {w.shape}")
+        # if dw.shape != w.shape:
+        #     raise ValueError(f"Shape of dw and w do not match: {dw.shape} != {w.shape}")
 
         w -= self.learning_rate * dw
         b -= self.learning_rate * db

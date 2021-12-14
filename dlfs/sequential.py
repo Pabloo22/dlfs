@@ -101,7 +101,7 @@ class Sequential:
         # backward pass
         # initialize the gradients
         gradients = [np.ndarray([])] * len(self.layers)
-        gradients[-1] = self.loss.compute_loss(y_pred, y_true)
+        gradients[-1] = self.loss.gradient(y_pred, y_true)
 
         # compute the gradients
         for i in range(len(self.layers) - 1, 0, -1):
@@ -157,6 +157,7 @@ class Sequential:
 
         # INITIALIZATION:
         # --------------------------------------------------
+        np.set_printoptions(precision=4)
 
         # Update the input_shape of the layers to take into account the batch_size
         for layer in self.layers:
@@ -201,7 +202,11 @@ class Sequential:
                 # backward pass: get the gradients
                 gradients = self.get_gradients(y_pred, y_batch)
 
-                # update the parameters
+                # print the shapes of the gradients
+                # for grad in gradients:
+                #     print(grad.shape)
+
+                # backward pass: update the weights
                 for i, layer in enumerate(self.layers):
                     if layer.trainable:
                         layer.update(gradients[i])
@@ -221,9 +226,9 @@ class Sequential:
                 if verbose == 1:
                     if using_validation_data:
                         print(f"Batch ({total_data_used_per_epoch}/{x.shape[0]}) "
-                              f"- loss: {loss:.4f} - val_loss: {val_loss:.4f}")
+                              f"- loss: {loss} - val_loss: {val_loss}")
                     else:
-                        print(f"Batch ({total_data_used_per_epoch}/{x.shape[0]}) - loss: {loss:.4f}")
+                        print(f"Batch ({total_data_used_per_epoch}/{x.shape[0]}) - loss: {loss}")
                     metrics_list = [f'{metric}: {self.metrics[metric].compute_metric(y_pred, y_batch):.4f}'
                                     for metric in self.metrics]
                     print(f"\t{', '.join(metrics_list)}")
