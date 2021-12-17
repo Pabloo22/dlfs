@@ -6,7 +6,7 @@ import numpy as np
 # import tensorflow.keras as keras
 
 from dlfs import Sequential
-from dlfs.layers import Dense, Input
+from dlfs.layers import Dense
 from dlfs.optimizers import SGD
 
 
@@ -30,15 +30,15 @@ def test1():
     # model.add(Input(input_shape=(None, 2)))
     model.add(Dense(16, activation="relu", input_shape=(2,)))  # weight_shape: (2, 16)
     model.add(Dense(8, activation="relu"))  # weight_shape: (16, 8)
-    model.add(Dense(1))  # weight_shape: (8, 1)
+    model.add(Dense(1, activation="sigmoid"))  # weight_shape: (8, 1)
 
     model.summary()
 
     # Compiling the model
-    model.compile(loss="mse", optimizer=SGD(lr=0.0001))
+    model.compile(loss="mse", optimizer=SGD(lr=0.01))
 
     # Training the model
-    model.fit(train_x, train_y, epochs=10, batch_size=10, verbose=2, validation_data=(test_x, test_y))
+    model.fit(train_x, train_y, epochs=10, batch_size=5, verbose=2, validation_data=(test_x, test_y))
 
     # Evaluating the model
     print(train_x[:5])

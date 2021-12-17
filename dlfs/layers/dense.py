@@ -22,9 +22,11 @@ class Dense(Layer):
             raise ValueError("The number of neurons should be greater than 0")
 
         input_shape = None if input_shape is None else (None, *input_shape)
-        super(Dense, self).__init__(input_shape=input_shape, output_shape=(None, n_neurons), name=name)
+        super(Dense, self).__init__(input_shape=input_shape,
+                                    output_shape=(None, n_neurons),
+                                    activation=activation,
+                                    name=name)
         self.__n_neurons = n_neurons
-        self.__activation = get_activation_function(activation) if activation else None
         self.weights = None
         self.bias = np.zeros((1, n_neurons))
         self.inputs = None
@@ -36,17 +38,6 @@ class Dense(Layer):
     @property
     def n_neurons(self):
         return self.__n_neurons
-
-    @property
-    def activation(self):
-        return self.__activation
-
-    # Setters
-    # ----------------------------------------------------------------------------------------------------
-
-    @activation.setter
-    def activation(self, activation_name: str):
-        self.__activation = get_activation_function(activation_name)
 
     # Methods
     # ----------------------------------------------------------------------------------------------------
@@ -91,8 +82,8 @@ class Dense(Layer):
         self.inputs = inputs
         # inputs has the shape (n_samples, n_features) and weights has the shape (n_features, n_neurons)
         self.outputs = np.dot(inputs, self.weights) + self.bias
-        if self.__activation:
-            self.outputs = self.__activation.forward(self.outputs)
+        if self.activation is not None:
+            self.outputs = self.activation.forward(self.outputs)
         return self.outputs
 
     def backward(self, gradients: np.ndarray) -> np.ndarray:
@@ -105,10 +96,19 @@ class Dense(Layer):
         Returns:
             np.ndarray: gradients of the current layer
         """
-        if self.__activation:
-            gradients = self.__activation.gradient(self.outputs) * gradients
-        gradients = np.dot(gradients, self.weights.T)
-        return gradients
+
+        # check if the layer is initialized
+        if not self.initialized:
+            raise ValueError("The layer is not initialized")
+        # check if the gradients shape is correct
+        if gradients.shape[1:] != self.output_shape[1:]:
+            raise ValueError(f"The gradients shape is incorrect, it should be {self.output_shape}")
+
+        # gradients has the shape (n_samples, n_neurons) and weights has the shape (n_features, n_neurons)
+        # gradients_weights has the shape (n_features, n_neurons) and gradients_bias has the shape (1, n_neurons)
+
+        # For instance, if the gradient comes from MSE loss and we are using a batch_size of 2,
+        # then the gradient received by the layer will have the shape (2, n_neurons).
 
     def update(self, gradients: np.ndarray):
         """

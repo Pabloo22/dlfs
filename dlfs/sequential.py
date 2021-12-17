@@ -1,3 +1,4 @@
+from collections import deque
 from copy import deepcopy
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -83,12 +84,12 @@ class Sequential:
             print("-" * len(layer.summary()))
             print(f"{layer.summary()}")
 
-        print("-" * len(layer.summary()))
+        print("-" * len(self.name))
         print("Total params:", sum(layer.count_params() for layer in self.layers))
         print("Trainable params:", sum(layer.count_params() for layer in self.layers if layer.trainable))
-        print("-" * len(layer.summary()))
+        print("-" * len(self.name))
 
-    def get_gradients(self, y_pred: np.ndarray, y_true: np.ndarray) -> List[np.ndarray]:
+    def get_gradients(self, y_pred: np.ndarray, y_true: np.ndarray) -> deque:
         """
         Backpropagation of the loss function
         Args:
@@ -96,19 +97,21 @@ class Sequential:
             y_true: the true labels
 
         Returns:
-            the gradients of the loss function
+            the gradients of the loss function (as a deque)
         """
-        # backward pass
+
         # initialize the gradients
-        gradients = [np.ndarray([])] * len(self.layers)
-        gradients[-1] = self.loss.gradient(y_pred, y_true)
+        gradients = deque()
 
-        # compute the gradients
-        for i in range(len(self.layers) - 1, 0, -1):
-            # store in gradients[i -1] the gradient of the loss function with respect to the output of the layer i
-            # gradients[i - 1] = (with respect to weights, with respect to biases)
-            gradients[i - 1] = self.layers[i].backward(gradients[i])
+        # initialize the gradients of the last layer
+        gradients.appendleft(self.loss.gradient(y_pred, y_true))
 
+        # backward pass
+        for layer in reversed(self.layers):
+            # we have to use gradients[0] because the gradients are stored in a deque: [layer_1_grad, layer_2_grad, ...]
+            gradients.appendleft(layer.backward(gradients[0]))
+
+        # Note that len(gradients) is equal to the number of layers + 1
         return gradients
 
     def fit(self,
@@ -200,11 +203,7 @@ class Sequential:
                 y_pred = self.predict(x_batch, training=True)
 
                 # backward pass: get the gradients
-                gradients = self.get_gradients(y_pred, y_batch)
-
-                # print the shapes of the gradients
-                # for grad in gradients:
-                #     print(grad.shape)
+                gradients: deque = self.get_gradients(y_pred, y_batch)
 
                 # backward pass: update the weights
                 for i, layer in enumerate(self.layers):

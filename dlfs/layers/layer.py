@@ -3,6 +3,7 @@ import numpy as np
 from typing import Optional
 
 from dlfs.optimizers import Optimizer
+from dlfs.activation_functions import ActivationFunction, get_activation_function
 
 
 class Layer(ABC):
@@ -12,6 +13,7 @@ class Layer(ABC):
     Args:
         input_shape (tuple or None): Shape of the input.
         output_shape (tuple): Shape of the output.
+        activation_function (str): Activation function to use.
         name (str): Name of the layer.
         trainable (bool): Whether the layer is trainable.
     """
@@ -19,6 +21,7 @@ class Layer(ABC):
     def __init__(self,
                  input_shape: Optional[tuple] = None,
                  output_shape: Optional[tuple] = None,
+                 activation: Optional[str] = None,
                  name: str = None,
                  trainable: bool = True):
 
@@ -28,6 +31,7 @@ class Layer(ABC):
         self.__trainable = trainable
         self.__initialized = False
         self.__optimizer = None
+        self.__activation = get_activation_function(activation)
 
     # Getters
     # -------------------------------------------------------------------------
@@ -60,6 +64,10 @@ class Layer(ABC):
     def optimizer(self) -> Optimizer:
         return self.__optimizer
 
+    @property
+    def activation(self) -> ActivationFunction:
+        return self.__activation
+
     # Setters
     # -------------------------------------------------------------------------
     @input_shape.setter
@@ -85,6 +93,10 @@ class Layer(ABC):
             raise TypeError(f"{optimizer} is not an instance of Optimizer")
 
         self.__optimizer = optimizer
+
+    @activation.setter
+    def activation(self, activation: str):
+        self.__activation = get_activation_function(activation)
 
     # Abstract methods
     # -------------------------------------------------------------------------
