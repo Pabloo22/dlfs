@@ -6,4 +6,3 @@ from .dropout import Dropout
 from .flatten import Flatten
 from .batchnorm import BatchNorm2D
 from .input import Input
-
