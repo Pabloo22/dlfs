@@ -8,6 +8,8 @@ import numpy as np
 from dlfs import Sequential
 from dlfs.layers import Dense
 from dlfs.optimizers import SGD
+from dlfs.losses import MSE
+from dlfs.activation_functions import ReLU
 
 
 def get_dataset():
@@ -67,5 +69,62 @@ def test2():
     print(test_y[:5])
 
 
+def test3():
+    # Example of backpropagation
+    # batch_size = 2
+
+    # input_shape = (batch_size, 2)
+    x = np.array([[0.5, 0.5],
+                  [0.5, -0.5]])
+    # rows correspond to different samples
+    # columns correspond to different features
+    print("x:\n", x)
+
+    # target
+    y_true = np.array([[0.25],
+                       [-0.25]])
+
+    # create seed
+    np.random.seed(2)
+
+    # BUILDING THE MODEL
+    # 16 neurons
+    weights_1 = np.random.uniform(low=-1, high=1, size=(2, 16))
+    bias_1 = np.zeros((1, 16))
+    # 8 neurons
+    weights_2 = np.random.uniform(low=-1, high=1, size=(16, 8))
+    bias_2 = np.zeros((1, 8))
+    # 1 neuron
+    weights_3 = np.random.uniform(low=-1, high=1, size=(8, 1))
+    bias_3 = np.zeros((1, 1))
+
+    # FORWARD PASS
+    relu = ReLU()
+
+    # layer 1
+    z_1 = np.dot(x, weights_1) + bias_1
+    a_1 = relu(z_1)
+    print("a_1:\n", a_1)
+
+    # layer 2
+    # the output shape of the second layer is (16, 8)
+    z_2 = np.dot(a_1, weights_2) + bias_2
+    a_2 = relu(z_2)  # shape: (2, 8)
+    print("a_2:\n", a_2)
+
+    # layer 3
+    # the output shape of the third layer is (8, 1)
+    y_pred = np.dot(a_2, weights_3) + bias_3  # shape: (2, 1)
+    print("y_pred:\n", y_pred)
+
+    # BACKWARD PASS
+    gradient_1 = MSE.gradient(y_true, y_pred)  # gradient of loss function. shape: (2, 1)
+    print("gradient_1:\n", gradient_1)
+    gradient_2 = a_2 * gradient_1  # shape: (2, 8)
+    print("gradient_2:\n", gradient_2)
+    gradient_3 = ...
+    print("gradient_3:\n", gradient_3)
+
+
 if __name__ == '__main__':
-    test1()
+    test3()

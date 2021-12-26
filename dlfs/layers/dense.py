@@ -84,6 +84,8 @@ class Dense(Layer):
         self.outputs = np.dot(inputs, self.weights) + self.bias
         if self.activation is not None:
             self.outputs = self.activation.forward(self.outputs)
+
+        # outputs has the shape (n_samples, n_neurons)
         return self.outputs
 
     def backward(self, gradients: np.ndarray) -> np.ndarray:
@@ -104,11 +106,8 @@ class Dense(Layer):
         if gradients.shape[1:] != self.output_shape[1:]:
             raise ValueError(f"The gradients shape is incorrect, it should be {self.output_shape}")
 
-        # gradients has the shape (n_samples, n_neurons) and weights has the shape (n_features, n_neurons)
-        # gradients_weights has the shape (n_features, n_neurons) and gradients_bias has the shape (1, n_neurons)
-
-        # For instance, if the gradient comes from MSE loss and we are using a batch_size of 2,
-        # then the gradient received by the layer will have the shape (2, n_neurons).
+        d_w = self.inputs.T @ self.activation.derivative(self.outputs) @ gradients
+        d_b = np.sum(self.activation.derivative(self.outputs) @ gradients, axis=0)
 
     def update(self, gradients: np.ndarray):
         """
