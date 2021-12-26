@@ -121,7 +121,7 @@ class Sequential:
             batch_size: int = 32,
             verbose: int = 1,
             validation_data: Tuple[np.ndarray, np.ndarray] = None,
-            validation_split: float = 0.0,
+            validation_split: float = 0.,
             shuffle: bool = True,
             initial_epoch: int = 0) -> Dict[str, List[float]]:
         """

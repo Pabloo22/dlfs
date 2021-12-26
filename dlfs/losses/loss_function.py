@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from numpy import ndarray
 
 
 class LossFunction(ABC):
@@ -11,10 +12,13 @@ class LossFunction(ABC):
 
     @staticmethod
     @abstractmethod
-    def compute_loss(y_true, y_pred):
+    def compute_loss(y_true, y_pred) -> float:
         raise NotImplementedError
 
     @staticmethod
     @abstractmethod
-    def gradient(y_true, y_pred):
+    def gradient(y_true, y_pred) -> ndarray:
         raise NotImplementedError
+
+    def __call__(self, y_true, y_pred):
+        return self.compute_loss(y_true, y_pred)

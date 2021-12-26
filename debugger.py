@@ -8,7 +8,7 @@ import numpy as np
 from dlfs import Sequential
 from dlfs.layers import Dense
 from dlfs.optimizers import SGD
-from dlfs.losses import MSE
+from dlfs.losses import MSE, MAE, BinaryCrossEntropy, CategoricalCrossEntropy
 from dlfs.activation_functions import ReLU
 
 
@@ -126,5 +126,30 @@ def test3():
     print("gradient_3:\n", gradient_3)
 
 
+def test_loss_functions():
+
+    y_true = np.array([[1],
+                       [0],
+                       [1]])
+    y_pred = np.array([[0.5],
+                       [0.05],
+                       [0.8]])
+
+    mae = MAE()
+    print("MAE:")
+    print(mae(y_true, y_pred))
+    print(mae.gradient(y_true, y_pred))
+
+    mse = MSE()
+    print("MSE:")
+    print(mse(y_true, y_pred))
+    print(mse.gradient(y_true, y_pred))
+
+    bce = BinaryCrossEntropy()
+    print("BinaryCrossEntropy:")
+    print(bce(y_true, y_pred))
+    print(bce.gradient(y_true, y_pred))
+
+
 if __name__ == '__main__':
-    test3()
+    test_loss_functions()
