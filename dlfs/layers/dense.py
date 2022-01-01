@@ -1,9 +1,6 @@
 import numpy as np
-from typing import Tuple
 
 from .layer import Layer
-from dlfs.activation_functions import get_activation_function
-from dlfs.optimizers import Optimizer
 
 
 class Dense(Layer):
@@ -21,6 +18,8 @@ class Dense(Layer):
         if n_neurons <= 0:
             raise ValueError("The number of neurons should be greater than 0")
 
+        # In order to give an easier way to define the layer, we allow the user to define the input shape
+        # without having to specify the batch size, that is why we set the batch size to None.
         input_shape = None if input_shape is None else (None, *input_shape)
         super(Dense, self).__init__(input_shape=input_shape,
                                     output_shape=(None, n_neurons),
@@ -30,7 +29,7 @@ class Dense(Layer):
         self.weights = None
         self.bias = np.zeros((1, n_neurons))
         self.inputs = None
-        self.outputs = None
+        self.z = None  # the output of the layer before the activation function
 
     # Getters
     # ----------------------------------------------------------------------------------------------------
@@ -80,49 +79,58 @@ class Dense(Layer):
             raise ValueError("The input shape is incorrect")
         # save the inputs
         self.inputs = inputs
-        # inputs has the shape (n_samples, n_features) and weights has the shape (n_features, n_neurons)
-        self.outputs = np.dot(inputs, self.weights) + self.bias
-        if self.activation is not None:
-            self.outputs = self.activation.forward(self.outputs)
+        self.z = inputs @ self.weights + self.bias
+        return self.z if self.activation is None else self.activation(self.z)
 
-        # outputs has the shape (n_samples, n_neurons)
-        return self.outputs
-
-    def backward(self, gradients: np.ndarray) -> np.ndarray:
+    def get_delta(self, last_delta: np.ndarray, dz_da: np.ndarray) -> np.ndarray:
         """
         Backward pass of the layer.
-
         Args:
-            gradients (np.ndarray) : gradients of the next layer
-
+            last_delta: gradients of the layer.
+            dz_da: next layer in the network. If this is the layer i, the received layer will be the i+1 layer.
+                        layers = [layer1, layer2, layer3, ..., layer_i, layer_i+1, ..., layerL]
         Returns:
-            np.ndarray: gradients of the current layer
+            The corresponding delta of the layer (d_cost/d_z).
         """
 
         # check if the layer is initialized
         if not self.initialized:
             raise ValueError("The layer is not initialized")
-        # check if the gradients shape is correct
-        if gradients.shape[1:] != self.output_shape[1:]:
-            raise ValueError(f"The gradients shape is incorrect, it should be {self.output_shape}")
 
-        d_w = self.inputs.T @ self.activation.derivative(self.outputs) @ gradients
-        d_b = np.sum(self.activation.derivative(self.outputs) @ gradients, axis=0)
+        # compute the delta
+        delta = last_delta @ dz_da
+        if self.activation is not None:
+            delta *= self.activation.derivative(self.z)
 
-    def update(self, gradients: np.ndarray):
+        return delta
+
+    def get_dz_da(self) -> np.ndarray:
+        """
+        Returns:
+            The derivative of the output of this layer (i) with respect to the z of the next layer (i+1).
+        """
+        # check if the layer is initialized
+        if not self.initialized:
+            raise ValueError("The layer is not initialized")
+
+        return self.weights.T
+
+    def update(self, delta: np.ndarray):
         """
         Update the weights and biases of the layer.
 
         Args:
-            gradients (np.ndarray): gradients of the current layer
+            delta (np.ndarray): delta of the current layer
         """
 
-        if self.weights is None or self.bias is None or self.optimizer is None:
-            raise ValueError("The layer has not been initialized")
+        # check if the layer is initialized
+        if not self.initialized:
+            raise ValueError("The layer is not initialized")
 
-        params: tuple = (self.weights, self.bias)
+        d_weights = (self.inputs.T @ delta) / self.inputs.shape[0]
+        d_bias = delta.sum(axis=0, keepdims=True) / self.inputs.shape[0]
 
-        self.optimizer.update(params, gradients)
+        self.optimizer.update((self.weights, self.bias), (d_weights, d_bias))
 
     def count_params(self) -> int:
         """
