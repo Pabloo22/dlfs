@@ -14,7 +14,7 @@ class MAE(LossFunction):
     def compute_loss(y_true: np.ndarray, y_pred: np.ndarray):
         """
         Calculates the Mean Absolute Error loss
-        :param y_true: labels
+        :param y_true: expected output
         :param y_pred: predictions
         :return: Mean Absolute Error loss
         """
@@ -23,7 +23,7 @@ class MAE(LossFunction):
     @staticmethod
     def gradient(y_true: np.ndarray, y_pred: np.ndarray):
         """
-        Calculates the gradient of the Mean Absolute Error loss
+        Calculates the gradient of the Mean Absolute Error loss with respect to the predictions
         
         Args:
             y_true: labels

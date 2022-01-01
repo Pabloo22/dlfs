@@ -65,7 +65,7 @@ class MaxPool2D(Layer):
 
         return output
 
-    def backward(self, gradients: np.ndarray):
+    def get_delta(self, last_delta: np.ndarray):
         # TODO: Implement backward pass
         pass
 

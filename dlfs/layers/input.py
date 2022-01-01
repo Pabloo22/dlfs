@@ -31,17 +31,17 @@ class Input(Layer):
         self.output = x
         return x
 
-    def backward(self, gradients: np.ndarray) -> np.ndarray:
+    def get_delta(self, last_delta: np.ndarray) -> np.ndarray:
         """
         Implemented for consistency with other layers.
 
         Args:
-            gradients: Gradients of the loss function with respect to the output of this layer.
+            last_delta: Gradients of the loss function with respect to the output of this layer.
 
         Returns:
             Gradients of the loss function with respect to the input of this layer.
         """
-        return gradients
+        return last_delta
 
     def update(self, gradients: np.ndarray):
         """

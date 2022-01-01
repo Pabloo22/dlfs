@@ -15,7 +15,6 @@ class MSE(LossFunction):
     def compute_loss(y_true, y_pred):
         """
         Calculates the Mean Squared Error loss
-
         """
         return np.sum(np.square(y_true - y_pred)) / 2 * y_true.shape[0]
 

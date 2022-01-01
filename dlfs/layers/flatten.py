@@ -33,8 +33,8 @@ class Flatten(Layer):
         """
         return np.reshape(x, self.output_shape)
 
-    def backward(self, gradients: np.ndarray) -> np.ndarray:
-        return np.reshape(gradients, self.input_shape)
+    def get_delta(self, last_delta: np.ndarray) -> np.ndarray:
+        return np.reshape(last_delta, self.input_shape)
 
     def summary(self) -> str:
         return f"{self.name} ({self.input_shape} -> {self.output_shape})"
