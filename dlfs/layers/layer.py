@@ -25,41 +25,18 @@ class Layer(ABC):
                  name: str = None,
                  trainable: bool = True):
 
-        self.__input_shape = input_shape if input_shape else None
-        self.__output_shape = output_shape
-        self.__name = name
-        self.__trainable = trainable
-        self.__initialized = False
+        self.input_shape = input_shape if input_shape else None
+        self.output_shape = output_shape
+        self.name = name
+        self.trainable = trainable
+        self.initialized = False
         self.__optimizer = None
         self.__activation = get_activation_function(activation)
+        self.inputs = None
+        self.z = None  # output of the layer before activation
 
     # Getters
     # -------------------------------------------------------------------------
-
-    @property
-    def input_shape(self) -> tuple:
-        return self.__input_shape
-
-    @property
-    def output_shape(self) -> tuple:
-        return self.__output_shape
-
-    @property
-    def name(self) -> str:
-        return self.__name
-
-    @name.setter
-    def name(self, name: str):
-        self.__name = name
-
-    @property
-    def trainable(self) -> bool:
-        return self.__trainable
-
-    @property
-    def initialized(self) -> bool:
-        return self.__initialized
-
     @property
     def optimizer(self) -> Optimizer:
         return self.__optimizer
@@ -70,21 +47,6 @@ class Layer(ABC):
 
     # Setters
     # -------------------------------------------------------------------------
-    @input_shape.setter
-    def input_shape(self, input_shape: tuple):
-        self.__input_shape = input_shape
-
-    @output_shape.setter
-    def output_shape(self, output_shape: tuple):
-        self.__output_shape = output_shape
-
-    @trainable.setter
-    def trainable(self, trainable: bool):
-        self.__trainable = trainable
-
-    @initialized.setter
-    def initialized(self, initialized: bool):
-        self.__initialized = initialized
 
     @optimizer.setter
     def optimizer(self, optimizer: Optimizer):
@@ -115,18 +77,25 @@ class Layer(ABC):
         Returns:
             output of the layer.
         """
-        raise NotImplementedError
 
     @abstractmethod
-    def backward(self, gradients: np.ndarray) -> np.ndarray:
+    def get_delta(self, last_delta: np.ndarray, dz_da: np.ndarray) -> np.ndarray:
         """
-        Backward pass of the layer.
+        Calculates the delta of the layer based on the delta of the next layer and derivative of the output of this
+        layer (i) with respect to the z of the next layer (i+1).
         Args:
-            gradients: gradients of the layer.
+            last_delta: delta of the next layer.
+            dz_da: derivative of the output of this layer (i) with respect to the z of the next layer (i+1).
         Returns:
-            gradients of the input.
+            The corresponding delta of the layer (d_cost/d_z).
         """
-        raise NotImplementedError
+
+    @abstractmethod
+    def get_dz_da(self) -> np.ndarray:
+        """
+        Returns:
+            The derivative of the output of this layer (i) with respect to the z of the next layer (i+1).
+        """
 
     @abstractmethod
     def summary(self) -> str:
@@ -141,4 +110,4 @@ class Layer(ABC):
         raise NotImplementedError
 
     def __str__(self) -> str:
-        return f"{self.__class__.__name__}({self.__name})"
+        return f"{self.__class__.__name__}({self.name})"
