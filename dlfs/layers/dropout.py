@@ -5,6 +5,12 @@ from .layer import Layer
 
 class Dropout(Layer):
 
+    def update(self, gradients: np.ndarray):
+        pass
+
+    def count_params(self) -> int:
+        pass
+
     def __init__(self, p=0.5, name="Dropout"):
 
         super(Dropout, self).__init__(name=name)
@@ -21,8 +27,11 @@ class Dropout(Layer):
         else:
             return x
 
-    def backward(self, gradients):
-        return gradients * self.mask
+    def get_delta(self, last_delta, dz_da):
+        return last_delta @ dz_da
+
+    def get_dz_da(self):
+        return self.mask
 
     def summary(self):
         return f"{self.name} (p={self.p})"
