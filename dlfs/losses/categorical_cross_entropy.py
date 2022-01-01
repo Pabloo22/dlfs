@@ -14,7 +14,6 @@ class CategoricalCrossEntropy(LossFunction):
     @staticmethod
     def compute_loss(y_true: np.ndarray, y_pred: np.ndarray) -> float:
         """
-
         Args:
             y_pred: (np.array)
             y_true: (np.array)
@@ -35,4 +34,4 @@ class CategoricalCrossEntropy(LossFunction):
         Returns:
             (np.array)
         """
-        return -y_true / y_pred
+        return -y_true / y_pred + (1 - y_true) / (1 - y_pred)
