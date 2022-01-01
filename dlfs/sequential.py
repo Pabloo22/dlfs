@@ -307,8 +307,11 @@ class Sequential:
         n_batches = len(x) // batch_size
 
         if shuffle:
-            x = np.random.permutation(x)
-            y = np.random.permutation(y)
+            # shuffle the data
+            indices = np.arange(len(x))
+            np.random.shuffle(indices)
+            x = x[indices]
+            y = y[indices]
 
         # loop over the batches
         for i in range(0, n_batches * batch_size, batch_size):
