@@ -168,17 +168,17 @@ class Conv2D(Layer):
         self.__output = output
         return output
 
-    def backward(self, gradients: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def get_delta(self, last_delta: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """
         Backward pass
         Args:
-            gradients: gradients of the loss with respect to the output of this layer
+            last_delta: gradients of the loss with respect to the output of this layer
         Returns:
             gradients with respect to the input of this layer
         """
         x = self.__input
         # the input x has the shape (batch_size, height, width, n_filters)
-        gradients = gradients.reshape((x.shape[0], x.shape[1], x.shape[2], self.__n_filters))
+        last_delta = last_delta.reshape((x.shape[0], x.shape[1], x.shape[2], self.__n_filters))
         gradients_w = np.zeros(self.__weights.shape)
         gradients_b = np.zeros(self.__bias.shape)
         for i in range(x.shape[0]):  # batch
@@ -186,8 +186,8 @@ class Conv2D(Layer):
                 for k in range(x.shape[2]):  # width
                     for L in range(self.__n_filters):  # filters
                         gradients_w[L] += np.sum(
-                            x[i, j:j + self.__kernel_size[0], k:k + self.__kernel_size[1]] * gradients[i, j, k, L])
-                        gradients_b[L] += gradients[i, j, k, L]
+                            x[i, j:j + self.__kernel_size[0], k:k + self.__kernel_size[1]] * last_delta[i, j, k, L])
+                        gradients_b[L] += last_delta[i, j, k, L]
 
         return self.activation.gradient(gradients_w), gradients_b
 
