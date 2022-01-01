@@ -89,7 +89,7 @@ class Sequential:
         print("Trainable params:", sum(layer.count_params() for layer in self.layers if layer.trainable))
         print("-" * len(self.name))
 
-    def get_gradients(self, y_pred: np.ndarray, y_true: np.ndarray) -> deque:
+    def get_deltas(self, y_pred: np.ndarray, y_true: np.ndarray) -> deque:
         """
         Backpropagation of the loss function
         Args:
@@ -97,22 +97,59 @@ class Sequential:
             y_true: the true labels
 
         Returns:
-            the gradients of the loss function (as a deque)
+            the deltas of the loss function (as a deque)
         """
 
-        # initialize the gradients
-        gradients = deque()
+        # initialize the deltas
+        deltas = deque()
 
-        # initialize the gradients of the last layer
-        gradients.appendleft(self.loss.gradient(y_pred, y_true))
+        last_layer = self.layers[-1]
+        dz_da = last_layer.get_dz_da()
+
+        # initialize the deltas of the last layer
+        if last_layer.activation is None:
+            deltas.appendleft(self.loss.gradient(y_pred, y_true))
+        else:
+            deltas.appendleft(self.loss.gradient(y_pred, y_true) * last_layer.activation.derivative(last_layer.z))
 
         # backward pass
-        for layer in reversed(self.layers):
-            # we have to use gradients[0] because the gradients are stored in a deque: [layer_1_grad, layer_2_grad, ...]
-            gradients.appendleft(layer.backward(gradients[0]))
+        for layer in reversed(self.layers[:-1]):
+            delta = layer.get_delta(deltas[0], dz_da)
+            deltas.appendleft(delta)
+            dz_da = layer.get_dz_da()
 
-        # Note that len(gradients) is equal to the number of layers + 1
-        return gradients
+        return deltas
+
+    def train_on_batch(self, x_batch: np.ndarray, y_batch: np.ndarray) -> Dict[str, float]:
+        """
+        Train the model on a batch of data
+
+        Args:
+            x_batch: the batch of inputs
+            y_batch: the batch of expected outputs
+
+        Returns:
+            the loss and the metrics
+        """
+
+        # forward pass
+        y_pred = self.predict_batch(x_batch, training=True)
+
+        # backward pass: get the deltas
+        deltas: deque = self.get_deltas(y_pred, y_batch)
+
+        # backward pass: update the weights
+        for i, layer in enumerate(self.layers):
+            if layer.trainable:
+                layer.update(deltas[i])
+
+        # compute the loss for the batch
+        loss = self.loss.compute_loss(y_pred, y_batch)
+
+        # compute the metrics for the batch
+        metrics = {metric: metric.compute_metric(y_pred, y_batch) for metric in self.metrics.values()}
+
+        return {**{'loss': loss}, **metrics}
 
     def fit(self,
             x: np.ndarray,
@@ -171,10 +208,10 @@ class Sequential:
             layer.output_shape = (batch_size, *layer.output_shape[1:])
 
         # initialize the history
-        history = {'loss': [], 'val_loss': []}
+        history = {"loss": [], "val_loss": []}
         for metric in self.metrics:
             history[metric] = []
-            history['val_' + metric] = []
+            history["val_" + metric] = []
 
         # set the optimizers
         for layer in self.layers:
@@ -199,27 +236,16 @@ class Sequential:
 
                 total_data_used_per_epoch += x_batch.shape[0]
 
-                # forward pass
-                y_pred = self.predict(x_batch, training=True)
-
-                # backward pass: get the gradients
-                gradients: deque = self.get_gradients(y_pred, y_batch)
-
-                # backward pass: update the weights
-                for i, layer in enumerate(self.layers):
-                    if layer.trainable:
-                        layer.update(gradients[i])
-
-                # compute the loss for the batch
-                loss = self.loss.compute_loss(y_pred, y_batch)
+                metrics = self.train_on_batch(x_batch, y_batch)
+                loss = metrics["loss"]
                 if using_validation_data:
                     val_loss = self.loss.compute_loss(self.predict(x_val, training=False), y_val)
 
-                # update the total loss (if verbose is 2)
+                # update the total loss for the epoch if verbose is not zero
                 if verbose > 0:
                     epoch_loss += loss
                     for metric in self.metrics:
-                        epoch_metrics[metric] += self.metrics[metric].compute_metric(self, x_batch, y_batch)
+                        epoch_metrics[metric] += metrics[metric]
 
                 # print the loss and the metrics per batch (if verbose is 1)
                 if verbose == 1:
@@ -228,9 +254,7 @@ class Sequential:
                               f"- loss: {loss} - val_loss: {val_loss}")
                     else:
                         print(f"Batch ({total_data_used_per_epoch}/{x.shape[0]}) - loss: {loss}")
-                    metrics_list = [f'{metric}: {self.metrics[metric].compute_metric(y_pred, y_batch):.4f}'
-                                    for metric in self.metrics]
-                    print(f"\t{', '.join(metrics_list)}")
+                    print(f"\t{', '.join([f'{metric}: {metrics[metric]:.4f}' for metric in self.metrics])}")
 
             # print the metrics (if verbose is 1 or 2)
             if verbose > 0:
@@ -244,22 +268,22 @@ class Sequential:
                     val_loss = self.loss.compute_loss(y_pred_val, y_val)
                     print(f"\tValidation loss: {val_loss}")
                     # add the validation loss to the history
-                    history['val_loss'].append(epoch_loss)
+                    history["val_loss"].append(epoch_loss)
 
                     for metric in self.metrics:
                         val_metric = self.metrics[metric].compute_metric(self, x_val, y_val)
                         print(f"\t{metric}: {val_metric:.4f}")
                         # add the validation metric to the history
-                        history['val_' + metric].append(val_metric)
+                        history["val_" + metric].append(val_metric)
 
                     # append the val_loss and val_metrics to the history
-                    history['val_loss'].append(val_loss)
+                    history["val_loss"].append(val_loss)
                     for metric in self.metrics:
-                        history['val_' + metric].append(self.metrics[metric].compute_metric(y_pred_val, y_val))
+                        history["val_" + metric].append(self.metrics[metric].compute_metric(y_pred_val, y_val))
             print("")
 
             # save the history
-            history['loss'].append(epoch_loss)
+            history["loss"].append(epoch_loss)
             for metric in self.metrics:
                 history[metric].append(epoch_metrics[metric] / len(x))
 
@@ -373,14 +397,3 @@ class Sequential:
         Args:
             path: the path to save the model
         """
-
-#
-# if __name__ == '__main__':
-#     length = 10
-#     array = np.zeros(length)
-#     print(array)
-#     array[-1] = 1
-#
-#     for i in range(length - 2, -1, -1):
-#         array[i] = array[i + 1] + 1
-#     print(array)
