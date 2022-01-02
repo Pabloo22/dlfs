@@ -51,10 +51,11 @@ class Sequential:
             raise ValueError("The first layer must have an input shape")
 
         # initialize the layer
-        if layer.input_shape is None:
-            layer.initialize(input_shape=self.layers[-1].output_shape)
-        else:
-            layer.initialize(input_shape=layer.input_shape)
+        if not layer.initialized:
+            if layer.input_shape is None:
+                layer.initialize(input_shape=self.layers[-1].output_shape)
+            else:
+                layer.initialize(input_shape=layer.input_shape)
 
         self.layers.append(layer)
 
