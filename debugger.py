@@ -154,3 +154,13 @@ def test_loss_functions():
 
 if __name__ == '__main__':
     test1()
+    x = np.array([[0.5, 0.5],
+                  [0.5, -0.5]])
+
+    w = np.arange(2*4).reshape(2, 4) / 10
+    b = np.ones((1, 4))
+
+    s = x @ w
+    print(s)
+    z = s + b
+    print(z)
