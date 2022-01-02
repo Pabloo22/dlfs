@@ -16,7 +16,7 @@ class MSE(LossFunction):
         """
         Calculates the Mean Squared Error loss
         """
-        return np.sum(np.square(y_true - y_pred)) / 2 * y_true.shape[0]
+        return np.sum(np.square(y_true - y_pred)) / (2 * y_true.shape[0])
 
     @staticmethod
     def gradient(y_true, y_pred):
