@@ -58,8 +58,11 @@ class Dense(Layer):
         # the weights has the shape (n_features, n_neurons) and the bias has the shape (1, n_neurons).
         # Each column of the weights matrix represents a neuron and the values of the column are its weights
         # of the neuron.
-        self.weights = weights or np.random.randn(input_shape[1], self.__n_neurons) * np.sqrt(1 / input_shape[1])
-        self.bias = bias or np.zeros((1, self.__n_neurons))
+
+        self.weights = np.random.randn(input_shape[1], self.__n_neurons) * np.sqrt(
+            1 / input_shape[1]) if weights is None else weights
+
+        self.bias = np.zeros((1, self.__n_neurons)) if bias is None else bias
         self.initialized = True
 
     def forward(self, inputs, training: bool = False) -> np.ndarray:
