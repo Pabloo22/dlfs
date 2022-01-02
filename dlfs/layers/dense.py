@@ -13,7 +13,8 @@ class Dense(Layer):
         name (str): layer name
     """
 
-    def __init__(self, n_neurons: int, activation: str = None, name: str = "Dense", input_shape: tuple = None):
+    def __init__(self, n_neurons: int, activation: str = None, name: str = "Dense", input_shape: tuple = None,
+                 weights_init: str = "xavier", bias_init: str = "zeros"):
 
         if n_neurons <= 0:
             raise ValueError("The number of neurons should be greater than 0")
@@ -26,6 +27,8 @@ class Dense(Layer):
                                     activation=activation,
                                     name=name)
         self.__n_neurons = n_neurons
+        self.weights_init = weights_init  # recommended: xavier
+        self.bias_init = bias_init  # recommended: zeros
         self.weights = None
         self.bias = np.zeros((1, n_neurons))
         self.inputs = None
@@ -54,15 +57,50 @@ class Dense(Layer):
             raise ValueError("The input shape is incorrect")
 
         self.input_shape = input_shape
-        # We use Xavier initialization [https://www.deeplearning.ai/ai-notes/initialization/]
-        # the weights has the shape (n_features, n_neurons) and the bias has the shape (1, n_neurons).
-        # Each column of the weights matrix represents a neuron and the values of the column are its weights
-        # of the neuron.
 
-        self.weights = np.random.randn(input_shape[1], self.__n_neurons) * np.sqrt(
-            1 / input_shape[1]) if weights is None else weights
+        if weights is not None:
+            self.weights = weights
+        elif self.weights_init == "xavier":
+            # The recommended initialization [https://www.deeplearning.ai/ai-notes/initialization/]
+            # the weights has the shape (n_features, n_neurons) and the bias has the shape (1, n_neurons).
+            # Each column of the weights matrix represents a neuron and the values of the column are its weights
+            # of the neuron.
+            self.weights = np.random.normal(loc=0,
+                                            scale=np.sqrt(2 / (input_shape[1] + self.n_neurons)),
+                                            size=(input_shape[1], self.n_neurons))
+        elif self.weights_init == "zeros":
+            self.weights = np.zeros((input_shape[1], self.n_neurons))
+        elif self.weights_init == "ones":
+            self.weights = np.ones((input_shape[1], self.n_neurons))
+        elif self.weights_init == "normal":
+            self.weights = np.random.normal(loc=0,
+                                            scale=1,
+                                            size=(input_shape[1], self.n_neurons))
+        elif self.weights_init == "uniform":
+            self.weights = np.random.uniform(low=-1,
+                                             high=1,
+                                             size=(input_shape[1], self.n_neurons))
+        else:
+            raise ValueError("The weights initializer is incorrect")
 
-        self.bias = np.zeros((1, self.__n_neurons)) if bias is None else bias
+        if bias is not None:
+            self.bias = bias
+        elif self.bias_init == "zeros":
+            # the recommended initialization [https://www.deeplearning.ai/ai-notes/initialization/]
+            self.bias = np.zeros((1, self.n_neurons))
+        elif self.bias_init == "ones":
+            self.bias = np.ones((1, self.n_neurons))
+        elif self.bias_init == "normal":
+            self.bias = np.random.normal(loc=0,
+                                         scale=1,
+                                         size=(1, self.n_neurons))
+        elif self.bias_init == "uniform":
+            self.bias = np.random.uniform(low=-1,
+                                          high=1,
+                                          size=(1, self.n_neurons))
+        else:
+            raise ValueError("The bias initializer is incorrect")
+
         self.initialized = True
 
     def forward(self, inputs, training: bool = False) -> np.ndarray:
@@ -103,7 +141,9 @@ class Dense(Layer):
             raise ValueError("The layer is not initialized")
 
         # compute the delta
-        delta = last_delta @ dz_da
+
+        delta = last_delta * dz_da if last_delta.shape[1:] == self.output_shape[1:] else last_delta @ dz_da
+
         if self.activation is not None:
             delta *= self.activation.derivative(self.z)
 
