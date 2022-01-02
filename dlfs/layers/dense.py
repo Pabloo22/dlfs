@@ -40,12 +40,14 @@ class Dense(Layer):
 
     # Methods
     # ----------------------------------------------------------------------------------------------------
-    def initialize(self, input_shape: tuple):
+    def initialize(self, input_shape: tuple, weights: np.ndarray = None, bias: np.ndarray = None):
         """
         Initialize the layer. Should be called after the input shape is set.
 
         Args:
             input_shape (tuple): input shape of the layer, it has the form (n_samples (None), n_features)
+            weights (np.ndarray): weights of the layer (optional, recommended to be None)
+            bias (np.ndarray): bias of the layer (optional, recommended to be None)
         """
         # check if the input shape is correct
         if len(input_shape) != 2:
@@ -56,8 +58,8 @@ class Dense(Layer):
         # the weights has the shape (n_features, n_neurons) and the bias has the shape (1, n_neurons).
         # Each column of the weights matrix represents a neuron and the values of the column are its weights
         # of the neuron.
-        self.weights = np.random.randn(input_shape[1], self.__n_neurons) * np.sqrt(1 / input_shape[1])
-        self.bias = np.zeros((1, self.__n_neurons))
+        self.weights = weights or np.random.randn(input_shape[1], self.__n_neurons) * np.sqrt(1 / input_shape[1])
+        self.bias = bias or np.zeros((1, self.__n_neurons))
         self.initialized = True
 
     def forward(self, inputs, training: bool = False) -> np.ndarray:
