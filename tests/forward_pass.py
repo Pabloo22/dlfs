@@ -80,7 +80,7 @@ def test_forward_pass():
     batch_generator = Sequential.batch_generator(train_x, train_y, batch_size=10)
 
     for x, y in batch_generator:
-        our_prediction = our_model.predict_batch(x)
+        our_prediction = our_model.predict(x)
         keras_prediction = keras_model.predict(x)
         assert np.allclose(our_prediction, keras_prediction)
 

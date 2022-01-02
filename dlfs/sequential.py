@@ -134,7 +134,7 @@ class Sequential:
         """
 
         # forward pass
-        y_pred = self.predict_batch(x_batch, training=True)
+        y_pred = self.predict(x_batch, training=True)
 
         # backward pass: get the deltas
         deltas: deque = self.get_deltas(y_pred, y_batch)
@@ -260,7 +260,7 @@ class Sequential:
             # print the metrics (if verbose is 1 or 2)
             if verbose > 0:
                 print(f"Epoch {epoch + 1}/{epochs}")
-                print(f"\tTrain loss: {epoch_loss}")
+                print(f"\tTrain loss: {epoch_loss / (len(x) // batch_size):.4f}")
                 for metric in self.metrics:
                     print(f"\t{metric}: {epoch_metrics[metric] / len(x)}")
 
@@ -351,37 +351,7 @@ class Sequential:
             pass
         return total_loss
 
-    def predict(self, x: np.ndarray, batch_size: int = 32, verbose: int = 1, training: bool = False) -> np.ndarray:
-        """
-
-        Args:
-            x: the input data
-            batch_size: the batch size
-            verbose: the verbosity mode (0 or 1)
-            training: whether the model is in training mode
-        """
-
-        # initialize the predictions
-        y_pred = []
-
-        # loop over the batches
-        for i in range(0, len(x), batch_size):
-            # get the batch data
-            x_batch = x[i:i + batch_size]
-            # get the predictions for the batch
-            y_batch_pred = self.predict_batch(x_batch, training)
-            # update the predictions
-            y_pred.append(y_batch_pred)
-        # concatenate the predictions
-        y_pred = np.concatenate(y_pred)
-        # print the metrics
-        if verbose:
-            # TODO: print the metrics
-            pass
-
-        return y_pred
-
-    def predict_batch(self, x: np.ndarray, training: bool = False) -> np.ndarray:
+    def predict(self, x: np.ndarray, training: bool = False) -> np.ndarray:
         """
 
         Args:
