@@ -5,19 +5,14 @@ from .layer import Layer
 
 class Dropout(Layer):
 
-    def update(self, gradients: np.ndarray):
-        pass
-
-    def count_params(self) -> int:
-        pass
-
     def __init__(self, p=0.5, name="Dropout"):
-
         super(Dropout, self).__init__(name=name)
-        self.p = p
+        self.p = 1 - p  # probability of keeping a neuron active
         self.mask = None
 
     def initialize(self, input_shape: tuple):
+        self.input_shape = input_shape
+        self.output_shape = input_shape
         self.initialized = True
 
     def forward(self, x, training=True):
@@ -35,3 +30,10 @@ class Dropout(Layer):
 
     def summary(self):
         return f"{self.name} (p={self.p})"
+
+    def update(self, gradients: np.ndarray):
+        pass
+
+    def count_params(self) -> int:
+        return 0
+
