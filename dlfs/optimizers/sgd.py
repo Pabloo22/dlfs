@@ -27,5 +27,5 @@ class SGD(Optimizer):
         if dw.shape != w.shape:
             raise ValueError(f"Shape of dw and w do not match: {dw.shape} != {w.shape}")
 
-        w -= self.learning_rate * dw
-        b -= self.learning_rate * db
+        w += self.learning_rate * dw
+        b += self.learning_rate * db
