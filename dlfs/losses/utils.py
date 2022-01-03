@@ -6,9 +6,9 @@ def get_loss_function(loss_name: str):
         return MAE()
     elif loss_name == 'mse':
         return MSE()
-    elif loss_name == 'binary_cross_entropy':
+    elif loss_name == 'binary_crossentropy':
         return BinaryCrossEntropy()
-    elif loss_name == 'categorical_cross_entropy':
+    elif loss_name == 'categorical_crossentropy':
         return CategoricalCrossEntropy()
     else:
         raise ValueError(f'Unknown loss function: {loss_name}')

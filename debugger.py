@@ -165,6 +165,34 @@ def test_loss_functions():
     print(bce(y_true, y_pred))
     print(bce.gradient(y_true, y_pred))
 
+def test_1():
+    from keras.utils import np_utils
+
+    # TEST 1
+
+    # LOAD DATA
+    from keras.datasets import mnist
+    (X_train, y_train), (X_test, y_test) = mnist.load_data()
+    num_train_image = X_train.shape[0]
+    num_test_image = X_test.shape[0]
+    image_height = X_train.shape[1]
+    image_width = X_train.shape[2]
+    X_train = X_train.reshape(num_train_image, image_height * image_width).astype('float32')
+    X_test = X_test.reshape(num_test_image, image_height * image_width).astype('float32')
+    X_train = X_train / 255
+    X_test = X_test / 255
+    y_train = np_utils.to_categorical(y_train)
+    y_test = np_utils.to_categorical(y_test)
+    num_classes = y_test.shape[1]
+
+    model = Sequential()
+    model.add(Dense(500, input_shape=(image_height * image_width,) , activation='relu'))
+    model.add(Dense(10, activation='softmax'))
+    model.summary()
+    model.compile(loss='categorical_crossentropy', optimizer=SGD(lr=0.0001),
+                  metrics=['accuracy'])
+    model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=100, batch_size=256, verbose=1)
+
 
 if __name__ == '__main__':
-    test1()
+    test_1()
