@@ -168,13 +168,14 @@ class Conv2D(Layer):
         self.__output = output
         return output
 
-    def get_delta(self, last_delta: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def get_delta(self, last_delta: np.ndarray, dz_da: np.ndarray) -> np.ndarray:
         """
         Backward pass
         Args:
             last_delta: gradients of the loss with respect to the output of this layer
+            derivative of the output of this layer (i) with respect to the z of the next layer (i+1)
         Returns:
-            gradients with respect to the input of this layer
+            The corresponding delta of the layer (d_cost/d_z).
         """
         x = self.__input
         # the input x has the shape (batch_size, height, width, n_filters)
@@ -209,7 +210,7 @@ class Conv2D(Layer):
                 self.input_shape[2] - self.__kernel_size[1] + 1, self.__n_filters)
 
     @staticmethod
-    def convolve_2d(image: np.ndarray, kernel: np.ndarray, padding: bool = False, stride: int = 1) -> np.ndarray:
+    def simple_convolution(image: np.ndarray, kernel: np.ndarray, padding: bool = False, stride: int = 1) -> np.ndarray:
         """
         Performs a valid convolution on an image with a kernel.
 
