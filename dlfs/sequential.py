@@ -4,6 +4,8 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from typing import List, Dict, Tuple
 from tqdm import tqdm
+import pickle
+
 
 from dlfs.layers import Layer
 from dlfs.optimizers import Optimizer, get_optimizer
@@ -322,34 +324,57 @@ class Sequential:
             # yield the batch
             yield x_batch, y_batch
 
-    def evaluate(self, x: np.ndarray, y: np.ndarray, batch_size: int = 32, verbose: int = 1) -> float:
+    def evaluate(self, x: np.ndarray, y: np.ndarray, batch_size: int = None, verbose: int = 1) -> dict:
         """
         Args:
             x: the input data
             y: the labels
-            batch_size: the batch size
+            batch_size: the batch size (default: len(x))
             verbose: the verbosity mode (0 or 1)
+
+        Returns:
+            The average loss and the average metrics of the model on the given data
         """
-        # initialize the total loss and the number of batches
-        total_loss = 0.0
+        # get the batch size
+        batch_size = batch_size or len(x)
+
+        # initialize the metrics
+        avg_loss = 0.0
+        avg_metrics = {metric: 0.0 for metric in self.metrics}
+
         n_batches = len(x) // batch_size
 
         # loop over the batches
         for i in range(0, n_batches * batch_size, batch_size):
             # get the batch data
-            x_batch = x[i:i + batch_size]
+            y_pred = x[i:i + batch_size]
             y_batch = y[i:i + batch_size]
+
+            # forward pass
+            y_pred = self.predict(y_pred)
+
             # compute the loss for the batch
-            loss = self.loss.compute_loss(self, x_batch, y_batch)
-            # update the total loss
-            total_loss += loss
-        # compute the average loss
-        total_loss /= len(x)
-        # print the metrics
-        if verbose:
-            # TODO: print the metrics
-            pass
-        return total_loss
+            loss = self.loss.compute_loss(y_pred, y_batch)
+
+            # compute the metrics for the batch
+            metrics = {metric: self.metrics[metric].compute_metric(y_pred, y_batch) for metric in self.metrics}
+
+            # update the loss and the metrics
+            avg_loss += 1/(i + 1) * (loss - avg_loss)
+            for metric in self.metrics:
+                avg_metrics[metric] += 1/(i + 1) * (metrics[metric] - avg_metrics[metric])
+
+            # print the loss and the metrics per batch (if verbose is 1)
+            if verbose > 0 and batch_size != len(x):
+                print(f"Batch ({i // batch_size + 1}/{n_batches}) - loss: {loss}")
+                print(f"\t{', '.join([f'{metric}: {metrics[metric]:.4f}' for metric in self.metrics])}")
+
+        # print final loss and metrics
+        if verbose > 0:
+            print(f"Average loss: {avg_loss}")
+            print(f"{', '.join([f'{metric}: {avg_metrics[metric]:.4f}' for metric in self.metrics])}")
+
+        return {'loss': avg_loss, **avg_metrics}
 
     def predict(self, x: np.ndarray, training: bool = False) -> np.ndarray:
         """
@@ -371,3 +396,39 @@ class Sequential:
         Args:
             path: the path to save the model
         """
+        with open(path, 'wb') as f:
+            pickle.dump(self, f)
+
+    @staticmethod
+    def load(path: str):
+        """
+        Args:
+            path: the path to load the model
+        """
+        with open(path, 'rb') as f:
+            return pickle.load(f)
+
+    def __str__(self):
+        return f"{self.__class__.__name__}({', '.join([str(layer) for layer in self.layers])})"
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __len__(self):
+        return len(self.layers)
+
+    def __getitem__(self, index: int):
+        return self.layers[index]
+
+    def __iter__(self):
+        return iter(self.layers)
+
+    def __add__(self, other: 'Sequential'):
+        return Sequential(self.layers + other.layers)
+
+    def __iadd__(self, other: 'Sequential'):
+        self.layers += other.layers
+        return self
+
+    def __copy__(self):
+        return deepcopy(Sequential(self.layers))
