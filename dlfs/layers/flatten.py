@@ -51,3 +51,12 @@ class Flatten(Layer):
 
     def set_weights(self, weights: np.ndarray = None, bias: np.ndarray = None):
         raise NotImplementedError("Flatten layer has no weights")
+
+    def get_dz_da(self) -> np.ndarray:
+        return np.ones(self.output_shape)
+
+    def update(self, gradients: np.ndarray):
+        pass
+
+    def count_params(self) -> int:
+        return 0
