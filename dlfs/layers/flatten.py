@@ -32,8 +32,12 @@ class Flatten(Layer):
         """
         return np.reshape(x, self.output_shape)
 
-    def get_delta(self, last_delta: np.ndarray) -> np.ndarray:
+    def get_delta(self, last_delta: np.ndarray, dz_da: np.ndarray) -> np.ndarray:
+        delta = ...
         return np.reshape(last_delta, self.input_shape)
 
     def summary(self) -> str:
         return f"{self.name} ({self.input_shape} -> {self.output_shape})"
+
+    def set_weights(self, weights: np.ndarray = None, bias: np.ndarray = None):
+        raise NotImplementedError("Flatten layer has no weights")

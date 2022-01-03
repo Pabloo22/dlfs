@@ -103,6 +103,31 @@ class Dense(Layer):
 
         self.initialized = True
 
+    def set_weights(self, weights: np.ndarray = None, bias: np.ndarray = None):
+        """
+        Set the weights and bias of the layer.
+
+        Args:
+            weights (np.ndarray): weights of the layer.
+                The weights has the shape (n_neurons_prev_layer, n_neurons_current_layer). Each column of the weights
+                matrix represents a neuron and the values of the column are its weights.
+            bias (np.ndarray): bias of the layer. The bias has the shape (1, n_neurons_current_layer).
+        """
+
+        if weights is not None:
+            # check the shape of the weights
+            if weights.shape != (self.input_shape[1], self.n_neurons):
+                raise ValueError(f"The shape of the weights is incorrect. Received {weights.shape}, expected "
+                                 f"{(self.input_shape[1], self.n_neurons)}")
+            self.weights = weights
+
+        if bias is not None:
+            # check the shape of the bias
+            if bias.shape != (1, self.n_neurons):
+                raise ValueError(f"The shape of the bias is incorrect. Received {bias.shape}, expected "
+                                 f"{(1, self.n_neurons)}")
+            self.bias = bias
+
     def forward(self, inputs, training: bool = False) -> np.ndarray:
         """
         Forward pass of the layer.

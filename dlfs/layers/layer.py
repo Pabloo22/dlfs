@@ -87,6 +87,10 @@ class Layer(ABC):
         """
 
     @abstractmethod
+    def set_weights(self, weights: np.ndarray = None, bias: np.ndarray = None):
+        raise NotImplementedError
+
+    @abstractmethod
     def get_delta(self, last_delta: np.ndarray, dz_da: np.ndarray) -> np.ndarray:
         """
         Calculates the delta of the layer based on the delta of the next layer and derivative of the output of this

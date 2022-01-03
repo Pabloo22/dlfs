@@ -391,6 +391,31 @@ class Sequential:
             last_input = layer.forward(last_input, training)
         return last_input
 
+    def set_weights(self, weights: list, layers: list = None, only_weights: bool = False, only_biases: bool = False):
+        """
+        Sets the weights and biases of the model. The weights and biases are in the same order as the layers.
+        Args:
+            weights: the weights of the model (list of numpy arrays) [layer_0_weights, layer_0_bias, ...]
+                The weights and biases of all the layers that have them must be included in the list
+            layers: the layers of the model (list of Layer objects) which you want to set the weights of
+                (default: all layers with weights)
+            only_weights: whether to set only the weights. If True, the weights list must contain
+                only the weights of the layers in the layers list. (default: False)
+            only_biases: whether to set only the biases. If True, the weights list must contain
+                only the biases of the layers in the layers list. (default: False)
+        """
+        layers_with_weights = layers or [layer for layer in self.layers if layer.has_weights]
+
+        if only_weights:
+            for i, w in enumerate(weights):
+                layers_with_weights[i].set_weights(w)
+        elif only_biases:
+            for i, b in enumerate(weights):
+                layers_with_weights[i].set_weights(bias=b)
+        else:
+            for i, layer in enumerate(layers_with_weights):
+                layer.set_weights(weights[i], weights[i + len(layers_with_weights)])
+
     def save(self, path: str):
         """
         Saves the model to the given path using the pickle module

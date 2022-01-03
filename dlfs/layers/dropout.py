@@ -37,3 +37,5 @@ class Dropout(Layer):
     def count_params(self) -> int:
         return 0
 
+    def set_weights(self, weights: np.ndarray, bias: np.ndarray):
+        raise NotImplementedError("Dropout layer has no weights")
