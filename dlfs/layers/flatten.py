@@ -33,8 +33,18 @@ class Flatten(Layer):
         return np.reshape(x, self.output_shape)
 
     def get_delta(self, last_delta: np.ndarray, dz_da: np.ndarray) -> np.ndarray:
-        delta = ...
-        return np.reshape(last_delta, self.input_shape)
+        """
+        Calculates the delta of the layer based on the delta of the next layer and derivative of the output of this
+        layer (i) with respect to the z of the next layer (i+1).
+        Args:
+            last_delta: delta of the next layer.
+            dz_da: derivative of the output of this layer (i) with respect to the z of the next layer (i+1). The
+                expected value od dz_da here is W.T assuming that the next layer is a dense layer.
+        Returns:
+            The corresponding delta of the layer (d_cost/d_z).
+        """
+        delta = last_delta * dz_da if last_delta.shape == self.output_shape else last_delta @ dz_da
+        return np.reshape(delta, self.input_shape)
 
     def summary(self) -> str:
         return f"{self.name} ({self.input_shape} -> {self.output_shape})"
