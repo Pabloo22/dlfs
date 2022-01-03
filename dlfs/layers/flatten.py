@@ -9,8 +9,7 @@ class Flatten(Layer):
     """
 
     def __init__(self, name: str = "Flatten"):
-
-        super(Flatten, self).__init__(name=name)
+        super(Flatten, self).__init__(name=name, has_weights=False)
 
     def initialize(self, input_shape: tuple):
         """

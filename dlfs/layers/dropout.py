@@ -6,7 +6,7 @@ from .layer import Layer
 class Dropout(Layer):
 
     def __init__(self, p=0.5, name="Dropout"):
-        super(Dropout, self).__init__(name=name)
+        super(Dropout, self).__init__(name=name, has_weights=False)
         self.p = 1 - p  # probability of keeping a neuron active
         self.mask = None
 

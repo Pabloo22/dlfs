@@ -23,11 +23,15 @@ class Layer(ABC):
                  output_shape: Optional[tuple] = None,
                  activation: Optional[str] = None,
                  name: str = None,
-                 trainable: bool = True):
+                 trainable: bool = True,
+                 has_weights: bool = True):
 
         self.input_shape = input_shape if input_shape else None
         self.output_shape = output_shape
         self.name = name
+        self.weights = None
+        self.bias = None
+        self.__has_weights = has_weights  # Whether the layer has weights and biases.
         self.trainable = trainable
         self.initialized = False
         self.__optimizer = None
@@ -44,6 +48,10 @@ class Layer(ABC):
     @property
     def activation(self) -> ActivationFunction:
         return self.__activation
+
+    @property
+    def has_weights(self) -> bool:
+        return self.__has_weights
 
     # Setters
     # -------------------------------------------------------------------------
