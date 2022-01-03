@@ -49,8 +49,11 @@ class Dense(Layer):
 
         Args:
             input_shape (tuple): input shape of the layer, it has the form (n_samples (None), n_features)
-            weights (np.ndarray): weights of the layer (optional, recommended to be None)
-            bias (np.ndarray): bias of the layer (optional, recommended to be None)
+            weights (np.ndarray): weights of the layer (optional, recommended to be None).
+                The weights has the shape (n_neurons_prev_layer, n_neurons_current_layer). Each column of the weights
+                matrix represents a neuron and the values of the column are its weights.
+            bias (np.ndarray): bias of the layer (optional, recommended to be None). The bias has the shape
+                (1, n_neurons_current_layer).
         """
         # check if the input shape is correct
         if len(input_shape) != 2:
@@ -62,9 +65,6 @@ class Dense(Layer):
             self.weights = weights
         elif self.weights_init == "xavier":
             # The recommended initialization [https://www.deeplearning.ai/ai-notes/initialization/]
-            # the weights has the shape (n_features, n_neurons) and the bias has the shape (1, n_neurons).
-            # Each column of the weights matrix represents a neuron and the values of the column are its weights
-            # of the neuron.
             self.weights = np.random.normal(loc=0,
                                             scale=np.sqrt(2 / (input_shape[1] + self.n_neurons)),
                                             size=(input_shape[1], self.n_neurons))
