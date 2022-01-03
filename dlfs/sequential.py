@@ -393,6 +393,7 @@ class Sequential:
 
     def save(self, path: str):
         """
+        Saves the model to the given path using the pickle module
         Args:
             path: the path to save the model
         """
@@ -402,6 +403,7 @@ class Sequential:
     @staticmethod
     def load(path: str):
         """
+        Loads the model from the given path using the pickle module
         Args:
             path: the path to load the model
         """
