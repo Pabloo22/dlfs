@@ -30,9 +30,9 @@ def test1():
     # Creating the model
     model = Sequential()
     # model.add(Input(input_shape=(None, 2)))
-    model.add(Dense(16, activation="relu", input_shape=(2,)))  # weight_shape: (2, 16)
-    model.add(Dropout(0.01))
-    model.add(Dense(8, activation="relu"))  # weight_shape: (16, 8)
+    model.add(Dense(16, activation="tanh", input_shape=(2,)))  # weight_shape: (2, 16)
+    model.add(Dropout(0.001))
+    model.add(Dense(8, activation="tanh"))  # weight_shape: (16, 8)
     model.add(Dense(1))  # weight_shape: (8, 1)
 
     model.summary()
@@ -44,52 +44,7 @@ def test1():
     model.fit(train_x, train_y, epochs=10, batch_size=1, verbose=2, validation_data=(test_x, test_y))
 
     # Evaluating the model
-    print(test_x[:5])
-    print(model.predict(test_x[:5]))
-    print(test_y[:5])
-    print("------------------")
-    print(train_x[:5])
-    print(model.predict(train_x[:5]))
-    print(train_y[:5])
-    print("------------------")
-    x = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
-    print(x)
-    print(model.predict(x))
-
-
-def test1_1():
-    # Generating the dataset
-    train_x, train_y, test_x, test_y = get_dataset()
-
-    # Creating the model
-    model = Sequential()
-    # model.add(Input(input_shape=(None, 2)))
-    model.add(Dense(16, activation="relu", input_shape=(2,), weights_init="uniform"))  # weight_shape: (2, 16)
-    model.add(Dropout(0.01))
-    model.add(Dense(8, activation="relu", weights_init="uniform"))  # weight_shape: (16, 8)
-    model.add(Dense(1, weights_init="uniform"),)  # weight_shape: (8, 1)
-
-    model.summary()
-
-    # Compiling the model
-    model.compile(loss="mse", optimizer=SGD(lr=0.01))
-
-    # Training the model
-    model.fit(train_x, train_y, epochs=10, batch_size=1, verbose=2, validation_data=(test_x, test_y))
-
-    # Evaluating the model
-    print(test_x[:5])
-    print(model.predict(test_x[:5]))
-    print(test_y[:5])
-    print("------------------")
-    print(train_x[:5])
-    print(model.predict(train_x[:5]))
-    print(train_y[:5])
-    print("------------------")
-    x = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
-    print(x)
-    print(model.predict(x))
-
+    evaluate_model(model, train_x, train_y, test_x, test_y)
 
 
 def test2():
@@ -110,14 +65,18 @@ def test2():
     model.fit(train_x, train_y, epochs=10, batch_size=1, verbose=1, validation_data=(test_x, test_y))
 
     # Evaluating the model
+    evaluate_model(model, train_x, train_y, test_x, test_y)
+
+
+def evaluate_model(model, x, y, test_x, test_y):
+    # Evaluating the model
     print(test_x[:5])
     print(model.predict(test_x[:5]))
     print(test_y[:5])
-
     print("------------------")
-    print(train_x[:5])
-    print(model.predict(train_x[:5]))
-    print(train_y[:5])
+    print(x[:5])
+    print(model.predict(x[:5]))
+    print(y[:5])
     print("------------------")
     x = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
     print(x)
@@ -209,4 +168,3 @@ def test_loss_functions():
 
 if __name__ == '__main__':
     test1()
-    test1_1()
