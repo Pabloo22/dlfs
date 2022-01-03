@@ -120,6 +120,14 @@ class Dense(Layer):
         # check if the input shape is correct
         if inputs.shape[1:] != self.input_shape[1:]:
             raise ValueError("The input shape is incorrect")
+
+        # check that the weights and bias are correct. This is needed since the weights and bias can be initialized
+        # manually by the user
+        if self.weights.shape[0] != self.input_shape[1]:
+            raise ValueError("The weights must have the shape (n_features, n_neurons)")
+        if self.bias.shape[1] != self.n_neurons:
+            raise ValueError("The bias must have the shape (1, n_neurons)")
+
         # save the inputs
         self.inputs = inputs
         self.z = inputs @ self.weights + self.bias
