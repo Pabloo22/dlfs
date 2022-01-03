@@ -175,7 +175,7 @@ class Dense(Layer):
 
         # compute the delta
 
-        delta = last_delta * dz_da if last_delta.shape[1:] == self.output_shape[1:] else last_delta @ dz_da
+        delta = last_delta * dz_da if last_delta.shape == self.output_shape else last_delta @ dz_da
 
         if self.activation is not None:
             delta *= self.activation.derivative(self.z)
