@@ -85,5 +85,34 @@ def test_forward_pass():
         assert np.allclose(our_prediction, keras_prediction)
 
 
+def test_train_on_batch():
+
+    train_x, train_y, test_x, test_y = get_dataset()
+
+    topology = [2, 16, 8, 1]
+    weights = get_weights(topology)
+    biases = [np.ones((16,)), np.ones((8,)), np.ones((1,))]
+    keras_weights = [*zip(weights, biases)]
+    result = []
+    for w, b in keras_weights:
+        result.append(w)
+        result.append(b)
+
+    keras_weights = result
+
+    our_model = create_our_model(weights)
+    keras_model = create_keras_model(keras_weights)
+
+    batch_generator = Sequential.batch_generator(train_x, train_y, batch_size=10)
+
+    for x, y in batch_generator:
+        our_model.train_on_batch(x, y)
+        keras_model.train_on_batch(x, y)
+
+    our_prediction = our_model.predict(test_x)
+    keras_prediction = keras_model.predict(test_x)
+    assert np.allclose(our_prediction, keras_prediction)
+
+
 if __name__ == "__main__":
     test_forward_pass()
