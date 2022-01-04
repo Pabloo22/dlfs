@@ -6,8 +6,8 @@ from .optimizer import Optimizer
 
 class SGDMomentum(Optimizer):
 
-    def __init__(self, lr: float = 0.01, momentum: float = 0.9):
-        super(SGDMomentum, self).__init__(lr)
+    def __init__(self, learning_rate: float = 0.01, momentum: float = 0.9):
+        super(SGDMomentum, self).__init__(learning_rate)
         self.momentum = momentum
         self.__v = None
 

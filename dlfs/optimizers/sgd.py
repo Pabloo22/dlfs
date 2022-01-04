@@ -9,8 +9,8 @@ class SGD(Optimizer):
     Mini-batch stochastic gradient descent.
     """
 
-    def __init__(self, lr: float = 0.01):
-        super(SGD, self).__init__(learning_rate=lr)
+    def __init__(self, learning_rate: float = 0.01):
+        super(SGD, self).__init__(learning_rate=learning_rate)
 
     def update(self, parameters: Tuple[np.ndarray, np.ndarray],
                gradients: Tuple[np.ndarray, np.ndarray]):
@@ -24,8 +24,5 @@ class SGD(Optimizer):
         w, b = parameters
         dw, db = gradients
 
-        if dw.shape != w.shape:
-            raise ValueError(f"Shape of dw and w do not match: {dw.shape} != {w.shape}")
-
-        w += self.learning_rate * dw
-        b += self.learning_rate * db
+        w -= self.learning_rate * dw
+        b -= self.learning_rate * db
