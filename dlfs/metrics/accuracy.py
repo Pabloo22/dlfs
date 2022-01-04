@@ -20,4 +20,4 @@ class Accuracy(Metric):
         Returns:
             The accuracy of the model.
         """
-        return np.mean(y_true == y_pred)
+        return np.mean(np.argmax(y_true, axis=1) == np.argmax(y_pred, axis=1))
