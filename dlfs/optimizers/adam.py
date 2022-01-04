@@ -1,7 +1,7 @@
 import numpy as np
 
 from .optimizer import Optimizer
-
+from dlfs import sequential
 
 class Adam(Optimizer):
     """
@@ -14,39 +14,29 @@ class Adam(Optimizer):
         epsilon (float): epsilon for numerical stability
     """
 
-    def __init__(self, lr=0.001, beta1=0.9, beta2=0.999, epsilon=1e-8):
+    def __init__(self, learning_rate=0.001, decay=0., beta1=0.9, beta2=0.999, epsilon=1e-7):
 
         super(Adam, self).__init__(lr)
         self.__beta1 = beta1
         self.__beta2 = beta2
         self.__epsilon = epsilon
-        self.__m = None
-        self.__v = None
-        self.__t = 0
+        self.__iterations = 0
+        self.__decay = 0
+        self.init_layer()
 
-    @property
-    def learning_rate(self):
-        return self.__learning_rate
+    def init_layer(self):
+        self.__layers = []
+        for layer in sequential.layers:
+            self.__layers.append((layer,}
 
-    @learning_rate.setter
-    def learning_rate(self, learning_rate):
-        self.__learning_rate = learning_rate
+    def update(self, layer):
+        if not hasattr(layer, 'weight_cache'):
+            layer.weight_momentums = np.zeros_like(layer.weights)
+            layer.weight_cache = np.zeros_like(layer.weights)
+            layer.bias_momentums = np.zeros_like(layer.bias)
+            layer.bias_cache = np.zeros_like(layer.bias)
 
-    def update(self, parameters: np.ndarray, gradients: np.ndarray):
-        """
-        Update the parameters of the model using the Adam optimization algorithm.
+        layer.weight_momentums = self.__beta1 * layer.weight_momentums + (1 - self.__beta1) * layer.dweights
 
-        Args:
-            parameters: Parameters of the model.
-            gradients: Gradients of the model.
-        """
-        if self.__m is None:
-            self.__m = np.zeros_like(parameters)
-            self.__v = np.zeros_like(parameters)
+    # Call once before any parameter updates
 
-        self.__t += 1
-        self.__m = self.__beta1 * self.__m + (1 - self.__beta1) * gradients
-        self.__v = self.__beta2 * self.__v + (1 - self.__beta2) * np.square(gradients)
-        m_hat = self.__m / (1 - self.__beta1 ** self.__t)
-        v_hat = self.__v / (1 - self.__beta2 ** self.__t)
-        parameters -= self.__learning_rate * m_hat / (np.sqrt(v_hat) + self.__epsilon)
