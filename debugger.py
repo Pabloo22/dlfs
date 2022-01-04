@@ -3,12 +3,12 @@ Temporal file used to debug the code. Feel free to add more tests. This file
 will be removed in the future.
 """
 import numpy as np
-import tensorflow.keras as keras
+# import tensorflow.keras as keras
 
 from dlfs import Sequential
 from dlfs.layers import Dense, Dropout
-from dlfs.optimizers import SGD
-from dlfs.losses import MSE, MAE, BinaryCrossEntropy, CategoricalCrossEntropy
+from dlfs.optimizers import SGD, SGDMomentum
+from dlfs.losses import MSE, MAE, BinaryCrossEntropy, CategoricalCrossentropy
 from dlfs.activation_functions import ReLU, Sigmoid, Softmax
 
 
@@ -38,7 +38,7 @@ def test1():
     model.summary()
 
     # Compiling the model
-    model.compile(loss="mse", optimizer=SGD(lr=0.01))
+    model.compile(loss="mse", optimizer=SGD(learning_rate=0.01))
 
     # Training the model
     model.fit(train_x, train_y, epochs=10, batch_size=1, verbose=2, validation_data=(test_x, test_y))
@@ -166,7 +166,7 @@ def test_loss_functions():
     print(bce.gradient(y_true, y_pred))
 
 
-def test_1():
+def test4():
     from keras.utils import np_utils
 
     # TEST 1
@@ -190,10 +190,10 @@ def test_1():
     model.add(Dense(500, input_shape=(image_height * image_width,) , activation='relu'))
     model.add(Dense(10, activation='softmax'))
     model.summary()
-    model.compile(loss='categorical_crossentropy', optimizer=SGD(lr=0.0001),
+    model.compile(loss='categorical_crossentropy', optimizer=SGDMomentum(learning_rate=0.01),
                   metrics=['accuracy'])
-    model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=100, batch_size=256, verbose=1)
+    model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=100, batch_size=100, verbose=1)
 
 
 if __name__ == '__main__':
-    test_1()
+    test4()

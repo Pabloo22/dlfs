@@ -111,9 +111,9 @@ class Sequential:
 
         # initialize the deltas of the last layer
         if last_layer.activation is None:
-            deltas.appendleft(self.loss.gradient(y_pred, y_true))
+            deltas.appendleft(self.loss.gradient(y_true, y_pred))
         else:
-            deltas.appendleft(self.loss.gradient(y_pred, y_true) * last_layer.activation.derivative(last_layer.z))
+            deltas.appendleft(self.loss.gradient(y_true, y_pred) * last_layer.activation.derivative(last_layer.z))
 
         # backward pass
         for layer in reversed(self.layers[:-1]):
@@ -274,7 +274,7 @@ class Sequential:
                     history["val_loss"].append(epoch_loss)
 
                     for metric in self.metrics:
-                        val_metric = self.metrics[metric].compute_metric(self, x_val, y_val)
+                        val_metric = self.metrics[metric].compute_metric(x_val, y_val)
                         print(f"\t{metric}: {val_metric:.4f}")
                         # add the validation metric to the history
                         history["val_" + metric].append(val_metric)

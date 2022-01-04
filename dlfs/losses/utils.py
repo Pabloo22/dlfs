@@ -1,4 +1,4 @@
-from . import MAE, MSE, BinaryCrossEntropy, CategoricalCrossEntropy
+from . import MAE, MSE, BinaryCrossEntropy, CategoricalCrossentropy
 
 
 def get_loss_function(loss_name: str):
@@ -9,6 +9,6 @@ def get_loss_function(loss_name: str):
     elif loss_name == 'binary_crossentropy':
         return BinaryCrossEntropy()
     elif loss_name == 'categorical_crossentropy':
-        return CategoricalCrossEntropy()
+        return CategoricalCrossentropy()
     else:
         raise ValueError(f'Unknown loss function: {loss_name}')

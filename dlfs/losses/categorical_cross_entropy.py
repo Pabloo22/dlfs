@@ -3,35 +3,48 @@ import numpy as np
 from .loss_function import LossFunction
 
 
-class CategoricalCrossEntropy(LossFunction):
+class CategoricalCrossentropy(LossFunction):
     """
     Cross entropy loss function.
     """
 
     def __init__(self, name="cross_entropy"):
-        super(CategoricalCrossEntropy, self).__init__(name)
+        super(CategoricalCrossentropy, self).__init__(name)
 
     @staticmethod
-    def compute_loss(y_true: np.ndarray, y_pred: np.ndarray) -> float:
+    def compute_loss(y_true: np.ndarray, y_pred: np.ndarray) -> np.ndarray:
         """
         Args:
-            y_pred: (np.array)
-            y_true: (np.array)
+            y_true: the expected distribution of probabilities as a one-hot vector
+            y_pred: the predicted distribution of probabilities
 
         Returns:
-            (float)
+            A numpy array with just a single element
         """
-        return -np.sum(y_true * np.log(y_pred))
+        samples = len(y_pred)
+
+        y_pred_clipped = np.clip(y_pred, 1e-7, 1 - 1e-7)
+
+        correct_confidences = np.sum(y_pred_clipped * y_true, axis=1)
+
+        negative_log_likelihoods = -np.log(correct_confidences)
+        return np.mean(negative_log_likelihoods)
 
     @staticmethod
     def gradient(y_true: np.ndarray, y_pred: np.ndarray) -> np.ndarray:
         """
 
         Args:
-            y_pred: (np.array)
-            y_true: (np.array)
+            y_true: the expected distribution of probabilities as a one-hot vector
+            y_pred: the predicted distribution of probabilities
 
         Returns:
-            (np.array)
+            A numpy array with dimensions (samples, classes)
         """
-        return -y_true / y_pred + (1 - y_true) / (1 - y_pred)
+
+        samples = len(y_pred)
+
+        d_inputs = -y_true / y_pred
+        d_inputs = d_inputs / samples
+
+        return d_inputs
