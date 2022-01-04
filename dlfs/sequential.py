@@ -113,7 +113,7 @@ class Sequential:
         if last_layer.activation is None:
             deltas.appendleft(self.loss.gradient(y_true, y_pred))
         else:
-            deltas.appendleft(self.loss.gradient(y_true, y_pred) * last_layer.activation.derivative(last_layer.z))
+            deltas.appendleft(self.loss.gradient(y_true, y_pred) * last_layer.activation.gradient(last_layer.z))
 
         # backward pass
         for layer in reversed(self.layers[:-1]):
