@@ -6,17 +6,12 @@ from dlfs import sequential
 class Adam(Optimizer):
     """
     Adam optimizer.
-
-    Args:
-        lr (float): learning rate
-        beta1 (float): first moment decay
-        beta2 (float): second moment decay
-        epsilon (float): epsilon for numerical stability
     """
 
     def __init__(self, learning_rate=0.001, decay=0., beta1=0.9, beta2=0.999, epsilon=1e-7):
 
-        super(Adam, self).__init__(lr)
+        super(Adam, self).__init__(learning_rate)
+        self.__current_learning_rate = learning_rate
         self.__beta1 = beta1
         self.__beta2 = beta2
         self.__epsilon = epsilon
