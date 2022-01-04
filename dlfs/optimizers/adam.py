@@ -22,7 +22,7 @@ class Adam(Optimizer):
     def init_layer(self):
         self.__layers = []
         for layer in sequential.layers:
-            self.__layers.append((layer,}
+            ...
 
     def update(self, layer):
         if not hasattr(layer, 'weight_cache'):
