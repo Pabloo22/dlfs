@@ -30,9 +30,9 @@ def test1():
     # Creating the model
     model = Sequential()
     # model.add(Input(input_shape=(None, 2)))
-    model.add(Dense(16, activation="tanh", input_shape=(2,)))  # weight_shape: (2, 16)
+    model.add(Dense(16, activation="relu", input_shape=(2,)))  # weight_shape: (2, 16)
     model.add(Dropout(0.001))
-    model.add(Dense(8, activation="tanh"))  # weight_shape: (16, 8)
+    model.add(Dense(8, activation="relu"))  # weight_shape: (16, 8)
     model.add(Dense(1))  # weight_shape: (8, 1)
 
     model.summary()
@@ -164,6 +164,7 @@ def test_loss_functions():
     print("BinaryCrossEntropy:")
     print(bce(y_true, y_pred))
     print(bce.gradient(y_true, y_pred))
+
 
 def test_1():
     from keras.utils import np_utils

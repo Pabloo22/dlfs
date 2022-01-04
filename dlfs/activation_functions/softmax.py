@@ -11,7 +11,6 @@ class Softmax(ActivationFunction):
     def __init__(self):
         super().__init__(
             name="Softmax",
-            description="Softmax activation function",
             function=lambda x: np.exp(x) / np.sum(np.exp(x), axis=1, keepdims=True),
             derivative=lambda x: self.function(x) * (1 - self.function(x)),
         )

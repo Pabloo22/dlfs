@@ -6,9 +6,8 @@ class ActivationFunction(ABC):
     Base class for activation functions.
     """
 
-    def __init__(self, name, description, function, derivative):
+    def __init__(self, name, function, derivative):
         self.name = name
-        self.description = description
         self.__function = function
         self.__derivative = derivative
 
