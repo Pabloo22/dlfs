@@ -34,16 +34,12 @@ class Layer(ABC):
         self.__has_weights = has_weights  # Whether the layer has weights and biases.
         self.trainable = trainable
         self.initialized = False
-        self.__optimizer = None
         self.__activation = get_activation_function(activation)
         self.inputs = None
         self.z = None  # output of the layer before activation
 
     # Getters
     # -------------------------------------------------------------------------
-    @property
-    def optimizer(self) -> Optimizer:
-        return self.__optimizer
 
     @property
     def activation(self) -> ActivationFunction:
@@ -55,14 +51,6 @@ class Layer(ABC):
 
     # Setters
     # -------------------------------------------------------------------------
-
-    @optimizer.setter
-    def optimizer(self, optimizer: Optimizer):
-
-        if not isinstance(optimizer, Optimizer):
-            raise TypeError(f"{optimizer} is not an instance of Optimizer")
-
-        self.__optimizer = optimizer
 
     @activation.setter
     def activation(self, activation: str):
@@ -114,7 +102,7 @@ class Layer(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def update(self, gradients: np.ndarray):
+    def update(self, optimizer: Optimizer, gradients: np.ndarray):
         raise NotImplementedError
 
     @abstractmethod

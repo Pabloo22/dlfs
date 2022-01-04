@@ -6,7 +6,13 @@ from .activation_function import ActivationFunction
 class Sigmoid(ActivationFunction):
 
     def __init__(self):
-        super().__init__(
-            name='sigmoid',
-            function=lambda x: 1 / (1 + np.exp(-x)),
-            derivative=lambda x: self.function(x) * (1 - self.function(x)))
+        super().__init__(name='sigmoid')
+
+    @staticmethod
+    def forward(x: np.ndarray) -> np.ndarray:
+        return 1 / (1 + np.exp(-x))
+
+    @staticmethod
+    def gradient(z: np.ndarray) -> np.ndarray:
+        sigmoid = Sigmoid.forward(z)
+        return sigmoid * (1 - sigmoid)

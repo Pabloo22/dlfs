@@ -1,4 +1,6 @@
-from abc import ABC
+import numpy as np
+
+from abc import ABC, abstractmethod
 
 
 class ActivationFunction(ABC):
@@ -6,30 +8,33 @@ class ActivationFunction(ABC):
     Base class for activation functions.
     """
 
-    def __init__(self, name, function, derivative):
+    def __init__(self, name):
         self.name = name
-        self.__function = function
-        self.__derivative = derivative
-
-    # Getters
-    # -------------------------------------------------------------------------
-
-    @property
-    def function(self):
-        return self.__function
-
-    @property
-    def derivative(self):
-        return self.__derivative
 
     # Methods
     # -------------------------------------------------------------------------
 
-    def forward(self, x):
-        return self.__function(x)
+    @staticmethod
+    @abstractmethod
+    def forward(x: np.ndarray) -> np.ndarray:
+        """
+        Forward pass of the activation function.
 
-    def gradient(self, x):
-        return self.__derivative(x)
+        Args:
+            x: Input of the activation function.
+        """
+        raise NotImplementedError
+
+    @staticmethod
+    @abstractmethod
+    def gradient(z: np.ndarray) -> np.ndarray:
+        """
+        Compute the gradient of the activation function.
+
+        Args:
+            z: Input of the activation function.
+        """
+        raise NotImplementedError
 
     def __call__(self, x):
         return self.forward(x)

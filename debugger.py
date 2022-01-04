@@ -190,9 +190,9 @@ def test4():
     model.add(Dense(500, input_shape=(image_height * image_width,) , activation='relu'))
     model.add(Dense(10, activation='softmax'))
     model.summary()
-    model.compile(loss='categorical_crossentropy', optimizer=SGDMomentum(learning_rate=0.01),
+    model.compile(loss='categorical_crossentropy', optimizer=SGDMomentum(learning_rate=0.05),
                   metrics=['accuracy'])
-    model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=100, batch_size=100, verbose=1)
+    model.fit(X_train, y_train, epochs=100, batch_size=100, verbose=1)
 
 
 if __name__ == '__main__':

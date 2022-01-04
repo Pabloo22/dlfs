@@ -1,6 +1,7 @@
 import numpy as np
 
 from .layer import Layer
+from dlfs.optimizers import Optimizer
 
 
 class Dense(Layer):
@@ -178,7 +179,7 @@ class Dense(Layer):
         delta = last_delta * dz_da if last_delta.shape == self.output_shape else last_delta @ dz_da
 
         if self.activation is not None:
-            delta *= self.activation.derivative(self.z)
+            delta *= self.activation.gradient(self.z)
 
         return delta
 
@@ -193,11 +194,12 @@ class Dense(Layer):
 
         return self.weights.T
 
-    def update(self, delta: np.ndarray):
+    def update(self, optimizer: Optimizer, delta: np.ndarray):
         """
         Update the weights and biases of the layer.
 
         Args:
+            optimizer (Optimizer): optimizer used to update the weights and biases.
             delta (np.ndarray): delta of the current layer
         """
 
@@ -208,7 +210,7 @@ class Dense(Layer):
         d_weights = (self.inputs.T @ delta) / self.inputs.shape[0]
         d_bias = delta.sum(axis=0, keepdims=True) / self.inputs.shape[0]
 
-        self.optimizer.update((self.weights, self.bias), (d_weights, d_bias))
+        optimizer.update(self, (d_weights, d_bias))
 
     def count_params(self) -> int:
         """
