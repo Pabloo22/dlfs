@@ -40,6 +40,7 @@ class Sequential:
         self.optimizer = None
         self.metrics = None
         self.trainable = True
+        self.counter = 1
 
     def add(self, layer: Layer):
         """
@@ -59,6 +60,10 @@ class Sequential:
             else:
                 layer.initialize(input_shape=layer.input_shape)
 
+        # each layer must have an unique name
+        layer.name = f"{layer.name}{self.counter}"
+        self.counter += 1
+
         self.layers.append(layer)
 
     def compile(self, optimizer: Optimizer or str, loss: LossFunction or str, metrics: List[str] = None):
@@ -75,6 +80,14 @@ class Sequential:
         self.optimizer = get_optimizer(optimizer) if isinstance(optimizer, str) else optimizer
         self.loss = get_loss_function(loss) if isinstance(loss, str) else loss
         self.metrics = {} if metrics is None else {metric: get_metric(metric) for metric in metrics}
+
+        # check that each layer has an unique name
+        names = set()
+        for layer in self.layers:
+            if layer.name in names:
+                raise ValueError(f"The layer name {layer.name} is not unique")
+            names.add(layer.name)
+            self.optimizer.add_slot(layer)
 
     def summary(self):
         """
@@ -144,7 +157,7 @@ class Sequential:
         # backward pass: update the weights
         for i, layer in enumerate(self.layers):
             if layer.trainable:
-                layer.update(deltas[i])
+                layer.update(self.optimizer, deltas[i])
 
         # compute the loss for the batch
         loss = self.loss.compute_loss(y_pred, y_batch)

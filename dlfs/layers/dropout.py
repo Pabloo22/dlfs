@@ -1,6 +1,7 @@
 import numpy as np
 
 from .layer import Layer
+from dlfs.optimizers import Optimizer
 
 
 class Dropout(Layer):
@@ -31,7 +32,7 @@ class Dropout(Layer):
     def summary(self):
         return f"{self.name} (p={self.p})"
 
-    def update(self, gradients: np.ndarray):
+    def update(self, optimzer: Optimizer, gradients: np.ndarray):
         pass
 
     def count_params(self) -> int:

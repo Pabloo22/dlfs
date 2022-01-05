@@ -228,5 +228,5 @@ class Dense(Layer):
         Returns:
             str: summary of the layer
         """
-        return f"Dense: {self.__n_neurons} neurons\t output_shape={self.output_shape}\t " \
+        return f"{self.name}: {self.__n_neurons} neurons\t output_shape={self.output_shape}\t " \
                f"n_params={self.weights.size + self.bias.size}"

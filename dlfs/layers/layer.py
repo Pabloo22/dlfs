@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 import numpy as np
 from typing import Optional
 
-from dlfs.optimizers import Optimizer
 from dlfs.activation_functions import ActivationFunction, get_activation_function
 
 
@@ -13,7 +12,7 @@ class Layer(ABC):
     Args:
         input_shape (tuple or None): Shape of the input.
         output_shape (tuple): Shape of the output.
-        activation_function (str): Activation function to use.
+        activation (str): Activation function to use.
         name (str): Name of the layer.
         trainable (bool): Whether the layer is trainable.
     """
@@ -102,7 +101,13 @@ class Layer(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def update(self, optimizer: Optimizer, gradients: np.ndarray):
+    def update(self, optimizer, gradients: np.ndarray):
+        """
+        Updates the weights and biases of the layer.
+        Args:
+            optimizer (Optimizer): optimizer to use.
+            gradients: gradients of the cost function with respect to the weights and biases of the layer.
+        """
         raise NotImplementedError
 
     @abstractmethod
