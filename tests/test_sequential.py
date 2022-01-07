@@ -1,8 +1,8 @@
 import numpy as np
-import tensorflow.keras as keras
 
 from dlfs import Sequential
-from dlfs.layers import Dense
+from dlfs.layers import Dense, Dropout
+from dlfs.optimizers import SGD, SGDMomentum
 
 
 def get_dataset():
@@ -43,6 +43,8 @@ def create_our_model(weights):
 
 
 def create_keras_model(weights):
+    import tensorflow.keras as keras
+
     model = keras.Sequential()
 
     dense1 = keras.layers.Dense(16, activation="relu", input_shape=(2,), name="dense1")
@@ -114,5 +116,30 @@ def test_train_on_batch():
     assert np.allclose(our_prediction, keras_prediction)
 
 
+def test_boston():
+    # DATA PREPROCESSING
+    from sklearn.model_selection import train_test_split
+    from sklearn.datasets import load_boston
+
+    boston = load_boston()
+    x = boston.data
+    y = boston.target
+
+    # normalize the data attributes
+    x = (x - x.mean(axis=0)) / x.std(axis=0)
+
+    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.33, random_state=42)
+
+    model = Sequential()
+    model.add(Dense(100, input_shape=(x_train.shape[1],), activation='relu'))
+    model.add(Dropout(0.2))
+    model.add(Dense(1))
+    model.summary()
+    model.compile(loss='mse', optimizer=SGDMomentum(learning_rate=0.001), metrics=['mae'])
+    model.fit(x_train, y_train, validation_data=(x_test, y_test), epochs=100, batch_size=1, verbose=3)
+    model.evaluate(x_test, y_test)
+
+
+
 if __name__ == "__main__":
-    test_forward_pass()
+    test_boston()
