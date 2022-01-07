@@ -180,7 +180,7 @@ class Sequential:
         loss = self.loss.compute_loss(y_pred, y_batch)
 
         # compute the metrics for the batch
-        metrics = {metric.name: metric.compute_metric(y_pred, y_batch) for metric in self.metrics.values()}
+        metrics = {metric.name: metric(y_pred, y_batch) for metric in self.metrics.values()}
 
         return {**{'loss': loss}, **metrics}
 
