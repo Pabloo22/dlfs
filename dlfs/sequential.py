@@ -325,8 +325,7 @@ class Sequential:
 
             epoch_metrics = {metric: 0.0 for metric in self.metrics}
             epoch_metrics['loss'] = 0.0
-            if using_validation_data:
-                val_epoch_metrics = {'val_' + metric: 0.0 for metric in epoch_metrics}
+            val_epoch_metrics = {'val_' + metric: 0.0 for metric in epoch_metrics} if using_validation_data else None
 
             val_metrics = None
 
@@ -371,15 +370,19 @@ class Sequential:
                 epoch_metrics = {metric: epoch_metrics[metric] / (len(x) // batch_size) for metric in epoch_metrics}
                 if using_validation_data:
                     val_epoch_metrics = {metric: val_epoch_metrics[metric] / (len(x_val) // batch_size)
-                                     for metric in val_epoch_metrics}
+                                         for metric in val_epoch_metrics}
 
                 # print the metrics of the epoch
-                self.__print_results(epoch_metrics, val_metrics, "Epoch",
+                self.__print_results(epoch_metrics, val_epoch_metrics, "Epoch",
                                      progress=epoch, total=epochs, history=history)
 
             # save the history
             for metric in epoch_metrics:
                 history[metric].append(epoch_metrics[metric] / (len(x) // batch_size))
+
+        if verbose == 3:
+            # print final results
+            self.evaluate(x, y)
         return history
 
     @staticmethod
