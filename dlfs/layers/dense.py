@@ -157,6 +157,10 @@ class Dense(Layer):
         # save the inputs
         self.inputs = inputs
         self.z = inputs @ self.weights + self.bias
+        # check overflow
+        if np.any(np.isnan(self.z)):
+            raise OverflowError("An overflow occurred during the forward pass")
+
         return self.z if self.activation is None else self.activation(self.z)
 
     def get_delta(self, last_delta: np.ndarray, dz_da: np.ndarray) -> np.ndarray:
@@ -180,6 +184,10 @@ class Dense(Layer):
 
         if self.activation is not None:
             delta *= self.activation.gradient(self.z)
+
+        # check overflow
+        if np.any(np.isnan(delta)):
+            raise OverflowError("An overflow occurred during the backward pass")
 
         return delta
 
@@ -210,7 +218,15 @@ class Dense(Layer):
         d_weights = (self.inputs.T @ delta) / self.inputs.shape[0]
         d_bias = delta.sum(axis=0, keepdims=True) / self.inputs.shape[0]
 
+        # check overflow
+        if np.isnan(d_weights).any() or np.isnan(d_bias).any():
+            raise OverflowError("The gradient is too large")
+
         optimizer.update(self, (d_weights, d_bias))
+
+        # check overflow in the weights and biases
+        if np.any(np.isnan(self.weights)) or np.any(np.isnan(self.bias)):
+            raise OverflowError("An overflow occurred during the update")
 
     def count_params(self) -> int:
         """
