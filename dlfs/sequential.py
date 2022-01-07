@@ -184,6 +184,58 @@ class Sequential:
 
         return {**{'loss': loss}, **metrics}
 
+    def __check_data(self, x: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+
+        if x.shape[1:] != self.layers[0].input_shape[1:]:
+            raise ValueError(f"The input shape of the model is {self.layers[0].input_shape}")
+
+        if y.ndim == 1:
+            y = y.reshape(-1, 1)
+
+        # check if the labels are valid
+        if y.shape[1:] != self.layers[-1].output_shape[1:]:
+            raise ValueError(f"The output shape of the model is {self.layers[-1].output_shape}")
+
+        return x, y
+
+    def __print_results(self,
+                        metrics: Dict[str, float],
+                        val_metrics: Dict[str, float] = None,
+                        title: str = "Epoch",
+                        progress: int = 0,
+                        total: int = 0,
+                        history: Dict[str, list] = None) -> None:
+        """
+        Print the results of the training and update the history
+        Args:
+            metrics: the metrics (and loss) of the current epoch
+            val_metrics: the metrics of the validation set
+            title: the title of the printed results (Batch or Epoch)
+            progress: the progress of the training. The number of batches processed or the number of epochs
+            total: the total number of batches or epochs
+            history: the history of the training to update
+        """
+
+        using_validation = val_metrics is not None
+        if using_validation:
+            # print the results
+            print(f"{title} ({progress}/{total}) - loss: {metrics['loss']} - val_loss: {val_metrics['val_loss']}")
+            for metric in self.metrics:
+                print(f"- {metric}: {metrics[metric]} - val_{metric}: {val_metrics['val_' + metric]}")
+        else:
+            # print the results
+            print(f"{title} ({progress}/{total}) - loss: {metrics['loss']}")
+            for metric in self.metrics:
+                print(f"- {metric}: {metrics[metric]}")
+
+        if history is not None:
+            for metric in metrics:
+                history[metric].append(metrics[metric])
+            if using_validation:
+                for metric in val_metrics:
+                    history[metric].append(val_metrics[metric])
+        print("")
+
     def fit(self,
             x: np.ndarray,
             y: np.ndarray,
@@ -202,7 +254,11 @@ class Sequential:
             y: the labels
             epochs: the number of epochs to train the model
             batch_size: the batch size
-            verbose: the verbosity mode. 0 is progress bar, 1 is one line per epoch, 2 is one line per batch
+            verbose: the verbosity mode:
+                * 0 doesn't show anything.
+                * 1 prints one line per batch.
+                * 2 prints one line per epoch.
+                * 3 shows the progress bar (per epoch).
             validation_data: the validation data
             validation_split: the validation split
             shuffle: whether to shuffle the data
@@ -213,17 +269,24 @@ class Sequential:
         if self.optimizer is None or self.loss is None:
             raise ValueError("You must compile the model before training")
 
-        using_validation_data = False
+        # check if the data dimensions are valid
+        x, y = self.__check_data(x, y)
+
+        using_validation_data = True
         # if validation data is not provided, split the data into train and validation
         if validation_split > 0:
             if validation_data is not None:
                 raise ValueError("validation_data and validation_split cannot be used together")
-            x_train, x_val, y_train, y_val = train_test_split(x, y, test_size=validation_split)
-            using_validation_data = True
-
-        if validation_data is not None:
+            x, x_val, y, y_val = train_test_split(x, y, test_size=validation_split)
+        elif validation_data is not None:
             x_val, y_val = validation_data
-            using_validation_data = True
+
+            # check if the data dimensions are valid
+            x_val, y_val = self.__check_data(x_val, y_val)
+        else:
+            x_val = None
+            y_val = None
+            using_validation_data = False
 
         if using_validation_data and verbose == 0:
             raise ValueError("validation_data and verbose=0 cannot be used together")
@@ -254,14 +317,18 @@ class Sequential:
         # --------------------------------------------------
         # create the progress bar if verbose is 0
         r = range(initial_epoch, epochs)
-        range_epochs = r if verbose > 0 else tqdm(r)
+        range_epochs = r if verbose != 3 else tqdm(r)
 
         # loop over the number of epochs
         for epoch in range_epochs:
             # initialize the total loss for the epoch if verbose is 2
-            if verbose > 0:
-                epoch_loss = 0.0
-                epoch_metrics = {metric: 0.0 for metric in self.metrics}
+
+            epoch_metrics = {metric: 0.0 for metric in self.metrics}
+            epoch_metrics['loss'] = 0.0
+            if using_validation_data:
+                val_epoch_metrics = {'val_' + metric: 0.0 for metric in epoch_metrics}
+
+            val_metrics = None
 
             # loop over the data in batches
             total_data_used_per_epoch = 0
@@ -274,56 +341,45 @@ class Sequential:
                 total_data_used_per_epoch += x_batch.shape[0]
 
                 metrics = self.train_on_batch(x_batch, y_batch)
-                loss = metrics["loss"]
-                if using_validation_data:
-                    val_loss = self.loss.compute_loss(self.predict(x_val, training=False), y_val)
 
-                # update the total loss for the epoch if verbose is not zero
-                if verbose > 0:
-                    epoch_loss += loss
+                # update the total loss and metrics for the epoch
+                for metric in epoch_metrics:
+                    epoch_metrics[metric] += metrics[metric]
+
+                if using_validation_data:
+                    # compute the loss and the metrics for the validation data
+                    val_loss = self.loss.compute_loss(self.predict(x_val), y_val)
+                    val_metrics = {metric: self.metrics[metric](self.predict(x_val), y_val) for metric in self.metrics}
+
+                    # add val_loss to val_metrics
+                    val_metrics["val_loss"] = val_loss
+
+                    # update the total validation loss and metrics for the epoch
+                    val_epoch_metrics["val_loss"] += val_loss
                     for metric in self.metrics:
-                        epoch_metrics[metric] += metrics[metric]
+                        val_epoch_metrics["val_" + metric] += val_metrics[metric]
 
                 # print the loss and the metrics per batch (if verbose is 1)
                 if verbose == 1:
-                    if using_validation_data:
-                        print(f"Batch ({total_data_used_per_epoch}/{x.shape[0]}) "
-                              f"- loss: {loss} - val_loss: {val_loss}")
-                    else:
-                        print(f"Batch ({total_data_used_per_epoch}/{x.shape[0]}) - loss: {loss}")
-                    print(f"\t{', '.join([f'{metric}: {metrics[metric]:.4f}' for metric in self.metrics])}")
+                    self.__print_results(metrics, val_metrics, "Batch",
+                                         progress=total_data_used_per_epoch, total=len(x))
 
-            # print the metrics (if verbose is 1 or 2)
-            if verbose > 0:
-                print(f"Epoch {epoch + 1}/{epochs}")
-                print(f"\tTrain loss: {epoch_loss / (len(x) // batch_size):.4f}")
-                for metric in self.metrics:
-                    print(f"\t{metric}: {epoch_metrics[metric] / (len(x) // batch_size):.4f}")
+            # print the metrics of the epoch (if verbose is 1 or 2)
+            if 0 < verbose < 3:
 
+                # compute the average loss and metrics for the epoch
+                epoch_metrics = {metric: epoch_metrics[metric] / (len(x) // batch_size) for metric in epoch_metrics}
                 if using_validation_data:
-                    y_pred_val = self.predict(x_val)
-                    val_loss = self.loss.compute_loss(y_pred_val, y_val)
-                    print(f"\tValidation loss: {val_loss}")
-                    # add the validation loss to the history
-                    history["val_loss"].append(epoch_loss)
+                    val_epoch_metrics = {metric: val_epoch_metrics[metric] / (len(x_val) // batch_size)
+                                     for metric in val_epoch_metrics}
 
-                    for metric in self.metrics:
-                        val_metric = self.metrics[metric](x_val, y_val)
-                        print(f"\t{metric}: {val_metric:.4f}")
-                        # add the validation metric to the history
-                        history["val_" + metric].append(val_metric)
+                # print the metrics of the epoch
+                self.__print_results(epoch_metrics, val_metrics, "Epoch",
+                                     progress=epoch, total=epochs, history=history)
 
-                    # append the val_loss and val_metrics to the history
-                    history["val_loss"].append(val_loss)
-                    for metric in self.metrics:
-                        history["val_" + metric].append(self.metrics[metric](y_pred_val, y_val))
-
-            else:
-                # save the history
-                history["loss"].append(epoch_loss)
-                for metric in self.metrics:
-                    history[metric].append(epoch_metrics[metric] / len(x))
-            print("")
+            # save the history
+            for metric in epoch_metrics:
+                history[metric].append(epoch_metrics[metric] / (len(x) // batch_size))
         return history
 
     @staticmethod
@@ -369,6 +425,9 @@ class Sequential:
         Returns:
             The average loss and the average metrics of the model on the given data
         """
+        # check the data
+        x, y = self.__check_data(x, y)
+
         # get the batch size
         batch_size = batch_size or len(x)
 
@@ -405,7 +464,7 @@ class Sequential:
 
         # print final loss and metrics
         if verbose > 0:
-            print(f"Average loss: {avg_loss}")
+            print(f"loss: {avg_loss}")
             print(f"{', '.join([f'{metric}: {avg_metrics[metric]:.4f}' for metric in self.metrics])}")
 
         return {'loss': avg_loss, **avg_metrics}

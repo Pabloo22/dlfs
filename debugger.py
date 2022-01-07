@@ -41,7 +41,7 @@ def test1():
     model.compile(loss="mse", optimizer=SGDMomentum(learning_rate=0.01))
 
     # Training the model
-    model.fit(train_x, train_y, epochs=10, batch_size=1, verbose=2, validation_data=(test_x, test_y))
+    model.fit(train_x, train_y, epochs=10, batch_size=1, verbose=3, validation_data=(test_x, test_y))
 
     # Evaluating the model
     evaluate_model(model, train_x, train_y, test_x, test_y)
@@ -196,4 +196,4 @@ def test4():
 
 
 if __name__ == '__main__':
-    test4()
+    test1()
