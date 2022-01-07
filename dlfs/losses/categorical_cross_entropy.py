@@ -44,7 +44,8 @@ class CategoricalCrossentropy(LossFunction):
 
         samples = len(y_pred)
 
-        d_inputs = -y_true / y_pred
-        d_inputs = d_inputs / samples
+        y_pred_clipped = np.clip(y_pred, 1e-7, 1 - 1e-7)
 
-        return d_inputs
+        gradients = -y_true / y_pred_clipped
+
+        return gradients / samples

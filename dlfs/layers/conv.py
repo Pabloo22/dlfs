@@ -183,11 +183,16 @@ class Conv2D(Layer):
         return convolved_image
 
     @staticmethod
+    def pad_image(image: np.ndarray, kernel_size: tuple, padding: int = 0) -> np.ndarray:
+        pass
+
+    @staticmethod
     def convolve(image: np.ndarray,
                  kernel: np.ndarray,
                  bias: np.ndarray = None,
                  padding: bool = False,
-                 stride: int = 1) -> np.ndarray:
+                 stride: int = 1,
+                 mode: str = "winograd") -> np.ndarray:
         """
         Performs a valid convolution to an image with a kernel.
 
@@ -197,6 +202,7 @@ class Conv2D(Layer):
             bias: A bias tensor of shape (n_channels,).
             padding: Whether to pad the image.
             stride: convolution stride size.
+            mode: The convolution algorithm to use.
 
         Returns:
             A tensor of shape (n_channels, output_height, output_width).
@@ -212,15 +218,22 @@ class Conv2D(Layer):
                                    (kernel_width // 2, kernel_width // 2)),
                            mode='constant', constant_values=0)
 
-        # Create the output image
-        output_height = (image_height - kernel_height) // stride + 1
-        output_width = (image_width - kernel_width) // stride + 1
+        if mode == "winograd":
+            return Conv2D.winograd_convolution(image, kernel, bias, padding, stride)
 
-        # Initialize the output tensor
-        convolved_image = np.zeros((n_channels, output_height, output_width))
 
-        # Perform the convolution
-
+    def winograd_convolution(self,
+                             image: np.ndarray,
+                             kernel: np.ndarray,
+                             bias: np.ndarray = None,
+                             padding: bool = False,
+                             stride: int = 1) -> np.ndarray:
+        """
+        Performs a valid convolution to an image with a kernel using the Winograd algorithm.
+        """
+        # Get the dimensions of the image and kernel
+        n_channels, image_height, image_width = image.shape
+        kernel_height, kernel_width = kernel.shape[1:]
 
 
     def forward(self, x: np.ndarray, training: bool = False) -> np.ndarray:

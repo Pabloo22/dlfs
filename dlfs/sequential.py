@@ -126,7 +126,24 @@ class Sequential:
         if last_layer.activation is None:
             deltas.appendleft(self.loss.gradient(y_true, y_pred))
         else:
-            deltas.appendleft(self.loss.gradient(y_true, y_pred) * last_layer.activation.gradient(last_layer.z))
+            activation_gradient = last_layer.activation.gradient(last_layer.z)
+            # check if the gradient is a matrix of tensors with shape=(m, n_neurons) or a tensor of jacobian matrices
+            # with shape (m, n_neurons, n_neurons). (m is the number of samples)
+            if activation_gradient.ndim == 2:
+                deltas.appendleft(self.loss.gradient(y_true, y_pred) * activation_gradient)
+            else:
+
+                loss_gradient = self.loss.gradient(y_true, y_pred)[:, np.newaxis, :]
+
+                delta = np.einsum('ijk,ikl->il', loss_gradient, activation_gradient)
+
+                # The above einsum is equivalent to:
+                # delta = np.empty_like(last_layer.z)
+                # batch_size = y_true.shape[0]
+                # for i in range(batch_size):  # for each sample
+                #     delta[i] = loss_gradient[i] @ activation_gradient[i]
+
+                deltas.appendleft(delta)
 
         # backward pass
         for layer in reversed(self.layers[:-1]):
@@ -248,7 +265,11 @@ class Sequential:
 
             # loop over the data in batches
             total_data_used_per_epoch = 0
-            for x_batch, y_batch in self.batch_generator(x, y, batch_size, shuffle):
+            generator = self.batch_generator(x, y, batch_size, shuffle)
+            if verbose == 2:
+                generator = tqdm(generator, total=len(x) // batch_size)
+
+            for x_batch, y_batch in generator:
 
                 total_data_used_per_epoch += x_batch.shape[0]
 
@@ -277,7 +298,7 @@ class Sequential:
                 print(f"Epoch {epoch + 1}/{epochs}")
                 print(f"\tTrain loss: {epoch_loss / (len(x) // batch_size):.4f}")
                 for metric in self.metrics:
-                    print(f"\t{metric}: {epoch_metrics[metric] / len(x)}")
+                    print(f"\t{metric}: {epoch_metrics[metric] / (len(x) // batch_size):.4f}")
 
                 if using_validation_data:
                     y_pred_val = self.predict(x_val)
@@ -287,7 +308,7 @@ class Sequential:
                     history["val_loss"].append(epoch_loss)
 
                     for metric in self.metrics:
-                        val_metric = self.metrics[metric].compute_metric(x_val, y_val)
+                        val_metric = self.metrics[metric](x_val, y_val)
                         print(f"\t{metric}: {val_metric:.4f}")
                         # add the validation metric to the history
                         history["val_" + metric].append(val_metric)
@@ -295,14 +316,14 @@ class Sequential:
                     # append the val_loss and val_metrics to the history
                     history["val_loss"].append(val_loss)
                     for metric in self.metrics:
-                        history["val_" + metric].append(self.metrics[metric].compute_metric(y_pred_val, y_val))
+                        history["val_" + metric].append(self.metrics[metric](y_pred_val, y_val))
+
+            else:
+                # save the history
+                history["loss"].append(epoch_loss)
+                for metric in self.metrics:
+                    history[metric].append(epoch_metrics[metric] / len(x))
             print("")
-
-            # save the history
-            history["loss"].append(epoch_loss)
-            for metric in self.metrics:
-                history[metric].append(epoch_metrics[metric] / len(x))
-
         return history
 
     @staticmethod
@@ -370,7 +391,7 @@ class Sequential:
             loss = self.loss.compute_loss(y_pred, y_batch)
 
             # compute the metrics for the batch
-            metrics = {metric: self.metrics[metric].compute_metric(y_pred, y_batch) for metric in self.metrics}
+            metrics = {metric: self.metrics[metric](y_pred, y_batch) for metric in self.metrics}
 
             # update the loss and the metrics
             avg_loss += 1/(i + 1) * (loss - avg_loss)

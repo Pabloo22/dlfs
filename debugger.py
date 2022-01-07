@@ -192,8 +192,8 @@ def test4():
     model.summary()
     model.compile(loss='categorical_crossentropy', optimizer=SGDMomentum(learning_rate=0.05),
                   metrics=['accuracy'])
-    model.fit(X_train, y_train, epochs=100, batch_size=100, verbose=1)
+    model.fit(X_train, y_train, epochs=5, batch_size=100, verbose=2)
 
 
 if __name__ == '__main__':
-    test1()
+    test4()

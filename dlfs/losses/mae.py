@@ -8,7 +8,7 @@ class MAE(LossFunction):
     Class that calculates the Mean Absolute Error loss
     """
     def __init__(self):
-        super(MAE, self).__init__(name="MAE")
+        super(MAE, self).__init__(name="mae")
 
     @staticmethod
     def compute_loss(y_true: np.ndarray, y_pred: np.ndarray):

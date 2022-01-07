@@ -14,3 +14,6 @@ class Metric(ABC):
 
     def __str__(self):
         return self.name
+
+    def __call__(self, y_true: np.ndarray, y_pred: np.ndarray) -> float:
+        return self.compute_metric(y_true, y_pred)

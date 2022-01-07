@@ -9,7 +9,7 @@ class MSE(LossFunction):
     """
 
     def __init__(self):
-        super(MSE, self).__init__(name="MSE")
+        super(MSE, self).__init__(name="mse")
 
     @staticmethod
     def compute_loss(y_true, y_pred):

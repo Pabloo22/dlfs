@@ -23,20 +23,21 @@ class Softmax(ActivationFunction):
     def gradient(z: np.ndarray) -> np.ndarray:
         """
         Compute the gradient of the softmax of the input.
+        Args:
+            z: The input to the softmax function. It has shape (batch_size, num_classes).
         """
-
-        # create initial gradient matrix
-        gradients = np.empty_like(z)
-
-        # compute the softmax of the input
+        batch_size = z.shape[0]
+        jacobian = np.empty((batch_size, z.shape[1], z.shape[1]))
         softmax = Softmax.forward(z)
 
-        # compute the gradient of the softmax
-        for i in range(len(z)):
-            for j in range(len(z[i])):
-                if j == np.argmax(z[i]):
-                    gradients[i][j] = softmax[i] * (1 - softmax[i])
-                else:
-                    gradients[i][j] = -softmax[i] * softmax[j]
+        # We can use np.einsum to compute the jacobian in a more efficient way. Than just using:
+        # for m in range(batch_size):
+        #     for i in range(z.shape[1]):
+        #         for j in range(z.shape[1]):
+        #             jacobian[m, i, j] = softmax[m, i] * ((i == j) - softmax[m, j])
+        for m in range(batch_size):
+            for i in range(z.shape[1]):
+                for j in range(z.shape[1]):
+                    jacobian[m, i, j] = softmax[m, i] * ((i == j) - softmax[m, j])
 
-        return gradients
+        return jacobian
