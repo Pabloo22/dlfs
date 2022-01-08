@@ -30,7 +30,6 @@ class Sequential:
         # check that the first layers has set the input shape
         if layers and layers[0].input_shape is None:
             raise ValueError("The first layer must have an input shape")
-
         self.layers = []
         if layers is not None:
             for layer in layers:
@@ -39,8 +38,18 @@ class Sequential:
         self.loss = None
         self.optimizer = None
         self.metrics = None
-        self.trainable = True
+        self.__trainable = True
         self.counter = 1
+
+    @property
+    def trainable(self):
+        return self.__trainable
+
+    @trainable.setter
+    def trainable(self, value: bool):
+        self.__trainable = value
+        for layer in self.layers:
+            layer.trainable = value
 
     def add(self, layer: Layer):
         """
@@ -65,6 +74,16 @@ class Sequential:
         self.counter += 1
 
         self.layers.append(layer)
+
+    def concatenate(self, model: 'Sequential'):
+        """
+        Concatenate two models
+        Args:
+            model (Sequential): the model to concatenate
+        """
+        if self.layers[-1].output_shape != model.layers[0].input_shape:
+            raise ValueError("The two models must have the same input shape")
+        self.layers += model.layers
 
     def compile(self, optimizer: Optimizer or str, loss: LossFunction or str, metrics: List[str] = None):
         """
@@ -557,11 +576,7 @@ class Sequential:
         return iter(self.layers)
 
     def __add__(self, other: 'Sequential'):
-        return Sequential(self.layers + other.layers)
-
-    def __iadd__(self, other: 'Sequential'):
-        self.layers += other.layers
-        return self
+        return self.concatenate(other)
 
     def __copy__(self):
         return deepcopy(Sequential(self.layers))
