@@ -576,7 +576,10 @@ class Sequential:
         return iter(self.layers)
 
     def __add__(self, other: 'Sequential'):
-        return self.concatenate(other)
+        return Sequential(self.layers + other.layers)
+
+    def __iadd__(self, other: 'Sequential'):
+        self.concatenate(other)
 
     def __copy__(self):
         return deepcopy(Sequential(self.layers))
