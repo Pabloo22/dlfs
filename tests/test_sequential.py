@@ -3,6 +3,9 @@ import numpy as np
 from dlfs import Sequential
 from dlfs.layers import Dense, Dropout
 from dlfs.optimizers import SGD, SGDMomentum
+from dlfs.losses import MSE, MAE, BinaryCrossEntropy, CategoricalCrossentropy
+from dlfs.activation_functions import ReLU, Sigmoid, Softmax
+
 
 
 def get_dataset():
@@ -139,6 +142,28 @@ def test_boston():
     model.fit(x_train, y_train, validation_data=(x_test, y_test), epochs=100, batch_size=1, verbose=3)
     model.evaluate(x_test, y_test)
 
+
+def test_cancer():
+    # DATA PREPROCESSING
+    from sklearn.model_selection import train_test_split
+    from sklearn.datasets import load_breast_cancer
+    from sklearn.preprocessing import MinMaxScaler
+    cancer = load_breast_cancer()
+    target_names = cancer.target_names
+    feature_names = cancer.feature_names
+    scaler = MinMaxScaler()
+    scaler.fit(cancer.data)
+    cancer_scaled = scaler.transform(cancer.data)
+    X = cancer_scaled
+    y = cancer.target
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
+
+    model = Sequential()
+    model.add(Dense(500, input_shape=(X_train.shape[1],), activation='relu'))
+    model.add(Dense(1, activation='sigmoid'))
+    model.summary()
+    model.compile(loss='binary_crossentropy', optimizer=SGDMomentum(learning_rate=0.001), metrics=['accuracy'])
+    history = model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=100, batch_size=5, verbose=1)
 
 
 if __name__ == "__main__":
