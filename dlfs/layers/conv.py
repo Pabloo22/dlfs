@@ -76,12 +76,9 @@ class Conv2D(Layer):
         Initialize the layer. Should be called after the input shape is set.
 
         Args:
-            input_shape (tuple): input shape of the layer, it has the form (n_samples (None), n_features)
+            input_shape (tuple): input shape of the layer, it has the form (n_samples, height, width, n_channels)
             weights (np.ndarray): weights of the layer (optional, recommended to be None).
-                The weights has the shape (n_neurons_prev_layer, n_neurons_current_layer). Each column of the weights
-                matrix represents a neuron and the values of the column are its weights.
-            bias (np.ndarray): bias of the layer (optional, recommended to be None). The bias has the shape
-                (1, n_neurons_current_layer).
+            bias (np.ndarray): bias of the layer (optional, recommended to be None).
         """
 
         # check if the input shape is correct
@@ -119,11 +116,12 @@ class Conv2D(Layer):
         else:
             raise ValueError("Unknown weights initialization")
 
-        bias_shape = (1, self.n_filters)
+        bias_shape = (self.n_filters,)
         # initialize bias
         if bias is not None:
             if bias.shape != bias_shape:
-                raise ValueError(f"The shape of the bias should be (1, n_neurons_current_layer). "
+                raise ValueError(f"The shape of the bias should be "
+                                 "(n_channels_current_layer). "
                                  f"Got {bias.shape}, expected {bias_shape}")
             self.bias = bias
         elif self.bias_init == "zeros":
@@ -138,6 +136,33 @@ class Conv2D(Layer):
             raise ValueError("Unknown bias initialization")
 
         self.initialized = True
+
+    def set_weights(self, weights: np.ndarray = None, bias: np.ndarray = None):
+        """
+        Set the weights and bias of the layer.
+
+        Args:
+            weights (np.ndarray): weights of the layer.
+            bias (np.ndarray): bias of the layer.
+        """
+        if weights is not None:
+            # check if the weights shape is correct
+            weight_shape = (self.input_shape[3], self.kernel_size[0], self.kernel_size[1], self.n_filters)
+            if weights.shape != weight_shape:
+                raise ValueError(f"The shape of the weights should be "
+                                 "(n_channels_prev_layer, kernel_height, kernel_width, n_channels_current_layer). "
+                                 f"Got {weights.shape}, expected {weight_shape}")
+            self.weights = weights
+
+        if bias is not None:
+            # check if the bias shape is correct
+            bias_shape = (self.n_filters,)
+            if bias.shape != bias_shape:
+                raise ValueError(f"The shape of the bias should be "
+                                 "(n_channels_current_layer). "
+                                 f"Got {bias.shape}, expected {bias_shape}")
+
+            self.bias = bias
 
     @staticmethod
     def convolve_simple_grayscale(image: np.ndarray,
