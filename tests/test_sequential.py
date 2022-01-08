@@ -142,4 +142,4 @@ def test_boston():
 
 
 if __name__ == "__main__":
-    test_boston()
+    test_cancer()
