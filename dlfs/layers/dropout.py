@@ -30,13 +30,13 @@ class Dropout(Layer):
         return self.mask
 
     def summary(self):
-        return f"{self.name} (p={self.p})"
+        return f"{self.name} (p={1 - self.p})"
 
-    def update(self, optimzer: Optimizer, gradients: np.ndarray):
+    def update(self, optimizer: Optimizer, gradients: np.ndarray):
         pass
 
     def count_params(self) -> int:
         return 0
 
-    def set_weights(self, weights: np.ndarray, bias: np.ndarray):
+    def set_weights(self, weights: np.ndarray = None, bias: np.ndarray = None):
         raise NotImplementedError("Dropout layer has no weights")

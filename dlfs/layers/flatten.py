@@ -55,7 +55,7 @@ class Flatten(Layer):
     def get_dz_da(self) -> np.ndarray:
         return np.ones(self.output_shape)
 
-    def update(self, gradients: np.ndarray):
+    def update(self, optimizer, gradients: np.ndarray):
         pass
 
     def count_params(self) -> int:
