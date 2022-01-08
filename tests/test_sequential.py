@@ -3,7 +3,7 @@ import numpy as np
 from dlfs import Sequential
 from dlfs.layers import Dense, Dropout
 from dlfs.optimizers import SGD, SGDMomentum
-from dlfs.losses import MSE, MAE, BinaryCrossEntropy, CategoricalCrossentropy
+from dlfs.losses import MSE, MAE, BinaryCrossentropy, CategoricalCrossentropy
 from dlfs.activation_functions import ReLU, Sigmoid, Softmax
 
 

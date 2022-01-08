@@ -8,7 +8,7 @@ import numpy as np
 from dlfs import Sequential
 from dlfs.layers import Dense, Dropout
 from dlfs.optimizers import SGD, SGDMomentum
-from dlfs.losses import MSE, MAE, BinaryCrossEntropy, CategoricalCrossentropy
+from dlfs.losses import MSE, MAE, BinaryCrossentropy, CategoricalCrossentropy
 from dlfs.activation_functions import ReLU, Sigmoid, Softmax
 
 
@@ -160,7 +160,7 @@ def test_loss_functions():
     print(mse(y_true, y_pred))
     print(mse.gradient(y_true, y_pred))
 
-    bce = BinaryCrossEntropy()
+    bce = BinaryCrossentropy()
     print("BinaryCrossEntropy:")
     print(bce(y_true, y_pred))
     print(bce.gradient(y_true, y_pred))
