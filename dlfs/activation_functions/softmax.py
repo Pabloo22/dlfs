@@ -17,7 +17,7 @@ class Softmax(ActivationFunction):
         Compute the softmax of the input.
         """
         exp_x = np.exp(x - np.max(x, axis=1, keepdims=True))
-        return np.mean(exp_x / np.sum(exp_x), axis=1, keepdims=True)
+        return exp_x / np.sum(exp_x, axis=1, keepdims=True)
 
     @staticmethod
     def gradient(z: np.ndarray) -> np.ndarray:
