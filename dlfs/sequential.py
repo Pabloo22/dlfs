@@ -348,7 +348,8 @@ class Sequential:
                 if using_validation_data:
                     # compute the loss and the metrics for the validation data
                     val_loss = self.loss.compute_loss(self.predict(x_val), y_val)
-                    val_metrics = {metric: self.metrics[metric](self.predict(x_val), y_val) for metric in self.metrics}
+                    val_metrics = {"val_" + metric: self.metrics[metric](self.predict(x_val), y_val)
+                                   for metric in self.metrics}
 
                     # add val_loss to val_metrics
                     val_metrics["val_loss"] = val_loss
@@ -356,7 +357,7 @@ class Sequential:
                     # update the total validation loss and metrics for the epoch
                     val_epoch_metrics["val_loss"] += val_loss
                     for metric in self.metrics:
-                        val_epoch_metrics["val_" + metric] += val_metrics[metric]
+                        val_epoch_metrics["val_" + metric] += val_metrics["val_" + metric]
 
                 # print the loss and the metrics per batch (if verbose is 1)
                 if verbose == 1:
