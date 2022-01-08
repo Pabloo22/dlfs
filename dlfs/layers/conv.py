@@ -1,158 +1,157 @@
 import numpy as np
-from typing import Tuple
+from typing import Tuple, Union
 
 from .layer import Layer
-from dlfs.activation_functions import get_activation_function, ActivationFunction
+from dlfs.activation_functions import ActivationFunction
 
 
 class Conv2D(Layer):
     """
     Convolutional layer
 
+    (inspiration from keras)
+
     Args:
-        kernel_size (int): Size of the convolutional kernel
+        kernel_size (tuple): tuple of 2 integers, specifying the height and width of the 2D convolution window.
         n_filters (int): Number of filters
-        stride (int): Stride of the convolutional kernel
-        padding (str): Padding type
+        stride (tuple or int): specifying the strides of the convolution along the height and width.
+                        Can be a single integer to specify the same value for all spatial dimensions
+        padding (bool): If True, add padding to the input so that the output has the same shape as the input
+                        (assuming stride = 1)
         activation (ActivationFunction): Activation function
         use_bias (bool): Whether to use bias
         name (str): Name of the layer
     """
 
-    __kernel_size: Tuple[int, int]
-    __n_filters: int
-    __stride: int
-    __padding: int
-    __weights: np.ndarray
-    __bias: np.ndarray
-    __activation: ActivationFunction
-    __use_bias: bool
-
     def __init__(self,
-                 kernel_size: tuple,
+                 kernel_size: Union[Tuple[int, int], int],
                  n_filters: int,
-                 stride: int = 1,
+                 stride: Union[tuple[int, int], int] = (1, 1),
                  padding: bool = False,
-                 activation: str = None,
+                 activation: str = "valid",
                  use_bias: bool = True,
-                 name: str = None):
+                 mode: str = 'winograd',
+                 name: str = "Conv2D",
+                 input_shape: tuple = None,
+                 weights_init: str = "xavier",
+                 bias_init: str = "zeros"):
 
-        super().__init__(name=name)
-        self.__kernel_size = kernel_size
-        self.__n_filters = n_filters
-        self.__stride = stride
-        self.__padding = padding
-        self.__weights = np.random.randn(n_filters, *kernel_size)
-        self.__bias = np.random.randn(n_filters)
-        self.__input = None
-        self.__output = None
-        self.__activation = get_activation_function(activation)
-        self.__use_bias = use_bias
+        if n_filters <= 0:
+            raise ValueError("The number of filters should be greater than 0")
+        if len(kernel_size) != 2:
+            raise ValueError("The kernel size should be a tuple of two integers")
+        if kernel_size[0] <= 0 or kernel_size[1] <= 0:
+            raise ValueError("The kernel size should be greater than 0")
+        if stride <= 0:
+            raise ValueError("The stride should be greater than 0")
+        if mode not in ['winograd', 'simple']:
+            raise ValueError("Unknown convolution mode")
+        if isinstance(kernel_size, int):
+            kernel_size = (kernel_size, kernel_size)
+        if isinstance(stride, int):
+            stride = (stride, stride)
 
-    # Getters
-    # -------------------------------------------------------------------------
+        input_shape = None if input_shape is None else (None, *input_shape)
+        output_shape = (None,
+                        input_shape[1] - kernel_size[0] + 1,
+                        input_shape[2] - kernel_size[1] + 1,
+                        n_filters)
 
-    @property
-    def kernel_size(self) -> tuple:
-        return self.__kernel_size
+        super().__init__(input_shape=input_shape,
+                         output_shape=output_shape,
+                         activation=activation,
+                         name=name)
 
-    @property
-    def filters(self) -> int:
-        return self.__n_filters
+        self.kernel_size = kernel_size
+        self.n_filters = n_filters
+        self.stride = stride
+        self.padding = padding
+        self.use_bias = use_bias
+        self.mode = mode
+        self.weights_init = weights_init
+        self.bias_init = bias_init
 
-    @property
-    def params(self) -> list:
-        return [self.__weights, self.__bias]
+    def initialize(self, input_shape: tuple, weights: np.ndarray = None, bias: np.ndarray = None):
+        """
+        Initialize the layer. Should be called after the input shape is set.
 
-    @property
-    def n_params(self):
-        return self.__weights.size + self.__bias.size
+        Args:
+            input_shape (tuple): input shape of the layer, it has the form (n_samples (None), n_features)
+            weights (np.ndarray): weights of the layer (optional, recommended to be None).
+                The weights has the shape (n_neurons_prev_layer, n_neurons_current_layer). Each column of the weights
+                matrix represents a neuron and the values of the column are its weights.
+            bias (np.ndarray): bias of the layer (optional, recommended to be None). The bias has the shape
+                (1, n_neurons_current_layer).
+        """
 
-    @property
-    def shape(self) -> tuple:
-        return self.__output.shape
+        # check if the input shape is correct
+        if len(input_shape) != 4:
+            raise ValueError("The input shape should be a tuple of four integers: "
+                             "(n_samples, height, width, n_channels)")
 
-    @property
-    def stride(self) -> int:
-        return self.__stride
-
-    @property
-    def padding(self) -> int:
-        return self.__padding
-
-    @property
-    def weights(self) -> np.ndarray:
-        return self.__weights
-
-    @property
-    def bias(self) -> np.ndarray:
-        return self.__bias
-
-    @property
-    def activation(self) -> ActivationFunction:
-        return self.__activation
-
-    @property
-    def output(self) -> np.ndarray:
-        return self.__output
-
-    @property
-    def input(self) -> np.ndarray:
-        return self.__input
-
-    @property
-    def use_bias(self):
-        return self.__use_bias
-
-    @property
-    def input_shape(self) -> tuple:
-        return self.input_shape
-
-    # Setters
-    # -------------------------------------------------------------------------
-
-    @weights.setter
-    def weights(self, weights: np.ndarray):
-        self.__weights = weights
-
-    @bias.setter
-    def bias(self, bias: np.ndarray):
-        self.__bias = bias
-
-    @params.setter
-    def params(self, params: list):
-        self.__weights = params[0]
-        self.__bias = params[1]
-
-    @input.setter
-    def input(self, x: np.ndarray):
-        self.__input = x
-
-    @input_shape.setter
-    def input_shape(self, input_shape: tuple):
         self.input_shape = input_shape
         self.output_shape = self._get_output_shape()
 
-    @use_bias.setter
-    def use_bias(self, use_bias: bool):
-        self.__use_bias = use_bias
+        weights_shape = (input_shape[3], self.kernel_size[0], self.kernel_size[1], self.n_filters)
+        # initialize weights
+        if weights is not None:
+            if weights.shape != weights_shape:
+                raise ValueError(f"The shape of the weights should be "
+                                 "(n_channels_prev_layer, kernel_height, kernel_width, n_channels_current_layer). "
+                                 f"Got {weights.shape}, expected {weights_shape}")
+            self.weights = weights
+        elif self.weights_init == "xavier":
+            self.weights = np.random.normal(loc=0,
+                                            scale=np.sqrt(1 / (input_shape[3] * self.kernel_size[0] * self.kernel_size[1])),
+                                            size=weights_shape)
+        elif self.weights_init == "zeros":
+            self.weights = np.zeros(weights_shape)
+        elif self.weights_init == "ones":
+            self.weights = np.ones(weights_shape)
+        elif self.weights_init == "uniform":
+            self.weights = np.random.uniform(low=-1, high=1, size=weights_shape)
+        elif self.weights_init == "normal":
+            self.weights = np.random.normal(loc=0, scale=1, size=weights_shape)
+        elif self.weights_init == "glorot_uniform":
+            self.weights = np.random.uniform(low=-np.sqrt(6 / (input_shape[3] + self.n_filters)),
+                                             high=np.sqrt(6 / (input_shape[3] + self.n_filters)),
+                                             size=weights_shape)
+        else:
+            raise ValueError("Unknown weights initialization")
 
-    # Methods
-    # -------------------------------------------------------------------------
+        bias_shape = (1, self.n_filters)
+        # initialize bias
+        if bias is not None:
+            if bias.shape != bias_shape:
+                raise ValueError(f"The shape of the bias should be (1, n_neurons_current_layer). "
+                                 f"Got {bias.shape}, expected {bias_shape}")
+            self.bias = bias
+        elif self.bias_init == "zeros":
+            self.bias = np.zeros(bias_shape)
+        elif self.bias_init == "ones":
+            self.bias = np.ones(bias_shape)
+        elif self.bias_init == "uniform":
+            self.bias = np.random.uniform(low=-1, high=1, size=bias_shape)
+        elif self.bias_init == "normal":
+            self.bias = np.random.normal(loc=0, scale=1, size=bias_shape)
+        else:
+            raise ValueError("Unknown bias initialization")
 
-    def initialize(self, input_shape: tuple):
-        self.input_shape = input_shape
-        self.output_shape = self._get_output_shape()
         self.initialized = True
 
     @staticmethod
-    def simple_convolution(image: np.ndarray, kernel: np.ndarray, padding: bool = False, stride: int = 1) -> np.ndarray:
+    def convolve_simple_grayscale(image: np.ndarray,
+                                  kernel: np.ndarray,
+                                  bias: np.ndarray = None,
+                                  padding: bool = False,
+                                  stride: int = 1) -> np.ndarray:
         """
         Performs a valid convolution on an image (with only a channel) with a kernel.
 
         Args:
             image: A grayscale image.
             kernel: A kernel.
+            bias: A bias.
             padding: Whether to pad the image.
             stride: convolution stride size.
 
@@ -163,10 +162,9 @@ class Conv2D(Layer):
         image_height, image_width = image.shape
         kernel_height, kernel_width = kernel.shape
 
-        # Pad the image if padding is True
+        # Pad the image if padding is enabled
         if padding:
-            image = np.pad(image, ((kernel_height // 2, kernel_height // 2), (kernel_width // 2, kernel_width // 2)),
-                           mode='constant', constant_values=0)
+            image = Conv2D.pad_image(image, kernel.shape)
 
         # Create the output image
         output_height = (image_height - kernel_height) // stride + 1
@@ -176,65 +174,102 @@ class Conv2D(Layer):
         # Perform the convolution
         for i in range(output_height):
             for j in range(output_width):
-                convolved_image[i, j] = np.sum(
-                    image[i * stride:i * stride + kernel_height,
-                    j * stride:j * stride + kernel_width] * kernel)
+                convolved_image[i, j] = np.sum(image[i * stride:i * stride + kernel_height,
+                                                     j * stride:j * stride + kernel_width] * kernel)
+
+        # Add the bias if it is provided
+        if bias is not None:
+            convolved_image += bias
 
         return convolved_image
 
     @staticmethod
-    def pad_image(image: np.ndarray, kernel_size: tuple, padding: int = 0) -> np.ndarray:
-        pass
+    def pad_image(image: np.ndarray, kernel_size: tuple) -> np.ndarray:
+
+        kernel_height, kernel_width = kernel_size
+        if image.ndim == 3:
+            image = np.pad(image, ((0, 0), (kernel_height // 2, kernel_height // 2),
+                                   (kernel_width // 2, kernel_width // 2)),
+                           mode='constant', constant_values=0.)
+        elif image.ndim == 2:
+            image = np.pad(image, ((kernel_height // 2, kernel_height // 2),
+                                   (kernel_width // 2, kernel_width // 2)),
+                           mode='constant', constant_values=0.)
+        else:
+            raise ValueError("Image must be 2D or 3D.")
+
+        return image
 
     @staticmethod
-    def convolve(image: np.ndarray,
-                 kernel: np.ndarray,
-                 bias: np.ndarray = None,
-                 padding: bool = False,
-                 stride: int = 1,
-                 mode: str = "winograd") -> np.ndarray:
+    def _winograd_convolution(image: np.ndarray,
+                              kernel: np.ndarray,
+                              bias: np.ndarray = None,
+                              padding: bool = False,
+                              stride: int = 1) -> np.ndarray:
+        """
+        Performs a valid convolution on an image with one or more channels with a kernel.
+
+        Args:
+            image: An image with one or more channels.
+            kernel: A kernel.
+            bias: A bias.
+            padding: Whether to pad the image.
+            stride: convolution stride size.
+
+        Returns:
+            The convolved image using the Winograd algorithm.
+        """
+
+    @staticmethod
+    def _simple_convolution(x: np.ndarray,
+                            kernel: np.ndarray,
+                            bias: np.ndarray = None,
+                            padding: bool = False,
+                            stride: int = 1) -> np.ndarray:
+        """
+        Performs a valid convolution to an image with a kernel using the simple algorithm.
+
+        Args:
+            x: An image of shape (batch_size, height, width, channels).
+            kernel: A kernel of shape (kernel_height, kernel_width, channels).
+            bias: A bias of shape (1, channels).
+            padding: Whether to pad the image.
+        """
+        # Get the dimensions of the image and kernel
+        image_height, image_width = x.shape[1:]
+        kernel_height, kernel_width = kernel.shape[1:]
+
+        # Pad the image if padding is enabled
+        if padding:
+            x = Conv2D.pad_image(x, kernel.shape[1:])
+
+        # Create the output image
+        output_height = (image_height - kernel_height) // stride + 1
+        output_width = (image_width - kernel_width) // stride + 1
+        output = np.zeros((x.shape[0], output_height, output_width))
+
+        raise NotImplementedError()
+
+    def convolve(self, x: np.ndarray) -> np.ndarray:
         """
         Performs a valid convolution to an image with a kernel.
 
         Args:
-            image: An image with multiple channels.
-            kernel: A kernel tensor of shape (n_channels, kernel_height, kernel_width).
-            bias: A bias tensor of shape (n_channels,).
-            padding: Whether to pad the image.
-            stride: convolution stride size.
-            mode: The convolution algorithm to use.
-
+            x: An image with one or multiple channels.
         Returns:
             A tensor of shape (n_channels, output_height, output_width).
         """
 
-        # Get the dimensions of the image and kernel
-        n_channels, image_height, image_width = image.shape
-        kernel_height, kernel_width = kernel.shape[1:]
-
         # Pad the image if padding is True
-        if padding:
-            image = np.pad(image, ((0, 0), (kernel_height // 2, kernel_height // 2),
-                                   (kernel_width // 2, kernel_width // 2)),
-                           mode='constant', constant_values=0)
+        if self.padding:
+            x = Conv2D.pad_image(x, self.kernel_size)
 
-        if mode == "winograd":
-            return Conv2D.winograd_convolution(image, kernel, bias, padding, stride)
-
-
-    def winograd_convolution(self,
-                             image: np.ndarray,
-                             kernel: np.ndarray,
-                             bias: np.ndarray = None,
-                             padding: bool = False,
-                             stride: int = 1) -> np.ndarray:
-        """
-        Performs a valid convolution to an image with a kernel using the Winograd algorithm.
-        """
-        # Get the dimensions of the image and kernel
-        n_channels, image_height, image_width = image.shape
-        kernel_height, kernel_width = kernel.shape[1:]
-
+        if self.mode == "winograd":
+            return self._winograd_convolution(x, self.weights, self.bias, self.padding, self.stride)
+        elif self.mode == "simple":
+            return self._simple_convolution(x)
+        else:
+            raise ValueError("Unknown convolution mode.")
 
     def forward(self, x: np.ndarray, training: bool = False) -> np.ndarray:
         """
@@ -245,19 +280,9 @@ class Conv2D(Layer):
         Returns:
             output data
         """
-
-        output = np.zeros((x.shape[0], x.shape[1], x.shape[2], self.__n_filters))
-        for i in range(x.shape[0]):
-            for j in range(x.shape[1]):
-                for k in range(x.shape[2]):
-                    for L in range(self.__n_filters):
-                        output[i, j, k, L] = np.sum(
-                            x[i, j:j + self.__kernel_size[0], k:k + self.__kernel_size[1]] * self.__weights[L]) + \
-                                             self.__bias[L]
-
-        self.__input = x
-        self.__output = output
-        return output
+        self.inputs = x
+        self.z = self.convolve(x)
+        return self.z if self.activation is None else self.activation(self.z)
 
     def get_delta(self, last_delta: np.ndarray, dz_da: np.ndarray) -> np.ndarray:
         """
@@ -276,7 +301,7 @@ class Conv2D(Layer):
         Returns:
             number of parameters
         """
-        return self.__weights.size + self.__bias.size
+        return self.weights.size + self.bias.size
 
     def _get_output_shape(self) -> tuple:
         """
@@ -284,8 +309,10 @@ class Conv2D(Layer):
         Returns:
             tuple: output shape
         """
-        return (self.input_shape[0], self.input_shape[1] - self.__kernel_size[0] + 1,
-                self.input_shape[2] - self.__kernel_size[1] + 1, self.__n_filters)
+        return (self.input_shape[0],
+                self.input_shape[1] - self.kernel_size[0] + 1,
+                self.input_shape[2] - self.kernel_size[1] + 1,
+                self.n_filters)
 
     def compute_weights_gradients(self, gradients: np.ndarray) -> np.ndarray:
         """
@@ -298,4 +325,4 @@ class Conv2D(Layer):
         return self.activation.gradient(gradients)
 
     def summary(self):
-        print(f"Layer: {self.name}, Output shape: {self.output.shape}")
+        print(f"Layer: {self.name}, Output shape: {self.output_shape}")
