@@ -26,7 +26,7 @@ class Conv2D(Layer):
     def __init__(self,
                  kernel_size: Union[Tuple[int, int], int],
                  n_filters: int,
-                 stride: Union[tuple[int, int], int] = (1, 1),
+                 stride: Union[Tuple[int, int], int] = (1, 1),
                  padding: bool = False,
                  activation: str = "valid",
                  use_bias: bool = True,

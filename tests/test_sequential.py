@@ -19,7 +19,7 @@ def get_dataset():
     return train_x, train_y, test_x, test_y
 
 
-def get_weights(topology: list[int]):
+def get_weights(topology):
     """
     Get the weights of a model.
     """
@@ -159,11 +159,11 @@ def test_cancer():
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
 
     model = Sequential()
-    model.add(Dense(500, input_shape=(X_train.shape[1],), activation='relu'))
+    model.add(Dense(100, input_shape=(X_train.shape[1],), activation='relu'))
     model.add(Dense(1, activation='sigmoid'))
     model.summary()
     model.compile(loss='binary_crossentropy', optimizer=SGDMomentum(learning_rate=0.001), metrics=['accuracy'])
-    history = model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=100, batch_size=5, verbose=1)
+    history = model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=100, batch_size=1, verbose=1)
 
 
 if __name__ == "__main__":
