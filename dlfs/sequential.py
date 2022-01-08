@@ -177,10 +177,10 @@ class Sequential:
                 layer.update(self.optimizer, deltas[i])
 
         # compute the loss for the batch
-        loss = self.loss.compute_loss(y_pred, y_batch)
+        loss = self.loss.compute_loss(y_batch, y_pred)
 
         # compute the metrics for the batch
-        metrics = {metric.name: metric(y_pred, y_batch) for metric in self.metrics.values()}
+        metrics = {metric.name: metric(y_batch, y_pred) for metric in self.metrics.values()}
 
         return {**{'loss': loss}, **metrics}
 
@@ -325,7 +325,6 @@ class Sequential:
 
             epoch_metrics = {metric: 0.0 for metric in self.metrics}
             epoch_metrics['loss'] = 0.0
-            val_epoch_metrics = {'val_' + metric: 0.0 for metric in epoch_metrics} if using_validation_data else None
 
             val_metrics = None
 
@@ -345,19 +344,15 @@ class Sequential:
                 for metric in epoch_metrics:
                     epoch_metrics[metric] += metrics[metric]
 
-                if using_validation_data:
+                if using_validation_data and verbose == 1:
                     # compute the loss and the metrics for the validation data
-                    val_loss = self.loss.compute_loss(self.predict(x_val), y_val)
-                    val_metrics = {"val_" + metric: self.metrics[metric](self.predict(x_val), y_val)
+                    y_val_pred = self.predict(x_val)
+                    val_loss = self.loss.compute_loss(y_val, y_val_pred)
+                    val_metrics = {"val_" + metric: self.metrics[metric](y_val, y_val_pred)
                                    for metric in self.metrics}
 
                     # add val_loss to val_metrics
                     val_metrics["val_loss"] = val_loss
-
-                    # update the total validation loss and metrics for the epoch
-                    val_epoch_metrics["val_loss"] += val_loss
-                    for metric in self.metrics:
-                        val_epoch_metrics["val_" + metric] += val_metrics["val_" + metric]
 
                 # print the loss and the metrics per batch (if verbose is 1)
                 if verbose == 1:
@@ -365,17 +360,24 @@ class Sequential:
                                          progress=total_data_used_per_epoch, total=len(x))
 
             # print the metrics of the epoch (if verbose is 1 or 2)
-            if 0 < verbose < 3:
+            if verbose == 1 or verbose == 2:
 
                 # compute the average loss and metrics for the epoch
                 epoch_metrics = {metric: epoch_metrics[metric] / (len(x) // batch_size) for metric in epoch_metrics}
+                val_epoch_metrics = None
                 if using_validation_data:
-                    val_epoch_metrics = {metric: val_epoch_metrics[metric] / (len(x_val) // batch_size)
-                                         for metric in val_epoch_metrics}
+                    # compute the loss and the metrics for the validation data
+                    y_val_pred = self.predict(x_val)
+                    val_epoch_loss = self.loss.compute_loss(y_val, y_val_pred)
+                    val_epoch_metrics = {"val_" + metric: self.metrics[metric](y_val, y_val_pred)
+                                         for metric in self.metrics}
+
+                    # add val_loss to val_metrics
+                    val_epoch_metrics["val_loss"] = val_epoch_loss
 
                 # print the metrics of the epoch
                 self.__print_results(epoch_metrics, val_epoch_metrics, "Epoch",
-                                     progress=epoch, total=epochs, history=history)
+                                     progress=epoch + 1, total=epochs, history=history)
 
             # save the history
             for metric in epoch_metrics:
@@ -384,6 +386,8 @@ class Sequential:
         if verbose == 3:
             # print final results
             self.evaluate(x, y)
+            if using_validation_data:
+                self.evaluate(x_val, y_val, prefix="val_")
         return history
 
     @staticmethod
@@ -418,7 +422,12 @@ class Sequential:
             # yield the batch
             yield x_batch, y_batch
 
-    def evaluate(self, x: np.ndarray, y: np.ndarray, batch_size: int = None, verbose: int = 1) -> dict:
+    def evaluate(self,
+                 x: np.ndarray,
+                 y: np.ndarray,
+                 batch_size: int = None,
+                 verbose: int = 1,
+                 prefix: str = "") -> dict:
         """
         Args:
             x: the input data
@@ -437,7 +446,7 @@ class Sequential:
 
         # initialize the metrics
         avg_loss = 0.0
-        avg_metrics = {metric: 0.0 for metric in self.metrics}
+        avg_metrics = {prefix + metric: 0.0 for metric in self.metrics}
 
         n_batches = len(x) // batch_size
 
@@ -451,27 +460,27 @@ class Sequential:
             y_pred = self.predict(y_pred)
 
             # compute the loss for the batch
-            loss = self.loss.compute_loss(y_pred, y_batch)
+            loss = self.loss.compute_loss(y_batch, y_pred)
 
             # compute the metrics for the batch
-            metrics = {metric: self.metrics[metric](y_pred, y_batch) for metric in self.metrics}
+            metrics = {prefix + metric: self.metrics[metric](y_batch, y_pred) for metric in self.metrics}
 
             # update the loss and the metrics
             avg_loss += 1/(i + 1) * (loss - avg_loss)
             for metric in self.metrics:
-                avg_metrics[metric] += 1/(i + 1) * (metrics[metric] - avg_metrics[metric])
+                avg_metrics[prefix + metric] += 1/(i + 1) * (metrics[prefix + metric] - avg_metrics[prefix + metric])
 
             # print the loss and the metrics per batch (if verbose is 1)
             if verbose > 0 and batch_size != len(x):
                 print(f"Batch ({i // batch_size + 1}/{n_batches}) - loss: {loss}")
-                print(f"\t{', '.join([f'{metric}: {metrics[metric]:.4f}' for metric in self.metrics])}")
+                print(f"\t{', '.join([prefix + f'{metric}: {metrics[prefix + metric]:.4f}' for metric in self.metrics])}")
 
         # print final loss and metrics
         if verbose > 0:
-            print(f"loss: {avg_loss}")
-            print(f"{', '.join([f'{metric}: {avg_metrics[metric]:.4f}' for metric in self.metrics])}")
+            print(prefix + f"loss: {avg_loss}")
+            print(f"{', '.join([prefix + f'{metric}: {avg_metrics[prefix + metric]:.4f}' for metric in self.metrics])}")
 
-        return {'loss': avg_loss, **avg_metrics}
+        return {prefix + 'loss': avg_loss, **avg_metrics}
 
     def predict(self, x: np.ndarray, training: bool = False) -> np.ndarray:
         """
