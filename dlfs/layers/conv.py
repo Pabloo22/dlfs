@@ -226,11 +226,11 @@ class Conv2D(Layer):
         return image
 
     @staticmethod
-    def _winograd_convolution(image: np.ndarray,
-                              kernel: np.ndarray,
-                              bias: np.ndarray = None,
-                              padding: bool = False,
-                              stride: tuple = (1, 1)) -> np.ndarray:
+    def winograd_convolution(image: np.ndarray,
+                             kernel: np.ndarray,
+                             bias: np.ndarray = None,
+                             padding: bool = False,
+                             stride: tuple = (1, 1)) -> np.ndarray:
         """
         Performs a valid convolution on an image with one or more channels with a kernel.
 
@@ -246,11 +246,11 @@ class Conv2D(Layer):
         """
 
     @staticmethod
-    def _simple_convolution(x: np.ndarray,
-                            kernel: np.ndarray,
-                            bias: np.ndarray = None,
-                            padding: bool = False,
-                            stride: tuple = (1, 1)) -> np.ndarray:
+    def simple_convolution(x: np.ndarray,
+                           kernel: np.ndarray,
+                           bias: np.ndarray = None,
+                           padding: bool = False,
+                           stride: tuple = (1, 1)) -> np.ndarray:
         """
         Performs a valid convolution to an image with a kernel using the simple algorithm.
 
@@ -300,9 +300,9 @@ class Conv2D(Layer):
             x = Conv2D.pad_image(x, kernel.shape[1:])
 
         if self.mode == "winograd":
-            return self._winograd_convolution(x, kernel, bias, padding, stride)
+            return self.winograd_convolution(x, kernel, bias, padding, stride)
         elif self.mode == "simple":
-            return self._simple_convolution(x, kernel, bias, padding, stride)
+            return self.simple_convolution(x, kernel, bias, padding, stride)
         else:
             raise ValueError("Unknown convolution mode.")
 
@@ -316,7 +316,7 @@ class Conv2D(Layer):
             output data
         """
         self.inputs = x
-        self.z = self.convolve(x, self.weights, self.bias)
+        self.z = self.convolve(x, self.weights, self.bias, self.padding, self.stride)
         return self.z if self.activation is None else self.activation(self.z)
 
     def get_delta(self, last_delta: np.ndarray, dz_da: np.ndarray) -> np.ndarray:
@@ -328,7 +328,6 @@ class Conv2D(Layer):
         Returns:
             The corresponding delta of the layer (d_cost/d_z).
         """
-
 
     def count_params(self) -> int:
         """
@@ -363,15 +362,10 @@ class Conv2D(Layer):
         dw = self.convolve(self.inputs, delta, padding=True, stride=self.stride)
         db = np.sum(delta, axis=(1, 2))
 
-        # check overflow
-        if np.isnan(dw).any() or np.isnan(db).any():
-            raise OverflowError("The gradient is too large")
-
         optimizer.update(self, (dw, db))
 
-        # check overflow in the weights and biases
-        if np.any(np.isnan(self.weights)) or np.any(np.isnan(self.bias)):
-            raise OverflowError("An overflow occurred during the update")
+    def get_dz_da(self) -> np.ndarray:
+        pass
 
     def summary(self):
         print(f"Layer: {self.name}, Output shape: {self.output_shape}")
