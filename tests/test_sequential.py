@@ -163,7 +163,38 @@ def test_cancer():
     model.add(Dense(1, activation='sigmoid'))
     model.summary()
     model.compile(loss='binary_crossentropy', optimizer=SGDMomentum(learning_rate=0.001), metrics=['accuracy'])
-    history = model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=100, batch_size=1, verbose=1)
+    history = model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=150, batch_size=1, verbose=3)
+    print(model.predict(X_test[:5]))
+    print(y_test[:5])
+
+
+def test_mnist_denses():
+    from keras.utils import np_utils
+
+    # TEST 1
+
+    # LOAD DATA
+    from keras.datasets import mnist
+    (X_train, y_train), (X_test, y_test) = mnist.load_data()
+    num_train_image = X_train.shape[0]
+    num_test_image = X_test.shape[0]
+    image_height = X_train.shape[1]
+    image_width = X_train.shape[2]
+    X_train = X_train.reshape(num_train_image, image_height * image_width).astype('float32')
+    X_test = X_test.reshape(num_test_image, image_height * image_width).astype('float32')
+    X_train = X_train / 255
+    X_test = X_test / 255
+    y_train = np_utils.to_categorical(y_train)
+    y_test = np_utils.to_categorical(y_test)
+    num_classes = y_test.shape[1]
+
+    model = Sequential()
+    model.add(Dense(500, input_shape=(image_height * image_width,), activation='relu'))
+    model.add(Dense(10, activation='softmax'))
+    model.summary()
+    model.compile(loss='categorical_crossentropy', optimizer=SGDMomentum(learning_rate=0.05),
+                  metrics=['accuracy'])
+    model.fit(X_train, y_train, epochs=5, batch_size=100, verbose=2)
 
 
 if __name__ == "__main__":

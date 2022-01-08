@@ -230,7 +230,7 @@ class Conv2D(Layer):
                               kernel: np.ndarray,
                               bias: np.ndarray = None,
                               padding: bool = False,
-                              stride: int = 1) -> np.ndarray:
+                              stride: tuple = (1, 1)) -> np.ndarray:
         """
         Performs a valid convolution on an image with one or more channels with a kernel.
 
@@ -250,7 +250,7 @@ class Conv2D(Layer):
                             kernel: np.ndarray,
                             bias: np.ndarray = None,
                             padding: bool = False,
-                            stride: int = 1) -> np.ndarray:
+                            stride: tuple = (1, 1)) -> np.ndarray:
         """
         Performs a valid convolution to an image with a kernel using the simple algorithm.
 
@@ -275,24 +275,34 @@ class Conv2D(Layer):
 
         raise NotImplementedError()
 
-    def convolve(self, x: np.ndarray) -> np.ndarray:
+    def convolve(self,
+                 x: np.ndarray,
+                 kernel: np.ndarray,
+                 bias: np.ndarray = None,
+                 padding: bool = False,
+                 stride: tuple = (1, 1)) -> np.ndarray:
         """
         Performs a valid convolution to an image with a kernel.
 
         Args:
             x: An image with one or multiple channels.
+            kernel: A kernel with one or multiple channels.
+            bias: A bias with one or multiple channels.
+            padding: Whether to pad the image.
+            stride: convolution stride size.
+
         Returns:
             A tensor of shape (n_channels, output_height, output_width).
         """
 
         # Pad the image if padding is True
-        if self.padding:
-            x = Conv2D.pad_image(x, self.kernel_size)
+        if padding:
+            x = Conv2D.pad_image(x, kernel.shape[1:])
 
         if self.mode == "winograd":
-            return self._winograd_convolution(x, self.weights, self.bias, self.padding, self.stride)
+            return self._winograd_convolution(x, kernel, bias, padding, stride)
         elif self.mode == "simple":
-            return self._simple_convolution(x)
+            return self._simple_convolution(x, kernel, bias, padding, stride)
         else:
             raise ValueError("Unknown convolution mode.")
 
@@ -306,7 +316,7 @@ class Conv2D(Layer):
             output data
         """
         self.inputs = x
-        self.z = self.convolve(x)
+        self.z = self.convolve(x, self.weights, self.bias)
         return self.z if self.activation is None else self.activation(self.z)
 
     def get_delta(self, last_delta: np.ndarray, dz_da: np.ndarray) -> np.ndarray:
@@ -339,15 +349,29 @@ class Conv2D(Layer):
                 self.input_shape[2] - self.kernel_size[1] + 1,
                 self.n_filters)
 
-    def compute_weights_gradients(self, gradients: np.ndarray) -> np.ndarray:
+    def update(self, optimizer, delta: np.ndarray):
         """
-
+        Update the weights and biases of this layer
         Args:
-             gradients: The gradients of the loss with respect to the output of this layer.
-        Returns:
-            The gradients of the loss with respect to the weights of this layer.
+            optimizer (Optimizer): optimizer used to update the weights and biases
+            delta: gradients of the loss with respect to the output of this layer
         """
-        return self.activation.gradient(gradients)
+        # check if the layer is initialized
+        if not self.initialized:
+            raise ValueError("The layer is not initialized")
+
+        dw = self.convolve(self.inputs, delta, padding=True, stride=self.stride)
+        db = np.sum(delta, axis=(1, 2))
+
+        # check overflow
+        if np.isnan(dw).any() or np.isnan(db).any():
+            raise OverflowError("The gradient is too large")
+
+        optimizer.update(self, (dw, db))
+
+        # check overflow in the weights and biases
+        if np.any(np.isnan(self.weights)) or np.any(np.isnan(self.bias)):
+            raise OverflowError("An overflow occurred during the update")
 
     def summary(self):
         print(f"Layer: {self.name}, Output shape: {self.output_shape}")
