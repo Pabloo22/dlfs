@@ -22,22 +22,21 @@ class Softmax(ActivationFunction):
     @staticmethod
     def gradient(z: np.ndarray) -> np.ndarray:
         """
-        Compute the gradient of the softmax of the input.
+        Compute the gradient of the softmax (d_a/d_z) of the input.
         Args:
             z: The input to the softmax function. It has shape (batch_size, num_classes).
         """
-        batch_size = z.shape[0]
-        jacobian = np.empty((batch_size, z.shape[1], z.shape[1]))
+        # code adapted from:
+        # https://stackoverflow.com/questions/36279904/softmax-derivative-in-numpy-approaches-0-implementation
         softmax = Softmax.forward(z)
+        jacobian = - softmax[..., None] * softmax[:, None, :]  # off-diagonal Jacobian
+        iy, ix = np.diag_indices_from(jacobian[0])
+        jacobian[:, iy, ix] = softmax * (1. - softmax)  # diagonal
 
-        # We can use np.einsum to compute the jacobian in a more efficient way. Than just using:
-        # for m in range(batch_size):
+        # The code above is equivalent to the following, but is much faster:
+        # for m in range(z.shape[0]):
         #     for i in range(z.shape[1]):
         #         for j in range(z.shape[1]):
-        #             jacobian[m, i, j] = softmax[m, i] * ((i == j) - softmax[m, j])
-        for m in range(batch_size):
-            for i in range(z.shape[1]):
-                for j in range(z.shape[1]):
-                    jacobian[m, i, j] = softmax[m, i] * ((i == j) - softmax[m, j])
+        #             jacobian[m, i, j] = softmax[m, i] * ((i == j) - softmax[m, j])])
 
-        return jacobian
+        return jacobian.sum(axis=1)  # sum across rows for each sample

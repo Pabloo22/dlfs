@@ -3,7 +3,6 @@ Temporal file used to debug the code. Feel free to add more tests. This file
 will be removed in the future.
 """
 import numpy as np
-# import tensorflow.keras as keras
 
 from dlfs import Sequential
 from dlfs.layers import Dense, Dropout
@@ -48,6 +47,8 @@ def test1():
 
 
 def test2():
+    import tensorflow.keras as keras
+
     # Generating the dataset
     train_x, train_y, test_x, test_y = get_dataset()
 
