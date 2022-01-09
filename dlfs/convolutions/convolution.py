@@ -82,6 +82,15 @@ class Convolution(ABC):
 
         return image
 
+    @staticmethod
+    def extract_blocks(matrix, blocksize, keep_as_view=False):
+        m, n = matrix.shape
+        b0, b1 = blocksize
+        if not keep_as_view:
+            return matrix.reshape(m // b0, b0, n // b1, b1).swapaxes(1, 2).reshape(-1, b0, b1)
+        else:
+            return matrix.reshape(m // b0, b0, n // b1, b1).swapaxes(1, 2)
+
     def __call__(self, image: np.ndarray, kernel: np.ndarray) -> np.ndarray:
         return self.convolve(image, kernel)
 
