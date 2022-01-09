@@ -198,4 +198,4 @@ def test_mnist_denses():
 
 
 if __name__ == "__main__":
-    test_cancer()
+    test_mnist_denses()
