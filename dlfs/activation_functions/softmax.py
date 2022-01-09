@@ -33,10 +33,12 @@ class Softmax(ActivationFunction):
         iy, ix = np.diag_indices_from(jacobian[0])
         jacobian[:, iy, ix] = softmax * (1. - softmax)  # diagonal
 
-        # The code above is equivalent to the following, but is much faster:
+        # The code above is equivalent to the following, but is much faster (2x):
+        # jacobian = np.empty((z.shape[0], z.shape[1], z.shape[1]))
+        # softmax = Softmax.forward(z)
         # for m in range(z.shape[0]):
         #     for i in range(z.shape[1]):
         #         for j in range(z.shape[1]):
-        #             jacobian[m, i, j] = softmax[m, i] * ((i == j) - softmax[m, j])])
+        #             jacobian[m, i, j] = softmax[m, i] * ((i == j) - softmax[m, j])
 
-        return jacobian.sum(axis=1)  # sum across rows for each sample
+        return jacobian
