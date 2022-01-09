@@ -9,7 +9,7 @@ class SimpleConvolution(Convolution):
     def __init__(self,
                  image_size: Union[int, tuple],
                  kernel_size: Union[int, tuple],
-                 padding: bool = False,
+                 padding: tuple = (0, 0),
                  stride: Union[int, tuple] = (1, 1)):
 
         super().__init__(image_size, kernel_size, padding, stride)
