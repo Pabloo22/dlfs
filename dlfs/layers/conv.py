@@ -3,13 +3,12 @@ from typing import Tuple, Union
 
 from .layer import Layer
 from dlfs.activation_functions import ActivationFunction
+from dlfs.convolutions import Convolution, SimpleConvolution, WinogradConvolution, get_convolution
 
 
 class Conv2D(Layer):
     """
     Convolutional layer
-
-    (inspiration from keras)
 
     Args:
         kernel_size (tuple): tuple of 2 integers, specifying the height and width of the 2D convolution window.
@@ -67,9 +66,9 @@ class Conv2D(Layer):
         self.stride = stride
         self.padding = padding
         self.use_bias = use_bias
-        self.mode = mode
         self.weights_init = weights_init
         self.bias_init = bias_init
+        self.convolution = get_convolution(mode, kernel_size, stride, padding)
 
     def initialize(self, input_shape: tuple, weights: np.ndarray = None, bias: np.ndarray = None):
         """
@@ -163,87 +162,6 @@ class Conv2D(Layer):
                                  f"Got {bias.shape}, expected {bias_shape}")
 
             self.bias = bias
-
-    @staticmethod
-    def convolve_simple_grayscale(image: np.ndarray,
-                                  kernel: np.ndarray,
-                                  bias: np.ndarray = None,
-                                  padding: bool = False,
-                                  stride: int = 1) -> np.ndarray:
-        """
-        Performs a valid convolution on an image (with only a channel) with a kernel.
-
-        Args:
-            image: A grayscale image.
-            kernel: A kernel.
-            bias: A bias.
-            padding: Whether to pad the image.
-            stride: convolution stride size.
-
-        Returns:
-            A grayscale image.
-        """
-        # Get the dimensions of the image and kernel
-        image_height, image_width = image.shape
-        kernel_height, kernel_width = kernel.shape
-
-        # Pad the image if padding is enabled
-        if padding:
-            image = Conv2D.pad_image(image, kernel.shape)
-
-        # Create the output image
-        output_height = (image_height - kernel_height) // stride + 1
-        output_width = (image_width - kernel_width) // stride + 1
-        convolved_image = np.zeros((output_height, output_width))
-
-        # Perform the convolution
-        for i in range(output_height):
-            for j in range(output_width):
-                convolved_image[i, j] = np.sum(image[i * stride:i * stride + kernel_height,
-                                                     j * stride:j * stride + kernel_width] * kernel)
-
-        # Add the bias if it is provided
-        if bias is not None:
-            convolved_image += bias
-
-        return convolved_image
-
-    @staticmethod
-    def pad_image(image: np.ndarray, kernel_size: tuple) -> np.ndarray:
-
-        kernel_height, kernel_width = kernel_size
-        if image.ndim == 3:
-            image = np.pad(image, ((0, 0), (kernel_height // 2, kernel_height // 2),
-                                   (kernel_width // 2, kernel_width // 2)),
-                           mode='constant', constant_values=0.)
-        elif image.ndim == 2:
-            image = np.pad(image, ((kernel_height // 2, kernel_height // 2),
-                                   (kernel_width // 2, kernel_width // 2)),
-                           mode='constant', constant_values=0.)
-        else:
-            raise ValueError("Image must be 2D or 3D.")
-
-        return image
-
-    @staticmethod
-    def winograd_convolution(image: np.ndarray,
-                             kernel: np.ndarray,
-                             bias: np.ndarray = None,
-                             padding: bool = False,
-                             stride: tuple = (1, 1)) -> np.ndarray:
-        """
-        Performs a valid convolution on an image with one or more channels with a kernel.
-
-        Args:
-            image: An image with one or more channels.
-            kernel: A kernel.
-            bias: A bias.
-            padding: Whether to pad the image.
-            stride: convolution stride size.
-
-        Returns:
-            The convolved image using the Winograd algorithm.
-        """
 
     @staticmethod
     def simple_convolution(x: np.ndarray,
