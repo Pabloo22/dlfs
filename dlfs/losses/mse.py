@@ -23,4 +23,4 @@ class MSE(LossFunction):
         """
         Calculates the gradient of the Mean Squared Error loss
         """
-        return (y_pred - y_true) / y_true.shape[0]
+        return y_pred - y_true
