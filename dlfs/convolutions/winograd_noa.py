@@ -13,9 +13,8 @@ x, d, g = symbols('x,d,g')
 
 def get_list_m(m: int, r: int):
     """
-    Description:
-        This function generetes negative and positive numbers in ascend order used for the equation m(x).
-            m(x) = x(x-1)(x+1)(x-2)...(x-∞)
+    This function generates negative and positive numbers in ascend order used for the equation m(x).
+        m(x) = x(x-1)(x+1)(x-2)...(x-∞)
 
     Args:
         m (int): The size of the output
@@ -25,7 +24,7 @@ def get_list_m(m: int, r: int):
          A list with the numbers chosen to create the polynomial m(x).
          [-1,1,-2,...]
     """
-    m_values = [0];
+    m_values = [0]
     i = 1
     while len(m_values) < (m + r - 1) - 1:
 
@@ -41,8 +40,7 @@ def get_list_m(m: int, r: int):
 
 def get_gx_polynomial(r: int):
     """
-    Description:
-        This function generetes a polynomial g(x) of degree (r-1).
+    This function generates a polynomial g(x) of degree (r-1).
 
     Args:
         r (int): The size of the filter
@@ -59,8 +57,7 @@ def get_gx_polynomial(r: int):
 
 def get_dx_polynomial(m: int):
     """
-    Description:
-        This function generetes a polynomial d(x) of degree (m-1).
+    This function generates a polynomial d(x) of degree (m-1).
 
     Args:
         m (int): The size of the output
@@ -76,14 +73,13 @@ def get_dx_polynomial(m: int):
 
 def get_a(m: int, r: int):
     """
-    Description:
-        This function generetes a linear system calculating d(i)(x) = d(x) mod m(i) for each i = 0, 1, _, m, len(m_values).
-            d(0)(x) = d(x) mod m(0) = d0
-            d(1)(x) = d(x) mod m(1) = d0 + d1 + ... + d(m-1)
-            .
-            .
-            d(i)(x) = d(x) mod m(i) = d(i)
-            d(len(m_values))(x) = d(x) mod m(len(m_values)) = d(x)[-1]
+    This function generates a linear system calculating d(i)(x) = d(x) mod m(i) for each i = 0, 1, _, m, len(m_values).
+        d(0)(x) = d(x) mod m(0) = d0
+        d(1)(x) = d(x) mod m(1) = d0 + d1 + ... + d(m-1)
+        .
+        .
+        d(i)(x) = d(x) mod m(i) = d(i)
+        d(len(m_values))(x) = d(x) mod m(len(m_values)) = d(x)[-1]
 
     Args:
         m (int): The size of the output
@@ -107,9 +103,8 @@ def get_a(m: int, r: int):
 
 def get_mx_polynomial(m: int, r: int):
     """
-    Description:
-        This function takes the list of numbers from 'get_list_m' and generates que equation for m(x).
-            m(x) = x(x-1)(x+1)(x-2)...(x-∞)
+    This function takes the list of numbers from 'get_list_m' and generates que equation for m(x).
+        m(x) = x(x-1)(x+1)(x-2)...(x-∞)
 
     Args:
         m (int): The size of the output
@@ -131,15 +126,15 @@ def get_mx_polynomial(m: int, r: int):
 
 def get_b(m: int, r: int):
     """
-    Description:
-        This function generetes a linear system composed with the calculating M(i)(x) = m(x)/m(i)(x) for each i = 0, 1, _, m and the polynomial m(x).
-            M(0)(x) = m(x)/m(0)(x)
-            M(1)(x) = m(x)/m(1)(x)
-            .
-            .
-            M(i)(x) = m(x)/m(i)(x)
-            .
-            m(x) = x(x-1)(x+1)(x-2)...
+    This function generates a linear system composed with the calculating M(i)(x) = m(x)/m(i)(x)
+    for each i = 0, 1, _, m and the polynomial m(x).
+        M(0)(x) = m(x)/m(0)(x)
+        M(1)(x) = m(x)/m(1)(x)
+        .
+        .
+        M(i)(x) = m(x)/m(i)(x)
+        .
+        m(x) = x(x-1)(x+1)(x-2)...
 
 
     Args:
@@ -165,15 +160,15 @@ def get_b(m: int, r: int):
 
 def get_m_polynomial(m: int, r: int):
     """
-    Description:
-        This function generetes a linear system composed with the calculating M(i)(x) = m(x)/m(i)(x) for each i = 0, 1, _, m and the polynomial m(x).
-            M(0)(x) = m(x)/m(0)(x)
-            M(1)(x) = m(x)/m(1)(x)
-            .
-            .
-            M(i)(x) = m(x)/m(i)(x)
-            .
-            m(x) = x(x-1)(x+1)(x-2)...
+    This function generates a linear system composed with the calculating
+    M(i)(x) = m(x)/m(i)(x) for each i = 0, 1, _, m and the polynomial m(x).
+        M(0)(x) = m(x)/m(0)(x)
+        M(1)(x) = m(x)/m(1)(x)
+        .
+        .
+        M(i)(x) = m(x)/m(i)(x)
+        .
+        m(x) = x(x-1)(x+1)(x-2)...
 
     Args:
         m (int): The size of the output
@@ -195,8 +190,7 @@ def get_m_polynomial(m: int, r: int):
 # n(i)(x)*m(i)(x) + N(i)(x)*M(i)(x) = 1         a*m(i)(x) + b*M(i)(x) = c
 def get_n_values(m: int, r: int):
     """
-    Description:
-        This function applies the Chinese Remainder Theorem.
+    This function applies the Chinese Remainder Theorem.
 
     Args:
         m (int): The size of the output
@@ -218,7 +212,8 @@ def get_n_values(m: int, r: int):
 def get_gxi(m: int, r: int):
     """
     Description:
-        This function generetes a linear system calculating g(i)(x) = g(x) mod m(i) for each i = 0, 1, _, m, len(m_values).
+        This function generates a linear system calculating g(i)(x) = g(x) mod m(i)
+        for each i = 0, 1, _, m, len(m_values).
             g(0)(x) = g(x) mod m(0) = g0
             g(1)(x) = g(x) mod m(1) = g0 + g1 + ... + g(m-1)
             .
