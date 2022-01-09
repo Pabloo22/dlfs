@@ -8,7 +8,7 @@ class Convolution(ABC):
     def __init__(self,
                  image_size: Union[int, tuple],
                  kernel_size: Union[int, tuple],
-                 padding: bool = False,
+                 padding: Union[int, tuple] = (0, 0),
                  stride: Union[int, tuple] = (1, 1)):
 
         self.image_size = image_size if isinstance(image_size, tuple) else (image_size, image_size)
@@ -53,30 +53,26 @@ class Convolution(ABC):
         raise ValueError("Image must be 2D or 3D.")
 
     @staticmethod
-    def pad_image(image: np.ndarray, kernel_size: tuple, using_batches: bool = False) -> np.ndarray:
+    def pad_image(image: np.ndarray, padding: Union[int, tuple], using_batches: bool = False) -> np.ndarray:
 
-        kernel_height, kernel_width = kernel_size
+        padding = (padding, padding) if isinstance(padding, int) else padding
 
         if not using_batches:
             if image.ndim == 3:
-                image = np.pad(image, ((0, 0), (kernel_height // 2, kernel_height // 2),
-                                       (kernel_width // 2, kernel_width // 2)),
-                               mode='constant', constant_values=0.)
+                image = np.pad(image, ((0, 0), (padding[0], padding[0]), (padding[1], padding[1])),
+                               'constant', constant_values=0)
             elif image.ndim == 2:
-                image = np.pad(image, ((kernel_height // 2, kernel_height // 2),
-                                       (kernel_width // 2, kernel_width // 2)),
-                               mode='constant', constant_values=0.)
+                image = np.pad(image, ((padding[0], padding[0]), (padding[1], padding[1])),
+                               'constant', constant_values=0)
             else:
                 raise ValueError("Image must be 2D or 3D.")
         else:
             if image.ndim == 4:
-                image = np.pad(image, ((0, 0), (kernel_height // 2, kernel_height // 2),
-                                       (kernel_width // 2, kernel_width // 2), (0, 0)),
-                               mode='constant', constant_values=0.)
+                image = np.pad(image, ((0, 0), (padding[0], padding[0]), (padding[1], padding[1]), (0, 0)),
+                               'constant', constant_values=0)
             elif image.ndim == 3:
-                image = np.pad(image, ((kernel_height // 2, kernel_height // 2),
-                                       (kernel_width // 2, kernel_width // 2), (0, 0)),
-                               mode='constant', constant_values=0.)
+                image = np.pad(image, ((0, 0), (padding[0], padding[0]), (padding[1], padding[1])),
+                               'constant', constant_values=0)
             else:
                 raise ValueError("Image must be 2D or 3D.")
 

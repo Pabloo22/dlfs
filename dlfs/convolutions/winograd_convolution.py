@@ -10,7 +10,7 @@ class WinogradConvolution(Convolution):
     def __init__(self,
                  image_size: Union[int, tuple],
                  kernel_size: Union[int, tuple],
-                 padding: bool = False,
+                 padding: Union[int, tuple] = (0, 0),
                  stride: Union[int, tuple] = (1, 1)):
 
         super().__init__(image_size, kernel_size, padding, stride)

@@ -6,7 +6,7 @@ from . import Convolution, SimpleConvolution, WinogradConvolution
 def get_convolution(convolution_type: str,
                     image_size: Union[int, tuple],
                     kernel_size: Union[int, tuple],
-                    padding: bool = False,
+                    padding: tuple = (0, 0),
                     stride: Union[int, tuple] = (1, 1)) -> Convolution:
     """
     Returns an activation function object based on the name of the activation function.

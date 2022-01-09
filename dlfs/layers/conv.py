@@ -9,17 +9,6 @@ from dlfs.convolutions import Convolution, SimpleConvolution, WinogradConvolutio
 class Conv2D(Layer):
     """
     Convolutional layer
-
-    Args:
-        kernel_size (tuple): tuple of 2 integers, specifying the height and width of the 2D convolution window.
-        n_filters (int): Number of filters
-        stride (tuple or int): specifying the strides of the convolution along the height and width.
-                        Can be a single integer to specify the same value for all spatial dimensions
-        padding (bool): If True, add padding to the input so that the output has the same shape as the input
-                        (assuming stride = 1)
-        activation (ActivationFunction): Activation function
-        use_bias (bool): Whether to use bias
-        name (str): Name of the layer
     """
 
     def __init__(self,
@@ -34,6 +23,22 @@ class Conv2D(Layer):
                  input_shape: tuple = None,
                  weights_init: str = "xavier",
                  bias_init: str = "zeros"):
+        """
+        Initialize the convolutional layer.
+         Args:
+            kernel_size (tuple): tuple of 2 integers, specifying the height and width of the 2D convolution window.
+            n_filters (int): Number of filters
+            stride (tuple or int): specifying the strides of the convolution along the height and width.
+                            Can be a single integer to specify the same value for all spatial dimensions
+            padding (bool): If True, add padding to the input so that the output has the same shape as the input
+                            (assuming stride = 1)
+            activation (ActivationFunction): Activation function
+            use_bias (bool): Whether to use bias
+            name (str): Name of the layer
+            input_shape (tuple): shape of the input
+            weights_init (str): Initialization method for the weights
+            bias_init (str): Initialization method for the bias
+        """
 
         if n_filters <= 0:
             raise ValueError("The number of filters should be greater than 0")
@@ -43,18 +48,23 @@ class Conv2D(Layer):
             raise ValueError("The kernel size should be greater than 0")
         if stride <= 0:
             raise ValueError("The stride should be greater than 0")
-        if mode not in ['winograd', 'simple']:
+        if mode not in {'winograd', 'simple'}:
             raise ValueError("Unknown convolution mode")
+
         if isinstance(kernel_size, int):
             kernel_size = (kernel_size, kernel_size)
         if isinstance(stride, int):
             stride = (stride, stride)
 
         input_shape = None if input_shape is None else (None, *input_shape)
-        output_shape = (None,
-                        input_shape[1] - kernel_size[0] + 1,
-                        input_shape[2] - kernel_size[1] + 1,
-                        n_filters)
+        output_shape = None
+        padding = (0, 0) if padding is False else (kernel_size[0] // 2, kernel_size[1] // 2)
+
+        # get the output shape if the input shape is known
+        if input_shape is not None:
+            output_height = (input_shape[1] - kernel_size[0] + 2 * padding[0]) // stride[0] + 1
+            output_width = (input_shape[2] - kernel_size[1] + 2 * padding[1]) // stride[1] + 1
+            output_shape = (None, output_height, output_width, n_filters)
 
         super().__init__(input_shape=input_shape,
                          output_shape=output_shape,
