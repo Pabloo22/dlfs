@@ -3,7 +3,7 @@ from typing import Tuple, Union
 
 from .layer import Layer
 from dlfs.activation_functions import ActivationFunction
-from dlfs.convolutions import Convolution, SimpleConvolution, WinogradConvolution, get_convolution
+from dlfs.convolutions import Convolutioner, get_convolution
 
 
 class Conv2D(Layer):
@@ -173,67 +173,6 @@ class Conv2D(Layer):
 
             self.bias = bias
 
-    @staticmethod
-    def simple_convolution(x: np.ndarray,
-                           kernel: np.ndarray,
-                           bias: np.ndarray = None,
-                           padding: bool = False,
-                           stride: tuple = (1, 1)) -> np.ndarray:
-        """
-        Performs a valid convolution to an image with a kernel using the simple algorithm.
-
-        Args:
-            x: An image of shape (batch_size, height, width, channels).
-            kernel: A kernel of shape (kernel_height, kernel_width, channels).
-            bias: A bias of shape (1, channels).
-            padding: Whether to pad the image.
-        """
-        # Get the dimensions of the image and kernel
-        image_height, image_width = x.shape[1:]
-        kernel_height, kernel_width = kernel.shape[1:]
-
-        # Pad the image if padding is enabled
-        if padding:
-            x = Conv2D.pad_image(x, kernel.shape[1:])
-
-        # Create the output image
-        output_height = (image_height - kernel_height) // stride + 1
-        output_width = (image_width - kernel_width) // stride + 1
-        output = np.zeros((x.shape[0], output_height, output_width))
-
-        raise NotImplementedError()
-
-    def convolve(self,
-                 x: np.ndarray,
-                 kernel: np.ndarray,
-                 bias: np.ndarray = None,
-                 padding: bool = False,
-                 stride: tuple = (1, 1)) -> np.ndarray:
-        """
-        Performs a valid convolution to an image with a kernel.
-
-        Args:
-            x: An image with one or multiple channels.
-            kernel: A kernel with one or multiple channels.
-            bias: A bias with one or multiple channels.
-            padding: Whether to pad the image.
-            stride: convolution stride size.
-
-        Returns:
-            A tensor of shape (n_channels, output_height, output_width).
-        """
-
-        # Pad the image if padding is True
-        if padding:
-            x = Conv2D.pad_image(x, kernel.shape[1:])
-
-        if self.mode == "winograd":
-            return self.winograd_convolution(x, kernel, bias, padding, stride)
-        elif self.mode == "simple":
-            return self.simple_convolution(x, kernel, bias, padding, stride)
-        else:
-            raise ValueError("Unknown convolution mode.")
-
     def forward(self, x: np.ndarray, training: bool = False) -> np.ndarray:
         """
         Forward pass
@@ -244,18 +183,21 @@ class Conv2D(Layer):
             output data
         """
         self.inputs = x
-        self.z = self.convolve(x, self.weights, self.bias, self.padding, self.stride)
+        self.z = self.convolution.convolve(x, self.weights) + self.bias
         return self.z if self.activation is None else self.activation(self.z)
 
     def get_delta(self, last_delta: np.ndarray, dz_da: np.ndarray) -> np.ndarray:
         """
         Backward pass
         Args:
-            last_delta: gradients of the loss with respect to the output of this layer
-            dz_da: derivative of the z of the next layer (i+1) with respect to the activation of the current layer (i)
+            last_delta: gradients of the loss with respect to the output of this layer (dL/dz)
+            dz_da: gradients of the activation with respect to the output of this layer (dL/dz)
         Returns:
-            The corresponding delta of the layer (d_cost/d_z).
+            gradients of the loss with respect to the input of this layer (dL/dx)
         """
+
+        # dL/dz = dL/da * da/dz *+
+
 
     def count_params(self) -> int:
         """

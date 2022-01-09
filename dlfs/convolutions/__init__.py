@@ -1,4 +1,4 @@
-from .convolution import Convolution
-from .simple_convolution import SimpleConvolution
-from .winograd_convolution import WinogradConvolution
+from .convolutioner import Convolutioner
+from .simple_convolution import SimpleConvolutioner
+from .winograd_convolution import WinogradConvolutioner
 from .utils import *

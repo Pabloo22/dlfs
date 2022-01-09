@@ -2,10 +2,10 @@ import numpy as np
 from typing import Union
 
 
-from dlfs.convolutions import Convolution
+from dlfs.convolutions import Convolutioner
 
 
-class WinogradConvolution(Convolution):
+class WinogradConvolutioner(Convolutioner):
 
     def __init__(self,
                  image_size: Union[int, tuple],

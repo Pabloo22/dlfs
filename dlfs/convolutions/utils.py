@@ -1,13 +1,13 @@
 from typing import Union
 
-from . import Convolution, SimpleConvolution, WinogradConvolution
+from . import Convolutioner, SimpleConvolutioner, WinogradConvolutioner
 
 
 def get_convolution(convolution_type: str,
                     image_size: Union[int, tuple],
                     kernel_size: Union[int, tuple],
                     padding: tuple = (0, 0),
-                    stride: Union[int, tuple] = (1, 1)) -> Convolution:
+                    stride: Union[int, tuple] = (1, 1)) -> Convolutioner:
     """
     Returns an activation function object based on the name of the activation function.
     Args:
@@ -24,8 +24,8 @@ def get_convolution(convolution_type: str,
     """
 
     if convolution_type == "simple":
-        return SimpleConvolution(image_size, kernel_size, padding, stride)
+        return SimpleConvolutioner(image_size, kernel_size, padding, stride)
     elif convolution_type == "winograd":
-        return WinogradConvolution(image_size, kernel_size, padding, stride)
+        return WinogradConvolutioner(image_size, kernel_size, padding, stride)
     else:
         raise ValueError(f'Unknown activation function name: {convolution_type}')

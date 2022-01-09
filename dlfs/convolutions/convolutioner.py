@@ -3,7 +3,7 @@ import numpy as np
 from typing import Union
 
 
-class Convolution(ABC):
+class Convolutioner(ABC):
 
     def __init__(self,
                  image_size: Union[int, tuple],

@@ -1,10 +1,10 @@
 import numpy as np
 from typing import Union
 
-from dlfs.convolutions import Convolution
+from dlfs.convolutions import Convolutioner
 
 
-class SimpleConvolution(Convolution):
+class SimpleConvolutioner(Convolutioner):
 
     def __init__(self,
                  image_size: Union[int, tuple],
@@ -34,7 +34,7 @@ class SimpleConvolution(Convolution):
             A grayscale image.
         """
         if using_batches:
-            return np.array([SimpleConvolution.convolve_grayscale(image_batch, kernel, padding, stride)
+            return np.array([SimpleConvolutioner.convolve_grayscale(image_batch, kernel, padding, stride)
                              for image_batch in image])
 
         # Get the dimensions of the image and kernel
@@ -43,7 +43,7 @@ class SimpleConvolution(Convolution):
 
         # Pad the image if padding is enabled
         if padding:
-            image = Convolution.pad_image(image, kernel.shape)
+            image = Convolutioner.pad_image(image, kernel.shape)
 
         # Create the output image
         output_height = (image_height - kernel_height) // stride + 1
@@ -79,10 +79,10 @@ class SimpleConvolution(Convolution):
         """
         # Pad the image if padding is enabled
         if padding:
-            image = Convolution.pad_image(image, kernel.shape, using_batches)
+            image = Convolutioner.pad_image(image, kernel.shape, using_batches)
 
         if using_batches:
-            return np.array([SimpleConvolution.convolve_multichannel(image_batch, kernel, padding=False, stride=stride)
+            return np.array([SimpleConvolutioner.convolve_multichannel(image_batch, kernel, padding=False, stride=stride)
                              for image_batch in image])
 
         # Get the dimensions of the image and kernel
