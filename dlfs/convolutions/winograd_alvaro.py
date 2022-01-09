@@ -1,5 +1,3 @@
-from dlfs.convolutions import Convolutioner
-
 # Source: On Improving the Numerical Stability of Winograd Convolutions
 # By: Kevin Vincent and Kevin J. Stephano and Michael A. Frumkin and Boris Ginsburg and Julien Demouth
 # (https://openreview.net/pdf?id=H1ZaRZVKg)
