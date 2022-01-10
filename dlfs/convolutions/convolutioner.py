@@ -20,7 +20,7 @@ class Convolutioner(ABC):
     @abstractmethod
     def convolve_grayscale(image: np.ndarray,
                            kernel: np.ndarray,
-                           padding: bool = False,
+                           padding: tuple = (0, 0),
                            stride: Union[int, tuple] = (1, 1),
                            using_batches: bool = False) -> np.ndarray:
         pass
@@ -29,7 +29,7 @@ class Convolutioner(ABC):
     @abstractmethod
     def convolve_multichannel(image: np.ndarray,
                               kernel: np.ndarray,
-                              padding: bool = False,
+                              padding: tuple = (0, 0),
                               stride: Union[int, tuple] = (1, 1),
                               using_batches: bool = False) -> np.ndarray:
         pass
