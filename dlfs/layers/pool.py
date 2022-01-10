@@ -76,5 +76,17 @@ class MaxPool2D(Layer):
         # TODO: Implement backward pass
         pass
 
+    def set_weights(self, weights: np.ndarray = None, bias: np.ndarray = None):
+        pass
+
+    def get_dz_da(self) -> np.ndarray:
+        pass
+
+    def update(self, optimizer, gradients: np.ndarray):
+        pass
+
+    def count_params(self) -> int:
+        return 0
+
     def summary(self) -> str:
         return f"{self.name} ({self.input_shape} -> {self.output_shape})"
