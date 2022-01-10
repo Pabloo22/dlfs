@@ -16,7 +16,7 @@ class Conv2D(Layer):
                  n_filters: int,
                  stride: Union[Tuple[int, int], int] = (1, 1),
                  padding: bool = False,
-                 activation: str = "valid",
+                 activation: str = None,
                  use_bias: bool = True,
                  mode: str = 'winograd',
                  name: str = "Conv2D",
@@ -190,13 +190,16 @@ class Conv2D(Layer):
         """
         Backward pass
         Args:
-            last_delta: gradients of the loss with respect to the output of this layer (dL/dz)
+            last_delta: gradients of the loss with respect to the output of this layer (dL/dz) if
+                this layer is the last layer in the network, or gradients of the loss with respect
+                to the output of the next layer (dL/dz_next) if this layer is followed by another
+                Conv2D layer.
             dz_da: gradients of the activation with respect to the output of this layer (dL/dz)
         Returns:
             gradients of the loss with respect to the input of this layer (dL/dx)
         """
 
-        # dL/dz = dL/da * da/dz *+
+        # get dL/da
 
 
     def count_params(self) -> int:
