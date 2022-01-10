@@ -121,7 +121,7 @@ def test_train_on_batch():
 
 def test_boston():
     # DATA PREPROCESSING
-    from sklearn.model_selection import train_test_split
+    from dlfs.preprocessing import train_test_split
     from sklearn.datasets import load_boston
 
     boston = load_boston()
@@ -135,7 +135,7 @@ def test_boston():
 
     model = Sequential()
     model.add(Dense(100, input_shape=(x_train.shape[1],), activation='relu'))
-    model.add(Dropout(0.2))
+    # model.add(Dropout(0.2))
     model.add(Dense(1))
     model.summary()
     model.compile(loss='mse', optimizer=SGDMomentum(learning_rate=0.001), metrics=['mae'])
@@ -198,4 +198,4 @@ def test_mnist_denses():
 
 
 if __name__ == "__main__":
-    test_mnist_denses()
+    test_boston()
