@@ -1,7 +1,7 @@
 import numpy as np
 
 from dlfs import Sequential
-from dlfs.layers import Dense, Dropout
+from dlfs.layers import Dense, Dropout, Flatten
 from dlfs.optimizers import SGD, SGDMomentum
 from dlfs.losses import MSE, MAE, BinaryCrossentropy, CategoricalCrossentropy
 from dlfs.activation_functions import ReLU, Sigmoid, Softmax
@@ -135,7 +135,8 @@ def test_boston():
 
     model = Sequential()
     model.add(Dense(100, input_shape=(x_train.shape[1],), activation='relu'))
-    # model.add(Dropout(0.2))
+    model.add(Flatten())  # used just for testing purposes
+    model.add(Dropout(0.2))
     model.add(Dense(1))
     model.summary()
     model.compile(loss='mse', optimizer=SGDMomentum(learning_rate=0.001), metrics=['mae'])
@@ -198,4 +199,4 @@ def test_mnist_denses():
 
 
 if __name__ == "__main__":
-    test_mnist_denses()
+    test_boston()

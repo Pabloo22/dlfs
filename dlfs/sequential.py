@@ -195,6 +195,16 @@ class Sequential:
 
         return x, y
 
+    def __update_io_shapes(self, batch_size: int):
+        """
+        Update the input and output shapes of the layers to match the batch size
+        Args:
+            batch_size: the batch size
+        """
+        for layer in self.layers:
+            layer.input_shape = (batch_size, *layer.input_shape[1:])
+            layer.output_shape = (batch_size, *layer.output_shape[1:])
+
     def __print_results(self,
                         metrics: Dict[str, float],
                         val_metrics: Dict[str, float] = None,
@@ -430,7 +440,8 @@ class Sequential:
             x: the input data
             y: the labels
             batch_size: the batch size (default: len(x))
-            verbose: the verbosity mode (0 or 1)
+            verbose: the verbosity mode (0, 1, or 2)
+            prefix: the prefix to print
 
         Returns:
             The average loss and the average metrics of the model on the given data
@@ -440,6 +451,9 @@ class Sequential:
 
         # get the batch size
         batch_size = batch_size or len(x)
+
+        # update input and output shapes of the model
+        self.__update_io_shapes(batch_size)
 
         # initialize the metrics
         avg_loss = 0.0
@@ -468,7 +482,7 @@ class Sequential:
                 avg_metrics[prefix + metric] += 1/(i + 1) * (metrics[prefix + metric] - avg_metrics[prefix + metric])
 
             # print the loss and the metrics per batch (if verbose is 1)
-            if verbose > 0 and batch_size != len(x):
+            if verbose == 2 and batch_size != len(x):
                 print(f"Batch ({i // batch_size + 1}/{n_batches}) - loss: {loss}")
                 print(f"\t{', '.join([prefix + f'{metric}: {metrics[prefix + metric]:.4f}' for metric in self.metrics])}")
 
@@ -488,6 +502,9 @@ class Sequential:
         Returns:
             y_pred : the predictions
         """
+
+        if not training:
+            self.__update_io_shapes(len(x))
 
         last_input = x
         for layer in self.layers:
