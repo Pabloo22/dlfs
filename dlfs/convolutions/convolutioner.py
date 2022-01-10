@@ -48,9 +48,9 @@ class Convolutioner(ABC):
             elif image.ndim == 3:
                 return self.convolve_grayscale(image, kernel, self.padding, self.stride, using_batches)
         else:
-            if image.ndim == 3:
+            if image.ndim == 2:
                 return self.convolve_grayscale(image, kernel, self.padding, self.stride, using_batches=False)
-            elif image.ndim == 4:
+            elif image.ndim == 3:
                 return self.convolve_multichannel(image, kernel, self.padding, self.stride, using_batches=False)
 
         raise ValueError("Image must be 2D or 3D.")
