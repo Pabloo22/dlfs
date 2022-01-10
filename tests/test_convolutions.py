@@ -86,15 +86,16 @@ def test_conv_multichannel():
                     [[2, 2, 1, 3],
                      [0, 3, 2, 1],
                      [1, 1, 0, 2],
-                     [2, 0, 0, 1]]])
+                     [2, 0, 0, 1]]]).reshape((4, 4, 2))
+    print(img)
 
     k = np.array([[[1,  0],
                    [2, -2]],
                   [[1, 0],
-                   [2, -2]]])
+                   [2, -2]]]).reshape((2, 2, 2))
 
     convolutioner = SimpleConvolutioner(img.shape, k.shape, stride=1, padding=0)
-    print(convolutioner.convolve(img, k, using_batches=False))
+    # print(convolutioner.convolve(img, k, using_batches=False))
 
 
 if __name__ == '__main__':
