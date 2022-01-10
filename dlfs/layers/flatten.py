@@ -32,18 +32,14 @@ class Flatten(Layer):
         """
         return np.reshape(x, self.output_shape)
 
-    def get_delta(self, last_delta: np.ndarray, dz_da: np.ndarray) -> np.ndarray:
+    def get_d_inputs(self, delta: np.ndarray) -> np.ndarray:
         """
-        Calculates the delta of the layer based on the delta of the next layer and derivative of the output of this
-        layer (i) with respect to the z of the next layer (i+1).
+        Returns the gradient of the loss with respect to the inputs of the layer.
         Args:
-            last_delta: delta of the next layer.
-            dz_da: derivative of the output of this layer (i) with respect to the z of the next layer (i+1). The
-                expected value od dz_da here is W.T assuming that the next layer is a dense layer.
+            delta: Delta of the loss with respect to the z of the layer.
         Returns:
             The corresponding delta of the layer (d_cost/d_z).
         """
-        delta = last_delta * dz_da if last_delta.shape == self.output_shape else last_delta @ dz_da
         return np.reshape(delta, self.input_shape)
 
     def summary(self) -> str:
@@ -51,9 +47,6 @@ class Flatten(Layer):
 
     def set_weights(self, weights: np.ndarray = None, bias: np.ndarray = None):
         raise NotImplementedError("Flatten layer has no weights")
-
-    def get_dz_da(self) -> np.ndarray:
-        return np.ones(self.output_shape)
 
     def update(self, optimizer, gradients: np.ndarray):
         pass
