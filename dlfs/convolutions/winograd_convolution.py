@@ -2,15 +2,15 @@ import numpy as np
 from typing import Union
 
 
-from dlfs.convolutions import Convolution
+from dlfs.convolutions import Convolutioner
 
 
-class WinogradConvolution(Convolution):
+class WinogradConvolutioner(Convolutioner):
 
     def __init__(self,
                  image_size: Union[int, tuple],
                  kernel_size: Union[int, tuple],
-                 padding: bool = False,
+                 padding: Union[int, tuple] = (0, 0),
                  stride: Union[int, tuple] = (1, 1)):
 
         super().__init__(image_size, kernel_size, padding, stride)
@@ -18,7 +18,7 @@ class WinogradConvolution(Convolution):
     @staticmethod
     def convolve_multichannel(image: np.ndarray,
                               kernel: np.ndarray,
-                              padding: bool = False,
+                              padding: Union[int, tuple] = (0, 0),
                               stride: Union[int, tuple] = (1, 1),
                               using_batches: bool = False) -> np.ndarray:
         pass
@@ -26,7 +26,7 @@ class WinogradConvolution(Convolution):
     @staticmethod
     def convolve_grayscale(image: np.ndarray,
                            kernel: np.ndarray,
-                           padding: bool = False,
+                           padding: Union[int, tuple] = (0, 0),
                            stride: Union[int, tuple] = (1, 1),
                            using_batches: bool = False) -> np.ndarray:
         pass

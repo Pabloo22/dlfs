@@ -1,6 +1,7 @@
 import numpy as np
 
 from dlfs.layers import Conv2D
+from dlfs.convolutions import SimpleConvolutioner
 
 
 def add_padding1(image, kernel, padding=True):
@@ -46,7 +47,6 @@ def test_padding1():
 
 
 def test_padding2():
-
     img = np.array([[[1, 2, 3, 4, 5],
                      [6, 7, 8, 9, 10],
                      [11, 12, 13, 14, 15],
@@ -65,6 +65,37 @@ def test_padding2():
     print(add_padding2(img, kernel, padding=False))
 
 
+def test_conv():
+    img = np.array([[2, 2, 1, 3],
+                    [0, 3, 2, 1],
+                    [1, 1, 0, 2],
+                    [2, 0, 0, 1]])
+
+    filter = np.array([[1, 0],
+                       [2, -2]])
+
+    convolutioner = SimpleConvolutioner(4, 2, stride=1, padding=0)
+    print(convolutioner.convolve(img, filter, using_batches=False))
+
+
+def test_conv_multichannel():
+    img = np.array([[[2, 2, 1, 3],
+                     [0, 3, 2, 1],
+                     [1, 1, 0, 2],
+                     [2, 0, 0, 1]],
+                    [[2, 2, 1, 3],
+                     [0, 3, 2, 1],
+                     [1, 1, 0, 2],
+                     [2, 0, 0, 1]]])
+
+    k = np.array([[[1,  0],
+                   [2, -2]],
+                  [[1, 0],
+                   [2, -2]]])
+
+    convolutioner = SimpleConvolutioner(img.shape, k.shape, stride=1, padding=0)
+    print(convolutioner.convolve(img, k, using_batches=False))
+
+
 if __name__ == '__main__':
-    test_padding1()
-    test_padding2()
+    test_conv_multichannel()

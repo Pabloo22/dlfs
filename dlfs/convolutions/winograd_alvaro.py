@@ -1,5 +1,3 @@
-from dlfs.convolutions import Convolution
-
 # Source: On Improving the Numerical Stability of Winograd Convolutions
 # By: Kevin Vincent and Kevin J. Stephano and Michael A. Frumkin and Boris Ginsburg and Julien Demouth
 # (https://openreview.net/pdf?id=H1ZaRZVKg)
@@ -55,7 +53,7 @@ def gen_points(num_points: int) -> List[Tuple[float, int]]:
 
 def winograd_get_matrices(m: int, n: int) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
-    This is equivalenT to F(m, n) on the paper.
+    This is equivalent to F(m, n) on the paper.
     This function returns the matrices necessary for calculating the Winograd convolution given the dimension of the filter and the dimension of the output. With those, we can infer the size of the input.
     The usage of these matrices depends on the dimension of the convolution. If we denote x as the signal and w as the filter:
     - If it is 1D: F(m, n) = x * w = Y.T @ [(X.T @ x) * (W @ w)]

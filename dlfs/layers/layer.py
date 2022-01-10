@@ -78,22 +78,22 @@ class Layer(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_delta(self, last_delta: np.ndarray, dz_da: np.ndarray) -> np.ndarray:
+    def get_delta(self, d_out: np.ndarray) -> np.ndarray:
         """
-        Calculates the delta of the layer based on the delta of the next layer and derivative of the output of this
-        layer (i) with respect to the z of the next layer (i+1).
         Args:
-            last_delta: delta of the next layer.
-            dz_da: derivative of the output of this layer (i) with respect to the z of the next layer (i+1).
+            d_out: derivative of the cost function with respect to the output of this layer.
         Returns:
-            The corresponding delta of the layer (d_cost/d_z).
+            The delta of the layer (d_C/d_z).
         """
 
     @abstractmethod
-    def get_dz_da(self) -> np.ndarray:
+    def get_d_inputs(self, delta: np.ndarray) -> np.ndarray:
         """
+        Returns the derivative of the cost function with respect to the input of the layer.
+        Args:
+            delta: derivative of the cost function with respect to the output of the layer.
         Returns:
-            The derivative of the output of this layer (i) with respect to the z of the next layer (i+1).
+            derivative of the cost function with respect to the input of the layer.
         """
 
     @abstractmethod
