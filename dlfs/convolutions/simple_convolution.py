@@ -5,6 +5,13 @@ from dlfs.convolutions import Convolutioner
 
 
 class SimpleConvolutioner(Convolutioner):
+    """
+    A simple convolutioner that performs a convolution on a single image.
+
+    Usage:
+        >>> conv = SimpleConvolutioner(image_size=(3, 3), kernel_size=(2, 2))
+        >>> conv.convolve(np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]]), np.array([[1, 2], [3, 4]]))
+    """
 
     def __init__(self,
                  image_size: Union[int, tuple],
@@ -17,7 +24,7 @@ class SimpleConvolutioner(Convolutioner):
     @staticmethod
     def convolve_grayscale(image: np.ndarray,
                            kernel: np.ndarray,
-                           padding: bool = False,
+                           padding: Union[int, tuple] = (0, 0),
                            stride: int = 1,
                            using_batches: bool = False) -> np.ndarray:
         """
@@ -61,7 +68,7 @@ class SimpleConvolutioner(Convolutioner):
     @staticmethod
     def convolve_multichannel(image: np.ndarray,
                               kernel: np.ndarray,
-                              padding: bool = False,
+                              padding: Union[int, tuple] = (0, 0),
                               stride: Union[int, tuple] = (1, 1),
                               using_batches: bool = False) -> np.ndarray:
         """

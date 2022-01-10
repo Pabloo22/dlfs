@@ -18,7 +18,7 @@ class WinogradConvolutioner(Convolutioner):
     @staticmethod
     def convolve_multichannel(image: np.ndarray,
                               kernel: np.ndarray,
-                              padding: bool = False,
+                              padding: Union[int, tuple] = (0, 0),
                               stride: Union[int, tuple] = (1, 1),
                               using_batches: bool = False) -> np.ndarray:
         pass
@@ -26,7 +26,7 @@ class WinogradConvolutioner(Convolutioner):
     @staticmethod
     def convolve_grayscale(image: np.ndarray,
                            kernel: np.ndarray,
-                           padding: bool = False,
+                           padding: Union[int, tuple] = (0, 0),
                            stride: Union[int, tuple] = (1, 1),
                            using_batches: bool = False) -> np.ndarray:
         pass

@@ -4,6 +4,9 @@ from typing import Union
 
 
 class Convolutioner(ABC):
+    """
+    Abstract class for convolutioners.
+    """
 
     def __init__(self,
                  image_size: Union[int, tuple],
@@ -20,7 +23,7 @@ class Convolutioner(ABC):
     @abstractmethod
     def convolve_grayscale(image: np.ndarray,
                            kernel: np.ndarray,
-                           padding: tuple = (0, 0),
+                           padding: Union[int, tuple] = (0, 0),
                            stride: Union[int, tuple] = (1, 1),
                            using_batches: bool = False) -> np.ndarray:
         pass

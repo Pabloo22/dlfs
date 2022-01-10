@@ -8,9 +8,9 @@ setup(
     description='implement from scratch (using numpy arrays) a package based on tensorflow architecture which '
                 'allows to build and train Fully Connected Networks and Convolutional Neural Networks (CNNs).',
     author='Pablo',  # Type in your name
-    author_email='pablete.arino@gmail.com',  # Type in your E-Mail
+    author_email='pablete.arino@gmail.com',
     url='https://github.com/Pabloo22/Deep-Learning-from-Scratch',
-    download_url='https://github.com/user/reponame/archive/v_01.tar.gz',  # I explain this later on
+    download_url='https://github.com/user/reponame/archive/v_01.tar.gz',
     keywords=['machine-learning', 'deep-learning', 'backpropagation'],  # Keywords that define your package best
     install_requires=[  # I get to this in a second
         'numpy',
