@@ -163,13 +163,11 @@ class Dense(Layer):
 
         return self.z if self.activation is None else self.activation(self.z)
 
-    def get_delta(self, last_delta: np.ndarray, dz_da: np.ndarray) -> np.ndarray:
+    def get_delta(self, d_out: np.ndarray) -> np.ndarray:
         """
         Backward pass of the layer.
         Args:
-            last_delta: gradients of the layer.
-            dz_da: next layer in the network. If this is the layer i, the received layer will be the i+1 layer.
-                        layers = [layer1, layer2, layer3, ..., layer_i, layer_i+1, ..., layerL]
+            d_out (np.ndarray): gradient of the loss with respect to the outputs of the layer
         Returns:
             The corresponding delta of the layer (d_cost/d_z).
         """
@@ -179,17 +177,31 @@ class Dense(Layer):
             raise ValueError("The layer is not initialized")
 
         # compute the delta
-
-        delta = last_delta * dz_da if last_delta.shape == self.output_shape else last_delta @ dz_da
-
-        if self.activation is not None:
-            delta *= self.activation.gradient(self.z)
+        delta = d_out if self.activation is None else self.activation.gradient(self.z) * d_out
 
         # check overflow
         if np.any(np.isnan(delta)):
             raise OverflowError("An overflow occurred during the backward pass")
 
         return delta
+
+    def get_d_inputs(self, delta: np.ndarray) -> np.ndarray:
+        """
+        Compute the gradient of the loss with respect to the inputs of the layer.
+
+        Args:
+            delta (np.ndarray): delta of the layer.
+
+        Returns:
+            The gradient of the loss with respect to the inputs of the layer.
+        """
+
+        # check if the layer is initialized
+        if not self.initialized:
+            raise ValueError("The layer is not initialized")
+
+        # compute the gradient of the loss with respect to the inputs
+        return delta @ self.weights.T
 
     def get_dz_da(self) -> np.ndarray:
         """

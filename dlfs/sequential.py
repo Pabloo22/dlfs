@@ -139,7 +139,6 @@ class Sequential:
         deltas = deque()
 
         last_layer = self.layers[-1]
-        dz_da = last_layer.get_dz_da()
 
         # initialize the deltas of the last layer
         if last_layer.activation is None:
@@ -166,9 +165,10 @@ class Sequential:
 
         # backward pass
         for layer in reversed(self.layers[:-1]):
-            delta = layer.get_delta(deltas[0], dz_da)
+            d_inputs = last_layer.get_d_inputs(deltas[0])
+            delta = layer.get_delta(d_inputs)
             deltas.appendleft(delta)
-            dz_da = layer.get_dz_da()
+            last_layer = layer
 
         return deltas
 
