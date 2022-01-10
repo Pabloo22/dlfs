@@ -1,7 +1,6 @@
 from collections import deque
 from copy import deepcopy
 import numpy as np
-from sklearn.model_selection import train_test_split
 from typing import List, Dict, Tuple
 from tqdm import tqdm
 import pickle
@@ -11,6 +10,7 @@ from dlfs.layers import Layer
 from dlfs.optimizers import Optimizer, get_optimizer
 from dlfs.losses import LossFunction, get_loss_function
 from dlfs.metrics import Metric, get_metric
+from dlfs.preprocessing import train_test_split
 
 
 class Sequential:
