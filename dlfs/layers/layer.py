@@ -105,7 +105,7 @@ class Layer(ABC):
                 d_out = d_out[:, np.newaxis, :]
                 delta = np.einsum('ijk,ikl->il', d_out, activation_gradient)
 
-                # The above einsum is equivalent to:
+                # The above einsum is equivalent to but faster than the following code:
                 # delta = np.empty_like(self.z)
                 # batch_size = self.input_shape.shape[0]
                 # for i in range(batch_size):  # for each sample
