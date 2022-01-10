@@ -18,7 +18,7 @@ class Conv2D(Layer):
                  padding: bool = False,
                  activation: str = None,
                  use_bias: bool = True,
-                 mode: str = 'winograd',
+                 convolution_type: str = 'winograd',
                  name: str = "Conv2D",
                  input_shape: tuple = None,
                  weights_init: str = "xavier",
@@ -34,6 +34,7 @@ class Conv2D(Layer):
                             (assuming stride = 1)
             activation (ActivationFunction): Activation function
             use_bias (bool): Whether to use bias
+            convolution_type (str): convolution mode. Can be 'winograd' or 'naive'
             name (str): Name of the layer
             input_shape (tuple): shape of the input
             weights_init (str): Initialization method for the weights
@@ -48,8 +49,6 @@ class Conv2D(Layer):
             raise ValueError("The kernel size should be greater than 0")
         if stride <= 0:
             raise ValueError("The stride should be greater than 0")
-        if mode not in {'winograd', 'simple'}:
-            raise ValueError("Unknown convolution mode")
 
         if isinstance(kernel_size, int):
             kernel_size = (kernel_size, kernel_size)
@@ -75,10 +74,13 @@ class Conv2D(Layer):
         self.n_filters = n_filters
         self.stride = stride
         self.padding = padding
+        self.convolution_type = convolution_type
         self.use_bias = use_bias
         self.weights_init = weights_init
         self.bias_init = bias_init
-        self.convolution = get_convolution(mode, kernel_size, stride, padding)
+        self.forward_conv = get_convolution(convolution_type, kernel_size, stride, padding)
+        self.backward_conv = None
+        self.update_conv = None
 
     def initialize(self, input_shape: tuple, weights: np.ndarray = None, bias: np.ndarray = None):
         """
@@ -144,6 +146,18 @@ class Conv2D(Layer):
         else:
             raise ValueError("Unknown bias initialization")
 
+        # INITIALIZE BACKWARD CONVOLUTION
+        # compute the padding needed for the backward convolution
+        padding_backward = ((self.kernel_size[0] - 1) // 2, (self.kernel_size[1] - 1) // 2)
+
+        # initialize the backward convolution. This convolution is used to compute the gradient of the loss
+        # with respect to input.
+        self.backward_conv = get_convolution(self.convolution_type,
+                                             image_size=self.output_shape,  # delta.shape
+                                             kernel_size=self.kernel_size,
+                                             stride=self.stride,
+                                             padding=padding_backward)
+
         self.initialized = True
 
     def set_weights(self, weights: np.ndarray = None, bias: np.ndarray = None):
@@ -183,24 +197,18 @@ class Conv2D(Layer):
             output data
         """
         self.inputs = x
-        self.z = self.convolution.convolve(x, self.weights) + self.bias
+        self.z = self.forward_conv.convolve(x, self.weights) + self.bias
         return self.z if self.activation is None else self.activation(self.z)
 
-    def get_delta(self, last_delta: np.ndarray, dz_da: np.ndarray) -> np.ndarray:
+    def get_d_inputs(self, delta: np.ndarray) -> np.ndarray:
         """
-        Backward pass
+        Returns the derivative of the cost function with respect to the input of the layer.
         Args:
-            last_delta: gradients of the loss with respect to the output of this layer (dL/dz) if
-                this layer is the last layer in the network, or gradients of the loss with respect
-                to the output of the next layer (dL/dz_next) if this layer is followed by another
-                Conv2D layer.
-            dz_da: gradients of the activation with respect to the output of this layer (dL/dz)
+            delta: derivative of the cost function with respect to the output of the layer.
         Returns:
-            gradients of the loss with respect to the input of this layer (dL/dx)
+            derivative of the cost function with respect to the input of the layer.
         """
-
-        # get dL/da
-
+        return self.forward_conv.convolve(delta, self.weights.transpose((0, 1, 3, 2)))
 
     def count_params(self) -> int:
         """
@@ -232,7 +240,7 @@ class Conv2D(Layer):
         if not self.initialized:
             raise ValueError("The layer is not initialized")
 
-        dw = self.convolve(self.inputs, delta, padding=True, stride=self.stride)
+        dw = self.forward_conv.convolve(self.inputs, delta.transpose((0, 3, 2, 1)), padding=self.padding)
         db = np.sum(delta, axis=(1, 2))
 
         optimizer.update(self, (dw, db))

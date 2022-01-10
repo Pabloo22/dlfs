@@ -139,29 +139,7 @@ class Sequential:
         deltas = deque()
 
         last_layer = self.layers[-1]
-
-        # initialize the deltas of the last layer
-        if last_layer.activation is None:
-            deltas.appendleft(self.loss.gradient(y_true, y_pred))
-        else:
-            activation_gradient = last_layer.activation.gradient(last_layer.z)
-            # check if the gradient is a matrix of tensors with shape=(m, n_neurons) or a tensor of jacobian matrices
-            # with shape (m, n_neurons, n_neurons). (m is the number of samples)
-            if activation_gradient.ndim == 2:
-                deltas.appendleft(self.loss.gradient(y_true, y_pred) * activation_gradient)
-            else:
-
-                loss_gradient = self.loss.gradient(y_true, y_pred)[:, np.newaxis, :]
-
-                delta = np.einsum('ijk,ikl->il', loss_gradient, activation_gradient)
-
-                # The above einsum is equivalent to:
-                # delta = np.empty_like(last_layer.z)
-                # batch_size = y_true.shape[0]
-                # for i in range(batch_size):  # for each sample
-                #     delta[i] = loss_gradient[i] @ activation_gradient[i]
-
-                deltas.appendleft(delta)
+        deltas.appendleft(last_layer.get_delta(self.loss.gradient(y_true, y_pred)))
 
         # backward pass
         for layer in reversed(self.layers[:-1]):

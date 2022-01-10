@@ -163,28 +163,6 @@ class Dense(Layer):
 
         return self.z if self.activation is None else self.activation(self.z)
 
-    def get_delta(self, d_out: np.ndarray) -> np.ndarray:
-        """
-        Backward pass of the layer.
-        Args:
-            d_out (np.ndarray): gradient of the loss with respect to the outputs of the layer
-        Returns:
-            The corresponding delta of the layer (d_cost/d_z).
-        """
-
-        # check if the layer is initialized
-        if not self.initialized:
-            raise ValueError("The layer is not initialized")
-
-        # compute the delta
-        delta = d_out if self.activation is None else self.activation.gradient(self.z) * d_out
-
-        # check overflow
-        if np.any(np.isnan(delta)):
-            raise OverflowError("An overflow occurred during the backward pass")
-
-        return delta
-
     def get_d_inputs(self, delta: np.ndarray) -> np.ndarray:
         """
         Compute the gradient of the loss with respect to the inputs of the layer.

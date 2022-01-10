@@ -140,7 +140,7 @@ def test_boston():
     model.summary()
     model.compile(loss='mse', optimizer=SGDMomentum(learning_rate=0.001), metrics=['mae'])
     model.fit(x_train, y_train, validation_data=(x_test, y_test), epochs=100, batch_size=1, verbose=3)
-    model.evaluate(x_test, y_test)
+    model.evaluate(x_test, y_test, prefix="test_")
 
 
 def test_cancer():
@@ -198,4 +198,4 @@ def test_mnist_denses():
 
 
 if __name__ == "__main__":
-    test_boston()
+    test_mnist_denses()

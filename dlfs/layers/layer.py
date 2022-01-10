@@ -77,7 +77,6 @@ class Layer(ABC):
     def set_weights(self, weights: np.ndarray = None, bias: np.ndarray = None):
         raise NotImplementedError
 
-    @abstractmethod
     def get_delta(self, d_out: np.ndarray) -> np.ndarray:
         """
         Args:
@@ -85,6 +84,34 @@ class Layer(ABC):
         Returns:
             The delta of the layer (d_C/d_z).
         """
+        # check if the layer is initialized
+        if not self.initialized:
+            raise ValueError("The layer is not initialized")
+
+        if self.activation is None:
+            delta = d_out
+        else:
+            activation_gradient = self.activation.gradient(self.z)
+            # check if the gradient is a matrix of tensors
+            #
+            # For example, in the case of Dense layers, we have to check if the gradient is a matrix of tensors
+            # with shape=(m, n_neurons) or a tensor of jacobian matrices with shape=(m, n_neurons, n_neurons)
+            # This is because of activation functions such
+            # as softmax which returns a matrix of jacobian matrices.
+
+            if activation_gradient.shape == self.z.shape:
+                delta = d_out * activation_gradient
+            else:
+                d_out = d_out[:, np.newaxis, :]
+                delta = np.einsum('ijk,ikl->il', d_out, activation_gradient)
+
+                # The above einsum is equivalent to:
+                # delta = np.empty_like(self.z)
+                # batch_size = self.input_shape.shape[0]
+                # for i in range(batch_size):  # for each sample
+                #     delta[i] = d_out[i] @ activation_gradient[i]
+
+        return delta
 
     @abstractmethod
     def get_d_inputs(self, delta: np.ndarray) -> np.ndarray:
