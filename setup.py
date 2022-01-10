@@ -15,6 +15,7 @@ setup(
     install_requires=[  # I get to this in a second
         'numpy',
         'sklearn',
+        'tqdm',
     ],
     classifiers=[
         'Development Status :: 3 - Alpha',
