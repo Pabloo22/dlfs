@@ -15,14 +15,8 @@ You can do thi easily thanks to the requirements.txt file by just running the fo
 pip install -r requirements.txt
 ```
 
-## Python version
+### Python version
 Everything is written in Python 3.7 (to be compatible with Google Colab).
-
-## Dependencies
-We use the following libraries:
-* **numpy**: for numerical computation
-* **tqdm**: for progress bars
-* **patchify**: for patching images
 
 ## Usage
 The usage is very similar to the keras library. See the folder 
@@ -35,7 +29,7 @@ This project is licensed under the Apache 2.0 license (see
 ## Contributing
 All contributions are welcome once the deadline to submit the project has passed (01/13/2022).
 
-## Contributors
+### Contributors
 * [Pablo Ariño](https://github.com/Pabloo22)
 * [Jorge de la Rosa](https://github.com/Mixnikon108)
 * [Álvaro Laguna](https://github.com/alvarola17)
