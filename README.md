@@ -1,5 +1,5 @@
 # Deep-Learning-from-Scratch
-An attempt to recreate the famous library keras from scratch, using the numeric python library numpy. This
+An attempt to recreate the most basic features of tensorflow and keras from scratch, using the numeric python library numpy. This
 framework has been created for educational purposes only.
 
 This package is originally started as part of a project for the Numeric Algorithms course at the 
