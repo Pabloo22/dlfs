@@ -4,7 +4,7 @@ framework has been created for educational purposes only.
 
 This package is originally started as part of a project for the Numeric Algorithms course at the 
 Polytechnic University of Madrid (Spain). However, we may extend the project to include more features and 
-improvements in the future. The main purpose of this project is to learn more about deep learning.
+improvements in the future. The main purpose of this project is to learn more about Deep Learning.
 
 ## Installation
 We plan to upload the package to PyPI in the near future. 
