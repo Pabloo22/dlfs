@@ -1,10 +1,25 @@
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ==============================================================================
+"""Home of the Flatten layer."""
+
 import numpy as np
 
 from .layer import Layer
 
 
 class Flatten(Layer):
-    """
+    """Flattens the input while preserving the batch dimension.
+
     This utility layer is responsible for flattening and reducing to one dimension the internal matrix
     of the neural network to later on process a simpler output vector. The main purpose of this layer is to connect
     the last convolutional layer to the fully connected layer. Note that this does not affect the batch size.
@@ -34,6 +49,7 @@ class Flatten(Layer):
         Args:
             x: Input to the layer.
             training: For compatibility with the base class.
+
         Returns:
             A 1D vector.
         """
@@ -41,8 +57,7 @@ class Flatten(Layer):
         return self.outputs
 
     def get_d_inputs(self, delta: np.ndarray) -> np.ndarray:
-        """
-        Returns the gradient of the loss with respect to the inputs of the layer.
+        """Returns the gradient of the loss with respect to the inputs of the layer.
 
         Args:
             delta: Delta of the loss with respect to the outputs of the layer.
@@ -57,7 +72,7 @@ class Flatten(Layer):
     def set_weights(self, weights: np.ndarray = None, bias: np.ndarray = None):
         raise NotImplementedError("Flatten layer has no weights")
 
-    def update(self, optimizer, gradients: np.ndarray):
+    def update(self, optimizer, delta: np.ndarray):
         pass
 
     def count_params(self) -> int:

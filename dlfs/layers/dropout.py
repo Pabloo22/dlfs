@@ -86,7 +86,7 @@ class Dropout(Layer):
         """Returns a string summary of the layer."""
         return f"{self.name} (p={1 - self.prob_keep})"
 
-    def update(self, optimizer: Optimizer, gradients: np.ndarray):
+    def update(self, optimizer: Optimizer, delta: np.ndarray):
         """Implemented for compatibility with the Layer interface."""
 
     def count_params(self) -> int:

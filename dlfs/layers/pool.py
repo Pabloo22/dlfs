@@ -99,7 +99,7 @@ class MaxPool2D(Layer):
     def get_dz_da(self) -> np.ndarray:
         pass
 
-    def update(self, optimizer, gradients: np.ndarray):
+    def update(self, optimizer, delta: np.ndarray):
         pass
 
     def count_params(self) -> int:

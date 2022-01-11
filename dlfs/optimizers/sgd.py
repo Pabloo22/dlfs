@@ -19,7 +19,7 @@ class SGD(Optimizer):
 
         Args:
             layer: The layer to update.
-            gradients: gradients of parameters (weights and bias)
+            gradients: delta of parameters (weights and bias)
         """
         dw, db = gradients
 

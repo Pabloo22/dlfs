@@ -6,8 +6,14 @@ from dlfs.activation_functions import ActivationFunction, get_activation_functio
 
 
 class Layer(ABC):
-    """
-    Base class for all layers.
+    """Base class for all layers.
+
+    Every layer should inherit from this class and implement the abstract methods. A layer is a part of a neural network
+    that performs some computation on the input data and produces an output. The output of a layer is the input of the
+    next layer. Some layers have weights and biases, which are used to compute the output. These parameters are
+    updated during training using backpropagation. This is the reason why there are methods to compute the gradient of
+    the loss function with respect to the input of the layer, the weights and the biases. The gradient of the loss
+    with respect to the weights and biases is computed in the `update` method.
 
     Args:
         input_shape (tuple or None): Shape of the input.
@@ -30,8 +36,8 @@ class Layer(ABC):
         trainable (bool): Whether the layer is trainable.
         initialized (bool): Whether the layer has been initialized.
         activation (ActivationFunction): Activation function to use.
-        inputs (np.ndarray): Inputs of the layer. Stored for backward propagation.
-        outputs (np.ndarray): Outputs of the layer before the activation. Stored for backward propagation. Th
+        inputs (np.ndarray): Inputs of the layer. Needed in the backward pass.
+        outputs (np.ndarray): Outputs of the layer before the activation. Needed in the backward pass.
     """
 
     def __init__(self,
@@ -138,7 +144,7 @@ class Layer(ABC):
                 d_out = d_out[:, np.newaxis, :]
                 delta = np.einsum('ijk,ikl->il', d_out, activation_gradient)
 
-                # The above einsum is equivalent to but faster than the following code:
+                # The above einsum is equivalent (but faster) to the following code:
                 # delta = np.empty_like(self.outputs)
                 # batch_size = self.input_shape.shape[0]
                 # for i in range(batch_size):  # for each sample
@@ -161,18 +167,26 @@ class Layer(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def update(self, optimizer, gradients: np.ndarray):
-        """
-        Updates the weights and biases of the layer.
+    def update(self, optimizer, delta: np.ndarray):
+        """Updates the weights and biases of the layer.
+
+        If the layer has no weights, this method does nothing. If the layer has weights,
+        the weights and biases are updated according to the optimizer after computing the
+        gradient of the cost function with respect to the weights and biases.
+
         Args:
             optimizer (Optimizer): optimizer to use.
-            gradients: gradients of the cost function with respect to the weights and biases of the layer.
+            delta (np.ndarray): gradient of the cost function with respect to the output of the layer (without
+                the activation function).
         """
         raise NotImplementedError
 
     @abstractmethod
     def count_params(self) -> int:
-        raise NotImplementedError
+        """Returns the number of parameters of the layer.
+
+        If the layer has no weights, this method returns 0.
+        """
 
     def __str__(self) -> str:
         return f"{self.__class__.__name__}({self.name})"

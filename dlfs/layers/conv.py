@@ -116,7 +116,7 @@ class Conv2D(Layer):
         self.update_conv = None
 
     def initialize(self, input_shape: tuple, weights: np.ndarray = None, bias: np.ndarray = None):
-        """Initialize the layer.
+        """Initializes the layer.
 
         If weights and bias are not provided, they are initialized using the specified initialization method.
 
@@ -124,6 +124,13 @@ class Conv2D(Layer):
             input_shape (tuple): input shape of the layer, it has the form (n_samples, height, width, n_channels)
             weights (np.ndarray): weights of the layer (optional, recommended to be None).
             bias (np.ndarray): bias of the layer (optional, recommended to be None).
+
+        Raises:
+            ValueError: if the input shape is not valid.
+            ValueError: if the weights and bias are not of the shape:
+                (input_shape[3], self.kernel_size[0], self.kernel_size[1], self.n_filters),
+                (self.n_filters,), respectively.
+            ValueError: if trying to set bias and `self.use_bias` is False.
         """
 
         # check if the input shape is correct
@@ -161,24 +168,28 @@ class Conv2D(Layer):
         else:
             raise ValueError("Unknown weights initialization")
 
-        bias_shape = (self.n_filters,)
-        # initialize bias
-        if bias is not None:
-            if bias.shape != bias_shape:
-                raise ValueError(f"The shape of the bias should be "
-                                 "(n_channels_current_layer). "
-                                 f"Got {bias.shape}, expected {bias_shape}")
-            self.bias = bias
-        elif self.bias_init == "zeros":
-            self.bias = np.zeros(bias_shape)
-        elif self.bias_init == "ones":
-            self.bias = np.ones(bias_shape)
-        elif self.bias_init == "uniform":
-            self.bias = np.random.uniform(low=-1, high=1, size=bias_shape)
-        elif self.bias_init == "normal":
-            self.bias = np.random.normal(loc=0, scale=1, size=bias_shape)
+        if self.use_bias:
+            bias_shape = (self.n_filters,)
+            # initialize bias
+            if bias is not None:
+                if bias.shape != bias_shape:
+                    raise ValueError(f"The shape of the bias should be "
+                                     "(n_channels_current_layer). "
+                                     f"Got {bias.shape}, expected {bias_shape}")
+                self.bias = bias
+            elif self.bias_init == "zeros":
+                self.bias = np.zeros(bias_shape)
+            elif self.bias_init == "ones":
+                self.bias = np.ones(bias_shape)
+            elif self.bias_init == "uniform":
+                self.bias = np.random.uniform(low=-1, high=1, size=bias_shape)
+            elif self.bias_init == "normal":
+                self.bias = np.random.normal(loc=0, scale=1, size=bias_shape)
+            else:
+                raise ValueError("Unknown bias initialization")
         else:
-            raise ValueError("Unknown bias initialization")
+            if bias is not None:
+                raise ValueError("The bias should be None if the layer is not using bias")
 
         # INITIALIZE BACKWARD CONVOLUTION
         # compute the padding needed for the backward convolution
@@ -195,12 +206,15 @@ class Conv2D(Layer):
         self.initialized = True
 
     def set_weights(self, weights: np.ndarray = None, bias: np.ndarray = None):
-        """
-        Set the weights and bias of the layer.
+        """Sets the weights and bias of the layer.
 
         Args:
             weights (np.ndarray): weights of the layer.
             bias (np.ndarray): bias of the layer.
+
+        Raises:
+            ValueError: if the shape of the weights or bias is not correct.
+            ValueError: if trying to set bias and `self.use_bias` is False.
         """
         if weights is not None:
             # check if the weights shape is correct
@@ -212,6 +226,10 @@ class Conv2D(Layer):
             self.weights = weights
 
         if bias is not None:
+
+            if not self.use_bias:
+                raise ValueError("The layer does not use bias")
+
             # check if the bias shape is correct
             bias_shape = (self.n_filters,)
             if bias.shape != bias_shape:
@@ -222,61 +240,51 @@ class Conv2D(Layer):
             self.bias = bias
 
     def forward(self, x: np.ndarray, training: bool = False) -> np.ndarray:
-        """
-        Forward pass
+        """Forward pass
+
         Args:
             x: input data
             training: for compatibility with other layers
+
         Returns:
             output data
         """
         self.inputs = x
-        self.z = self.forward_conv.convolve(x, self.weights) + self.bias
-        return self.z if self.activation is None else self.activation(self.z)
+        self.outputs = self.forward_conv.convolve(x, self.weights) + self.bias
+        return self.outputs if self.activation is None else self.activation(self.outputs)
 
     def get_d_inputs(self, delta: np.ndarray) -> np.ndarray:
-        """
-        Returns the derivative of the cost function with respect to the input of the layer.
+        """Returns the derivative of the cost function with respect to the input of the layer.
+
         Args:
             delta: derivative of the cost function with respect to the output of the layer.
-        Returns:
-            derivative of the cost function with respect to the input of the layer.
         """
-        # 180° rotation of the filters
-        flipped_weights = np.rot90(self.weights, 2, axes=(1, 2))
-        return self.forward_conv.convolve(delta, self.weights.transpose((0, 1, 3, 2)))
+        flipped_weights = np.rot90(self.weights, 2, axes=(1, 2))  # 180° rotation of the filters
+        return self.backward_conv.convolve(delta, flipped_weights)
 
     def count_params(self) -> int:
-        """
-        Counts the number of parameters of this layer
-        Returns:
-            number of parameters
-        """
         return self.weights.size + self.bias.size
 
     def _get_output_shape(self) -> tuple:
-        """
-        Get the output shape
-        Returns:
-            tuple: output shape
-        """
         return (self.input_shape[0],
                 self.input_shape[1] - self.kernel_size[0] + 1,
                 self.input_shape[2] - self.kernel_size[1] + 1,
                 self.n_filters)
 
     def update(self, optimizer, delta: np.ndarray):
-        """
-        Update the weights and biases of this layer
+        """Updates the weights and biases of this layer.
+
+        See `base class` for more details.
+
         Args:
             optimizer (Optimizer): optimizer used to update the weights and biases
-            delta: gradients of the loss with respect to the output of this layer
+            delta: delta of the loss with respect to the output of this layer
         """
         # check if the layer is initialized
         if not self.initialized:
             raise ValueError("The layer is not initialized")
 
-        dw = self.forward_conv.convolve(self.inputs, delta.transpose((0, 3, 2, 1)))
+        dw = self.update_conv.convolve(self.inputs, delta.transpose((0, 3, 2, 1)))
         db = np.sum(delta, axis=(1, 2))
 
         optimizer.update(self, (dw, db))
