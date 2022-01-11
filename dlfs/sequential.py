@@ -1,3 +1,18 @@
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ==============================================================================
+"""Contains the Sequential model class."""
+
+
 from collections import deque
 from copy import deepcopy
 import numpy as np
@@ -14,8 +29,32 @@ from dlfs.preprocessing import train_test_split
 
 
 class Sequential:
-    """
-    A sequential model is a linear stack of layers.
+    """A sequential model is a linear stack of layers.
+
+    Args:
+        layers (List[Layer]): A list of layers.
+        name (str): The name of the model.
+
+    Attributes:
+        layers (List[Layer]): A list of layers.
+        name (str): The name of the model.
+        optimizer (Optimizer): The optimizer used to optimize the model.
+        loss (LossFunction): The loss function used to compute the loss.
+        metrics (Dict[str, Union[Metric, LossFunction]]): A dictionary of metrics.
+        __trainable (bool): Whether the model is trainable.
+
+    Examples:
+        >>> from dlfs.layers import Dense
+
+        >>> model = Sequential([Dense(10, activation='relu'), Dense(1)])
+
+        >>> model.summary()
+
+        >>> model.compile(optimizer='sgd', loss='mse', metrics=['mae'])
+
+        >>> model.fit(X_train, y_train, epochs=10)
+
+
     """
 
     layers: List[Layer]
@@ -39,7 +78,7 @@ class Sequential:
         self.optimizer = None
         self.metrics = None
         self.__trainable = True
-        self.counter = 1
+        self.__counter = 1
 
     @property
     def trainable(self):
@@ -52,8 +91,8 @@ class Sequential:
             layer.trainable = value
 
     def add(self, layer: Layer):
-        """
-        Add a layer to the model
+        """Adds a layer to the model
+
         Args:
             layer (Layer): the layer to add
         """
@@ -70,14 +109,14 @@ class Sequential:
                 layer.initialize(input_shape=layer.input_shape)
 
         # each layer must have an unique name
-        layer.name = f"{layer.name}{self.counter}"
-        self.counter += 1
+        layer.name = f"{layer.name}{self.__counter}"
+        self.__counter += 1
 
         self.layers.append(layer)
 
     def concatenate(self, model: 'Sequential'):
-        """
-        Concatenate two models
+        """Concatenates two models.
+        
         Args:
             model (Sequential): the model to concatenate
         """
