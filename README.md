@@ -25,10 +25,12 @@ We use the following libraries:
 * **patchify**: for patching images
 
 ## Usage
-The usage is very similar to the keras library. See the folder `examples` for some examples.
+The usage is very similar to the keras library. See the folder 
+[examples](https://github.com/Pabloo22/Deep-Learning-from-Scratch/tree/main/examples) for some examples.
 
 ## License
-This project is licensed under the Apache 2.0 license (see LICENSE.md).
+This project is licensed under the Apache 2.0 license (see 
+[LICENSE.md](https://github.com/Pabloo22/Deep-Learning-from-Scratch/blob/main/LICENSE)).
 
 ## Contributing
 All contributions are welcome once the deadline to submit the project has passed (01/13/2022).
