@@ -4,7 +4,7 @@ will be removed in the future.
 """
 import numpy as np
 
-from dlfs import Sequential
+from dlfs.models import Sequential
 from dlfs.layers import Dense, Dropout
 from dlfs.optimizers import SGD, SGDMomentum
 from dlfs.losses import MSE, MAE, BinaryCrossentropy, CategoricalCrossentropy
