@@ -10,7 +10,7 @@ setup(
     author='Pablo',  # Type in your name
     author_email='pablete.arino@gmail.com',
     url='https://github.com/Pabloo22/Deep-Learning-from-Scratch',
-    download_url='https://github.com/user/reponame/archive/v_01.tar.gz',
+    download_url='https://github.com/Pabloo22/dlfs/archive/refs/tags/v0.1.tar.gz',
     keywords=['machine-learning', 'deep-learning', 'backpropagation'],  # Keywords that define your package best
     install_requires=[
         'numpy',
