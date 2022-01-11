@@ -12,21 +12,20 @@ setup(
     url='https://github.com/Pabloo22/Deep-Learning-from-Scratch',
     download_url='https://github.com/user/reponame/archive/v_01.tar.gz',
     keywords=['machine-learning', 'deep-learning', 'backpropagation'],  # Keywords that define your package best
-    install_requires=[  # I get to this in a second
+    install_requires=[
         'numpy',
-        'sklearn',
         'tqdm',
     ],
     classifiers=[
         'Development Status :: 3 - Alpha',
         # Chose either "3 - Alpha", "4 - Beta" or "5 - Production/Stable" as the current state of your package
-        'Intended Audience :: Developers',  # Define that your audience are developers
+        'Intended Audience :: Developers',
         'Topic :: Software Development :: Build Tools',
-        'License :: OSI Approved :: Apache-2.0 License',  # Again, pick a license
-        'Programming Language :: Python :: 3',  # Specify which python versions that you want to support
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
+        'License :: OSI Approved :: Apache-2.0 License',
         'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7'
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
     ],
 )
