@@ -1,13 +1,13 @@
 from distutils.core import setup
 
 setup(
-    name='dlfs',  # How you named your package folder (MyLib)
-    packages=['dlfs'],  # Chose the same as "name"
-    version='0.1.2',  # Start with a small number and increase it with every change you make
-    license='apache-2.0',  # Chose a license from here: https://help.github.com/articles/licensing-a-repository
+    name='dlfs',
+    packages=['dlfs'],
+    version='0.1.2',
+    license='apache-2.0',
     description='implement from scratch (using numpy arrays) a package based on tensorflow architecture which '
                 'allows to build and train Fully Connected Networks and Convolutional Neural Networks (CNNs).',
-    author='Pablo',  # Type in your name
+    author='Pablo',
     author_email='pablete.arino@gmail.com',
     url='https://github.com/Pabloo22/Deep-Learning-from-Scratch',
     download_url='https://github.com/Pabloo22/dlfs/archive/refs/tags/v0.1.2.tar.gz',
