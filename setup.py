@@ -12,14 +12,14 @@ setup(
               'dlfs.optimizers',
               'dlfs.preprocessing'],
 
-    version='0.1.3',
+    version='0.1.4',
     license='apache-2.0',
     description='implement from scratch (using numpy arrays) a package based on tensorflow architecture which '
                 'allows to build and train Fully Connected Networks and Convolutional Neural Networks (CNNs).',
     author='Pablo',
     author_email='pablete.arino@gmail.com',
     url='https://github.com/Pabloo22/Deep-Learning-from-Scratch',
-    download_url='https://github.com/Pabloo22/dlfs/archive/refs/tags/v0.1.3.tar.gz',
+    download_url='https://github.com/Pabloo22/dlfs/archive/refs/tags/v0.1.4.tar.gz',
     keywords=['machine-learning', 'deep-learning', 'backpropagation'],  # Keywords that define your package best
     install_requires=[
         'numpy',
