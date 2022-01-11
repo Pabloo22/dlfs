@@ -1,4 +1,4 @@
-from .sequential import Sequential
+from dlfs.models.sequential import Sequential
 
 from .layers import *
 from .optimizers import *

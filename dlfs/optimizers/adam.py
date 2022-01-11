@@ -1,7 +1,7 @@
 import numpy as np
 
 from .optimizer import Optimizer
-from dlfs import sequential
+
 
 class Adam(Optimizer):
     """

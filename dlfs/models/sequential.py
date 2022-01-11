@@ -21,6 +21,7 @@ from tqdm import tqdm
 import pickle
 
 
+from . import Model
 from dlfs.layers import Layer
 from dlfs.optimizers import Optimizer, get_optimizer
 from dlfs.losses import LossFunction, get_loss_function
@@ -28,7 +29,7 @@ from dlfs.metrics import Metric, get_metric
 from dlfs.preprocessing import train_test_split
 
 
-class Sequential:
+class Sequential(Model):
     """A sequential model is a linear stack of layers.
 
     Args:
@@ -43,7 +44,7 @@ class Sequential:
         metrics (Dict[str, Union[Metric, LossFunction]]): A dictionary of metrics.
         __trainable (bool): Whether the model is trainable.
 
-    Examples:
+    Usage:
         >>> from dlfs.layers import Dense
 
         >>> model = Sequential([Dense(10, activation='relu'), Dense(1)])
@@ -52,7 +53,7 @@ class Sequential:
 
         >>> model.compile(optimizer='sgd', loss='mse', metrics=['mae'])
 
-        >>> model.fit(X_train, y_train, epochs=10)
+        >>> model.fit(x_train, y_train, epochs=10)
 
 
     """
@@ -65,6 +66,8 @@ class Sequential:
     trainable: bool
 
     def __init__(self, layers: List[Layer] = None, name: str = "Sequential"):
+
+        super().__init__(name=name)
 
         # check that the first layers has set the input shape
         if layers and layers[0].input_shape is None:
