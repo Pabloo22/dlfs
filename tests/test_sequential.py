@@ -199,4 +199,4 @@ def test_mnist_denses():
 
 
 if __name__ == "__main__":
-    test_boston()
+    test_mnist_denses()

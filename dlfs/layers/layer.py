@@ -42,9 +42,9 @@ class Layer(ABC):
         output_shape (tuple): Shape of the output.
         name (str): Name of the layer. The name is used to identify the layer in the network
             and is used by the optimizer to identify the layer's parameters.
-        __weights (np.ndarray): Weights of the layer (None by default). If the layer has weights,
+        weights (np.ndarray): Weights of the layer (None by default). If the layer has weights,
             they can be set using the set_weights method or in the initialize method.
-        __bias (np.ndarray): Bias of the layer (None by default). They are set in the
+        bias (np.ndarray): Bias of the layer (None by default). They are set in the
             initialize method or in the set_weights method.
         has_weights (bool): Whether the layer has weights.
         trainable (bool): Whether the layer is trainable.
@@ -65,8 +65,8 @@ class Layer(ABC):
         self.input_shape = input_shape if input_shape else None
         self.output_shape = output_shape
         self.name = name
-        self.__weights = None
-        self.__bias = None
+        self.weights = None
+        self.bias = None
         self.__has_weights = has_weights  # Whether the layer has weights and biases.
         self.trainable = trainable
         self.initialized = False
@@ -85,28 +85,12 @@ class Layer(ABC):
     def has_weights(self) -> bool:
         return self.__has_weights
 
-    @property
-    def weights(self) -> np.ndarray:
-        return self.__weights
-
-    @property
-    def bias(self) -> np.ndarray:
-        return self.__bias
-
     # Setters
     # -------------------------------------------------------------------------
 
     @activation.setter
     def activation(self, activation: str):
         self.__activation = get_activation_function(activation)
-
-    @weights.setter
-    def weights(self, weights: np.ndarray):
-        self.set_weights(weights=weights)
-
-    @bias.setter
-    def bias(self, bias: np.ndarray):
-        self.set_weights(bias=bias)
 
     # Abstract methods
     # -------------------------------------------------------------------------

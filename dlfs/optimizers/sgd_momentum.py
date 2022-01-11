@@ -28,8 +28,8 @@ class SGDMomentum(Optimizer):
         vb = self.momentum * vb + (1 - self.momentum) * db
 
         # update parameters
-        layer.__weights -= self.learning_rate * vw
-        layer.__bias -= self.learning_rate * vb
+        layer.weights -= self.learning_rate * vw
+        layer.bias -= self.learning_rate * vb
 
         # store the velocity
         self.__v[layer.name] = (vw, vb)
@@ -40,7 +40,7 @@ class SGDMomentum(Optimizer):
         Args:
             layer: The layer to add a slot for.
         """
-        self.__v[layer.name] = (np.zeros_like(layer.__weights), np.zeros_like(layer.__bias))
+        self.__v[layer.name] = (np.zeros_like(layer.weights), np.zeros_like(layer.bias))
 
     def reset(self):
         """
