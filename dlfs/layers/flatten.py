@@ -5,7 +5,12 @@ from .layer import Layer
 
 class Flatten(Layer):
     """
-    Flatten layer. It flattens the input to a 1D vector.
+    This utility layer is responsible for flattening and reducing to one dimension the internal matrix
+    of the neural network to later on process a simpler output vector. The main purpose of this layer is to connect
+    the last convolutional layer to the fully connected layer. Note that this does not affect the batch size.
+
+    Args:
+        name (str): Name of the layer.
     """
 
     def __init__(self, name: str = "Flatten"):
@@ -13,7 +18,8 @@ class Flatten(Layer):
 
     def initialize(self, input_shape: tuple):
         """
-        Initialize the layer.
+        Initialize the layer. This method is called by the model when the model is being compiled.
+
         Args:
             input_shape: The input shape.
         """
@@ -24,19 +30,22 @@ class Flatten(Layer):
     def forward(self, x: np.ndarray, training: bool = True) -> np.ndarray:
         """
         Forward pass of the layer.
+
         Args:
             x: Input to the layer.
             training: For compatibility with the base class.
         Returns:
             A 1D vector.
         """
-        return np.reshape(x, self.output_shape)
+        self.outputs = np.reshape(x, self.output_shape)
+        return self.outputs
 
     def get_d_inputs(self, delta: np.ndarray) -> np.ndarray:
         """
         Returns the gradient of the loss with respect to the inputs of the layer.
+
         Args:
-            delta: Delta of the loss with respect to the z of the layer.
+            delta: Delta of the loss with respect to the outputs of the layer.
         Returns:
             The corresponding delta of the layer (d_cost/d_z).
         """

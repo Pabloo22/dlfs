@@ -26,10 +26,10 @@ class Adam(Optimizer):
 
     def update(self, layer):
         if not hasattr(layer, 'weight_cache'):
-            layer.weight_momentums = np.zeros_like(layer.weights)
-            layer.weight_cache = np.zeros_like(layer.weights)
-            layer.bias_momentums = np.zeros_like(layer.bias)
-            layer.bias_cache = np.zeros_like(layer.bias)
+            layer.weight_momentums = np.zeros_like(layer.__weights)
+            layer.weight_cache = np.zeros_like(layer.__weights)
+            layer.bias_momentums = np.zeros_like(layer.__bias)
+            layer.bias_cache = np.zeros_like(layer.__bias)
 
         layer.weight_momentums = self.__beta1 * layer.weight_momentums + (1 - self.__beta1) * layer.dweights
 

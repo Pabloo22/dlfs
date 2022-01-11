@@ -1,3 +1,17 @@
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ==============================================================================
+"""Contains the convolutional layers classes (only the 2D convolution has been implemented by now)."""
+
 import numpy as np
 from typing import Tuple, Union
 
@@ -7,15 +21,48 @@ from dlfs.convolutions import Convolutioner, get_convolution
 
 
 class Conv2D(Layer):
-    """
-    Convolutional layer
+    """A 2D convolution layer.
+
+    Conv2D is analogous to the Dense layer. They differ in the fact that Conv2D takes into account
+    the spatial location. It also concerns some other parameters such as stride, kernel size, padding,
+    etc; which are essential characteristics in order to carry out a convolution.
+
+    Args:
+        kernel_size (tuple): tuple of 2 integers, specifying the height and width of the 2D convolution window.
+        n_filters (int): Number of filters
+        stride (tuple or int): specifying the strides of the convolution along the height and width.
+            Can be a single integer to specify the same value for all spatial dimensions
+        padding (bool, tuple or int): If True, add padding to the input so that the output has the same shape as the
+            input (assuming stride = 1). If padding is a tuple of two integers, this defines the amount of padding
+            to add to the top, bottom, left and right of the input. If padding is an integer, this number of zeros
+            is added to the input on both sides.
+        activation (ActivationFunction): Activation function
+        use_bias (bool): Whether to use bias
+        convolution_type (str): convolution mode. Can be 'winograd' or 'naive'
+        name (str): Name of the layer
+        input_shape (tuple): shape of the input
+        weights_init (str): Initialization method for the weights
+        bias_init (str): Initialization method for the bias
+
+    Attributes:
+        n_filters (int): Number of filters
+        kernel_size (tuple): tuple of 2 integers, specifying the height and width of the 2D convolution window.
+        stride (tuple): specifying the strides of the convolution along the height and width.
+        padding (tuple): tuple of 2 integers, specifying the padding of the convolution along the height and width.
+            This values are computed from the stride and kernel size in order to ensure that the output has the same
+            shape as the input (if padding = True).
+        activation (ActivationFunction): Activation function
+        use_bias (bool): Whether to use bias.
+        convolution_type (str): convolution mode. Recommended to be 'winograd'.
+        name (str): Name of the layer
+
     """
 
     def __init__(self,
-                 kernel_size: Union[Tuple[int, int], int],
                  n_filters: int,
+                 kernel_size: Union[Tuple[int, int], int],
                  stride: Union[Tuple[int, int], int] = (1, 1),
-                 padding: bool = False,
+                 padding: Union[bool, tuple, int] = False,
                  activation: str = None,
                  use_bias: bool = True,
                  convolution_type: str = 'winograd',
@@ -23,23 +70,6 @@ class Conv2D(Layer):
                  input_shape: tuple = None,
                  weights_init: str = "xavier",
                  bias_init: str = "zeros"):
-        """
-        Initialize the convolutional layer.
-         Args:
-            kernel_size (tuple): tuple of 2 integers, specifying the height and width of the 2D convolution window.
-            n_filters (int): Number of filters
-            stride (tuple or int): specifying the strides of the convolution along the height and width.
-                            Can be a single integer to specify the same value for all spatial dimensions
-            padding (bool): If True, add padding to the input so that the output has the same shape as the input
-                            (assuming stride = 1)
-            activation (ActivationFunction): Activation function
-            use_bias (bool): Whether to use bias
-            convolution_type (str): convolution mode. Can be 'winograd' or 'naive'
-            name (str): Name of the layer
-            input_shape (tuple): shape of the input
-            weights_init (str): Initialization method for the weights
-            bias_init (str): Initialization method for the bias
-        """
 
         if n_filters <= 0:
             raise ValueError("The number of filters should be greater than 0")
@@ -57,7 +87,10 @@ class Conv2D(Layer):
 
         input_shape = None if input_shape is None else (None, *input_shape)
         output_shape = None
-        padding = (0, 0) if padding is False else (kernel_size[0] // 2, kernel_size[1] // 2)
+        if isinstance(padding, bool):
+            padding = (0, 0) if padding is False else (kernel_size[0] // 2, kernel_size[1] // 2)
+        else:
+            padding = (padding, padding) if isinstance(padding, int) else padding
 
         # get the output shape if the input shape is known
         if input_shape is not None:
@@ -83,8 +116,9 @@ class Conv2D(Layer):
         self.update_conv = None
 
     def initialize(self, input_shape: tuple, weights: np.ndarray = None, bias: np.ndarray = None):
-        """
-        Initialize the layer. Should be called after the input shape is set.
+        """Initialize the layer.
+
+        If weights and bias are not provided, they are initialized using the specified initialization method.
 
         Args:
             input_shape (tuple): input shape of the layer, it has the form (n_samples, height, width, n_channels)
@@ -208,6 +242,8 @@ class Conv2D(Layer):
         Returns:
             derivative of the cost function with respect to the input of the layer.
         """
+        # 180° rotation of the filters
+        flipped_weights = np.rot90(self.weights, 2, axes=(1, 2))
         return self.forward_conv.convolve(delta, self.weights.transpose((0, 1, 3, 2)))
 
     def count_params(self) -> int:
@@ -240,13 +276,10 @@ class Conv2D(Layer):
         if not self.initialized:
             raise ValueError("The layer is not initialized")
 
-        dw = self.forward_conv.convolve(self.inputs, delta.transpose((0, 3, 2, 1)), padding=self.padding)
+        dw = self.forward_conv.convolve(self.inputs, delta.transpose((0, 3, 2, 1)))
         db = np.sum(delta, axis=(1, 2))
 
         optimizer.update(self, (dw, db))
-
-    def get_dz_da(self) -> np.ndarray:
-        pass
 
     def summary(self):
         print(f"Layer: {self.name}, Output shape: {self.output_shape}")

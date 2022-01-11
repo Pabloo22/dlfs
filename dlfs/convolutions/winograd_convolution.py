@@ -6,6 +6,11 @@ from dlfs.convolutions import Convolutioner
 
 
 class WinogradConvolutioner(Convolutioner):
+    """A convolutioner that uses the Winograd convolution algorithm.
+
+    The Winograd algorithm reduces the number of multiplication operations by transforming the input feature map and
+    executing a series of transformations on the filter. The result is a much faster convolution.
+    """
 
     def __init__(self,
                  image_size: Union[int, tuple],

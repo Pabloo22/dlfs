@@ -15,6 +15,23 @@ class Layer(ABC):
         activation (str): Activation function to use.
         name (str): Name of the layer.
         trainable (bool): Whether the layer is trainable.
+        has_weights (bool): Whether the layer has weights.
+
+    Attributes:
+        input_shape (tuple or None): Shape of the input.
+        output_shape (tuple): Shape of the output.
+        name (str): Name of the layer. The name is used to identify the layer in the network
+            and is used by the optimizer to identify the layer's parameters.
+        __weights (np.ndarray): Weights of the layer (None by default). If the layer has weights,
+            they can be set using the set_weights method or in the initialize method.
+        __bias (np.ndarray): Bias of the layer (None by default). They are set in the
+            initialize method or in the set_weights method.
+        has_weights (bool): Whether the layer has weights.
+        trainable (bool): Whether the layer is trainable.
+        initialized (bool): Whether the layer has been initialized.
+        activation (ActivationFunction): Activation function to use.
+        inputs (np.ndarray): Inputs of the layer. Stored for backward propagation.
+        outputs (np.ndarray): Outputs of the layer before the activation. Stored for backward propagation. Th
     """
 
     def __init__(self,
@@ -28,14 +45,14 @@ class Layer(ABC):
         self.input_shape = input_shape if input_shape else None
         self.output_shape = output_shape
         self.name = name
-        self.weights = None
-        self.bias = None
+        self.__weights = None
+        self.__bias = None
         self.__has_weights = has_weights  # Whether the layer has weights and biases.
         self.trainable = trainable
         self.initialized = False
         self.__activation = get_activation_function(activation)
         self.inputs = None
-        self.z = None  # output of the layer before activation
+        self.outputs = None  # output of the layer before activation
 
     # Getters
     # -------------------------------------------------------------------------
@@ -48,12 +65,28 @@ class Layer(ABC):
     def has_weights(self) -> bool:
         return self.__has_weights
 
+    @property
+    def weights(self) -> np.ndarray:
+        return self.__weights
+
+    @property
+    def bias(self) -> np.ndarray:
+        return self.__bias
+
     # Setters
     # -------------------------------------------------------------------------
 
     @activation.setter
     def activation(self, activation: str):
         self.__activation = get_activation_function(activation)
+
+    @weights.setter
+    def weights(self, weights: np.ndarray):
+        self.set_weights(weights=weights)
+
+    @bias.setter
+    def bias(self, bias: np.ndarray):
+        self.set_weights(bias=bias)
 
     # Abstract methods
     # -------------------------------------------------------------------------
@@ -91,7 +124,7 @@ class Layer(ABC):
         if self.activation is None:
             delta = d_out
         else:
-            activation_gradient = self.activation.gradient(self.z)
+            activation_gradient = self.activation.gradient(self.outputs)
             # check if the gradient is a matrix of tensors
             #
             # For example, in the case of Dense layers, we have to check if the gradient is a matrix of tensors
@@ -99,14 +132,14 @@ class Layer(ABC):
             # This is because of activation functions such
             # as softmax which returns a matrix of jacobian matrices.
 
-            if activation_gradient.shape == self.z.shape:
+            if activation_gradient.shape == self.outputs.shape:
                 delta = d_out * activation_gradient
             else:
                 d_out = d_out[:, np.newaxis, :]
                 delta = np.einsum('ijk,ikl->il', d_out, activation_gradient)
 
                 # The above einsum is equivalent to but faster than the following code:
-                # delta = np.empty_like(self.z)
+                # delta = np.empty_like(self.outputs)
                 # batch_size = self.input_shape.shape[0]
                 # for i in range(batch_size):  # for each sample
                 #     delta[i] = d_out[i] @ activation_gradient[i]
@@ -143,3 +176,6 @@ class Layer(ABC):
 
     def __str__(self) -> str:
         return f"{self.__class__.__name__}({self.name})"
+
+    def __call__(self, inputs, *args, **kwargs):
+        return self.forward(inputs, *args, **kwargs)
