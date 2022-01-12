@@ -9,15 +9,16 @@ class SimpleConvolutioner(Convolutioner):
     A simple convolutioner that performs a convolution on a single image.
 
     Usage:
-        >>> img = np.array([[2, 2, 1, 3],
-                            [0, 3, 2, 1],
-                            [1, 1, 0, 2],
-                            [2, 0, 0, 1]])
+        img = np.array([[2, 2, 1, 3],
+                        [0, 3, 2, 1],
+                        [1, 1, 0, 2],
+                        [2, 0, 0, 1]])
 
-        >>> k = np.array([[1,  0],
-                          [2, -2]])
-        >>> conv = SimpleConvolutioner(img.shape, k.shape)
-        >>> print(conv.convolve(img, k, using_batches=False))
+        k = np.array([[1,  0],
+                      [2, -2]])
+        conv = SimpleConvolutioner(img.shape, k.shape)
+        print(conv.convolve(img, k, using_batches=False))
+
     """
 
     def __init__(self,

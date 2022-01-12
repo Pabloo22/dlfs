@@ -93,7 +93,7 @@ def test3():
                   [0.5, -0.5]])
     # rows correspond to different samples
     # columns correspond to different features
-    print("x:\n", x)
+    print("image:\n", x)
 
     # target
     y_true = np.array([[0.25],

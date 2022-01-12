@@ -15,7 +15,7 @@ np.set_printoptions(formatter={
 def vandermonde_matrix(b: int, points: List[Tuple[Union[int, float]]]) -> np.ndarray:
     """
     This is equivalent to V_{axb} on the document.
-    This function returns a trimmed Vandermonde Matrix of size len(points) x b
+    This function returns a trimmed Vandermonde Matrix of size len(points) image b
 
         f_0^0 * g_0^b-1       f_0^1 * g_0^b-2       ... f_0^b-1 * g_0^0
         .
@@ -57,9 +57,9 @@ def winograd_get_matrices(m: int, n: int) -> Tuple[np.ndarray, np.ndarray, np.nd
     """
     This is equivalent to F(m, n) on the paper.
     This function returns the matrices necessary for calculating the Winograd convolution given the dimension of the filter and the dimension of the output. With those, we can infer the size of the input.
-    The usage of these matrices depends on the dimension of the convolution. If we denote x as the signal and w as the filter:
-    - If it is 1D: F(m, n) = x * w = Y.T @ [(X.T @ x) * (W @ w)]
-    - If it is 2D: F(m x i, n x j) = x * w = Y.T @ [(X.T @ x @ X') * (W @ w @ W'.T)] @ Y'
+    The usage of these matrices depends on the dimension of the convolution. If we denote image as the signal and w as the filter:
+    - If it is 1D: F(m, n) = image * w = Y.T @ [(X.T @ image) * (W @ w)]
+    - If it is 2D: F(m image i, n image j) = image * w = Y.T @ [(X.T @ image @ X') * (W @ w @ W'.T)] @ Y'
     In the latter case, if m = i and n = j, then Y = Y', X = X', W = W'. If not, then you would have to calculate both F(m, n) to get Y, X, W and F(i, j) to get Y', X', W'.
 
     Args:

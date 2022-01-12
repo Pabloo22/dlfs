@@ -8,20 +8,20 @@ from sympy import *
 # Appendices
 # (https://openaccess.thecvf.com/content_cvpr_2016/supplemental/Lavin_Fast_Algorithms_for_2016_CVPR_supplemental.pdf)
 
-x, d, g = symbols('x,d,g')
+x, d, g = symbols('image,d,g')
 
 
 def get_list_m(m: int, r: int):
     """
-    This function generates negative and positive numbers in ascend order used for the equation m(x).
-        m(x) = x(x-1)(x+1)(x-2)...(x-∞)
+    This function generates negative and positive numbers in ascend order used for the equation m(image).
+        m(image) = image(image-1)(image+1)(image-2)...(image-∞)
 
     Args:
         m (int): The size of the output
         r (int): The size of the filter
 
      Returns:
-         A list with the numbers chosen to create the polynomial m(x).
+         A list with the numbers chosen to create the polynomial m(image).
          [-1,1,-2,...]
     """
     m_values = [0]
@@ -40,7 +40,7 @@ def get_list_m(m: int, r: int):
 
 def get_gx_polynomial(r: int):
     """
-    This function generates a polynomial g(x) of degree (r-1).
+    This function generates a polynomial g(image) of degree (r-1).
 
     Args:
         r (int): The size of the filter
@@ -57,7 +57,7 @@ def get_gx_polynomial(r: int):
 
 def get_dx_polynomial(m: int):
     """
-    This function generates a polynomial d(x) of degree (m-1).
+    This function generates a polynomial d(image) of degree (m-1).
 
     Args:
         m (int): The size of the output
@@ -73,13 +73,13 @@ def get_dx_polynomial(m: int):
 
 def get_a(m: int, r: int):
     """
-    This function generates a linear system calculating d(i)(x) = d(x) mod m(i) for each i = 0, 1, _, m, len(m_values).
-        d(0)(x) = d(x) mod m(0) = d0
-        d(1)(x) = d(x) mod m(1) = d0 + d1 + ... + d(m-1)
+    This function generates a linear system calculating d(i)(image) = d(image) mod m(i) for each i = 0, 1, _, m, len(m_values).
+        d(0)(image) = d(image) mod m(0) = d0
+        d(1)(image) = d(image) mod m(1) = d0 + d1 + ... + d(m-1)
         .
         .
-        d(i)(x) = d(x) mod m(i) = d(i)
-        d(len(m_values))(x) = d(x) mod m(len(m_values)) = d(x)[-1]
+        d(i)(image) = d(image) mod m(i) = d(i)
+        d(len(m_values))(image) = d(image) mod m(len(m_values)) = d(image)[-1]
 
     Args:
         m (int): The size of the output
@@ -103,16 +103,16 @@ def get_a(m: int, r: int):
 
 def get_mx_polynomial(m: int, r: int):
     """
-    This function takes the list of numbers from 'get_list_m' and generates que equation for m(x).
-        m(x) = x(x-1)(x+1)(x-2)...(x-∞)
+    This function takes the list of numbers from 'get_list_m' and generates que equation for m(image).
+        m(image) = image(image-1)(image+1)(image-2)...(image-∞)
 
     Args:
         m (int): The size of the output
         r (int): The size of the filter
 
      Returns:
-         mx_ply: A representation of m(x) as a polynomial.
-         mx_matrix: A representation of m(x) as a matrix which each term in each position.
+         mx_ply: A representation of m(image) as a polynomial.
+         mx_matrix: A representation of m(image) as a matrix which each term in each position.
     """
     mx_matrix = zeros(0)
     mx_ply = 1
@@ -126,15 +126,15 @@ def get_mx_polynomial(m: int, r: int):
 
 def get_b(m: int, r: int):
     """
-    This function generates a linear system composed with the calculating M(i)(x) = m(x)/m(i)(x)
-    for each i = 0, 1, _, m and the polynomial m(x).
-        M(0)(x) = m(x)/m(0)(x)
-        M(1)(x) = m(x)/m(1)(x)
+    This function generates a linear system composed with the calculating M(i)(image) = m(image)/m(i)(image)
+    for each i = 0, 1, _, m and the polynomial m(image).
+        M(0)(image) = m(image)/m(0)(image)
+        M(1)(image) = m(image)/m(1)(image)
         .
         .
-        M(i)(x) = m(x)/m(i)(x)
+        M(i)(image) = m(image)/m(i)(image)
         .
-        m(x) = x(x-1)(x+1)(x-2)...
+        m(image) = image(image-1)(image+1)(image-2)...
 
 
     Args:
@@ -161,14 +161,14 @@ def get_b(m: int, r: int):
 def get_m_polynomial(m: int, r: int):
     """
     This function generates a linear system composed with the calculating
-    M(i)(x) = m(x)/m(i)(x) for each i = 0, 1, _, m and the polynomial m(x).
-        M(0)(x) = m(x)/m(0)(x)
-        M(1)(x) = m(x)/m(1)(x)
+    M(i)(image) = m(image)/m(i)(image) for each i = 0, 1, _, m and the polynomial m(image).
+        M(0)(image) = m(image)/m(0)(image)
+        M(1)(image) = m(image)/m(1)(image)
         .
         .
-        M(i)(x) = m(x)/m(i)(x)
+        M(i)(image) = m(image)/m(i)(image)
         .
-        m(x) = x(x-1)(x+1)(x-2)...
+        m(image) = image(image-1)(image+1)(image-2)...
 
     Args:
         m (int): The size of the output
@@ -187,7 +187,7 @@ def get_m_polynomial(m: int, r: int):
     return M
 
 
-# n(i)(x)*m(i)(x) + N(i)(x)*M(i)(x) = 1         a*m(i)(x) + b*M(i)(x) = c
+# n(i)(image)*m(i)(image) + N(i)(image)*M(i)(image) = 1         a*m(i)(image) + b*M(i)(image) = c
 def get_n_values(m: int, r: int):
     """
     This function applies the Chinese Remainder Theorem.
@@ -212,14 +212,14 @@ def get_n_values(m: int, r: int):
 def get_gxi(m: int, r: int):
     """
     Description:
-        This function generates a linear system calculating g(i)(x) = g(x) mod m(i)
+        This function generates a linear system calculating g(i)(image) = g(image) mod m(i)
         for each i = 0, 1, _, m, len(m_values).
-            g(0)(x) = g(x) mod m(0) = g0
-            g(1)(x) = g(x) mod m(1) = g0 + g1 + ... + g(m-1)
+            g(0)(image) = g(image) mod m(0) = g0
+            g(1)(image) = g(image) mod m(1) = g0 + g1 + ... + g(m-1)
             .
             .
-            g(i)(x) = g(x) mod m(i) = ....
-            g(len(m_values))(x) = g(x) mod m(len(m_values)) = g(x)[-1]
+            g(i)(image) = g(image) mod m(i) = ....
+            g(len(m_values))(image) = g(image) mod m(len(m_values)) = g(image)[-1]
 
     Args:
         m (int): The size of the output
@@ -293,7 +293,7 @@ def winograd_algorithm(image: np.ndarray, m: int, r: int):  # m = number of outp
     number_of_inputs = image.shape[0] - input_size + 1
     result = np.zeros(1)
 
-    # A minimal 1d algorithm is nested with itself to obtain a minimal 2d algorithm. F (m x m, r x r)
+    # A minimal 1d algorithm is nested with itself to obtain a minimal 2d algorithm. F (m image m, r image r)
     for i in range(image.shape[0] - input_size + 1):
         for j in range(image.shape[1] - input_size + 1):
             _d = image[i:i + input_size, j:j + input_size]
