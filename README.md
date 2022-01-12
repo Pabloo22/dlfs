@@ -7,10 +7,12 @@ Polytechnic University of Madrid (Spain). However, we may extend the project to 
 improvements in the future. The main purpose of this project is to learn more about Deep Learning.
 
 ## Installation
-We plan to upload the package to PyPI in the near future. 
+```
+pip install dlfs
+```
 
 ### Install dependencies
-You can do thi easily thanks to the requirements.txt file by just running the following command:
+You can do this easily if needed thanks to the requirements.txt file by just running the following command:
 ```
 pip install -r requirements.txt
 ```
