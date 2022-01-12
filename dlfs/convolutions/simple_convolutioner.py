@@ -32,9 +32,7 @@ class SimpleConvolutioner(Convolutioner):
     @staticmethod
     def convolve_grayscale(image: np.ndarray,
                            kernel: np.ndarray,
-                           padding: Union[int, tuple] = (0, 0),
-                           stride: int = 1,
-                           using_batches: bool = False) -> np.ndarray:
+                           stride: Union[int, tuple] = (0, 0)) -> np.ndarray:
         """
         Performs a valid convolution on an image (with only a channel) with a kernel.
 
@@ -48,13 +46,6 @@ class SimpleConvolutioner(Convolutioner):
         Returns:
             A grayscale image.
         """
-
-        # Pad the image if padding is enabled
-        padding = (padding, padding) if isinstance(padding, int) else padding
-        image = Convolutioner.pad_image(image, padding) if padding != (0, 0) else image
-        if using_batches:
-            return np.array([SimpleConvolutioner.convolve_grayscale(image_batch, kernel, 0, stride)
-                             for image_batch in image])
 
         # Get the dimensions of the image and kernel
         image_height, image_width = image.shape
@@ -76,9 +67,7 @@ class SimpleConvolutioner(Convolutioner):
     @staticmethod
     def convolve_multichannel(image: np.ndarray,
                               kernel: np.ndarray,
-                              padding: Union[int, tuple] = (0, 0),
-                              stride: Union[int, tuple] = (1, 1),
-                              using_batches: bool = False) -> np.ndarray:
+                              stride: Union[int, tuple] = (1, 1)) -> np.ndarray:
         """
         Performs a valid convolution on an image (with multiple channels) with a kernel.
 
@@ -92,31 +81,36 @@ class SimpleConvolutioner(Convolutioner):
         Returns:
             A multichannel image.
         """
-        # Pad the image if padding is enabled
-        padding = (padding, padding) if isinstance(padding, int) else padding
-        image = Convolutioner.pad_image(image, padding) if padding != (0, 0) else image
 
-        if using_batches:
-            return np.array([SimpleConvolutioner.convolve_multichannel(image_batch, kernel, padding=0, stride=stride)
-                             for image_batch in image])
+        # convert image and kernel to channel first
+        image = np.moveaxis(image, -1, 0)
+        kernel = np.moveaxis(kernel, -1, 0)
 
         # Get the dimensions of the image and kernel
-        image_height, image_width, image_channels = image.shape
-        kernel_height, kernel_width, kernel_channels = kernel.shape
+        print("image shape: ", image.shape)
+        image_channels, image_height, image_width = image.shape
+        kernel_channels, kernel_height, kernel_width = kernel.shape
+
+        assert kernel_channels == image_channels, f"The number of channels in the image and kernel must be the same. " \
+                                                  f"Image channels: {image_channels}, kernel channels: {kernel_channels}"
 
         # Create the output image
         stride = (stride, stride) if isinstance(stride, int) else stride
         output_height = (image_height - kernel_height) // stride[0] + 1
         output_width = (image_width - kernel_width) // stride[1] + 1
-        convolved_image = np.zeros((output_height, output_width, kernel_channels))
+        convolved_image = np.zeros((output_height, output_width))
 
         # Perform the convolution
         for i in range(output_height):
             for j in range(output_width):
                 for k in range(kernel_channels):
-                    convolved_image[i, j, k] = np.sum(image[i * stride[0]:i * stride[0] + kernel_height,
-                                                            j * stride[1]:j * stride[1] + kernel_width,
-                                                            k] * kernel[:, :, k])
+                    convolved_image[i, j] += np.sum(image[k,
+                                                          i * stride[0]:i * stride[0] + kernel_height,
+                                                          j * stride[1]:j * stride[1] + kernel_width] * kernel[k],
+                                                    axis=(0, 1))
+
+        # convert image and kernel to channel last
+        convolved_image = np.moveaxis(convolved_image, 0, -1)
 
         return convolved_image
 
