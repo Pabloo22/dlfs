@@ -119,7 +119,7 @@ def winograd_convolution(source, filter):
         # part2 = tensorly.tenalg.multi_mode_dot(filter, [t[2] for t in winograd_matrices], list(range(filter.ndim)))
         # part3 = part1 * part2
         # out = tensorly.tenalg.multi_mode_dot(part3, [t[0] for t in winograd_matrices], list(range(part3.ndim)))
-    return out
+    #return out
 
 
 def winograd_convolution_with_blocks(source, filter, blocksize=None):
