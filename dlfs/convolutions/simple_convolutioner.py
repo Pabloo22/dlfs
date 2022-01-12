@@ -119,3 +119,16 @@ class SimpleConvolutioner(Convolutioner):
                                                             k] * kernel[:, :, k])
 
         return convolved_image
+
+    @staticmethod
+    def _create_output_image(self):
+
+        # Get the dimensions of the image and kernel
+        image_channels, image_height, image_width, = image.shape
+        kernel_channels, kernel_height, kernel_width, = kernel.shape
+
+        # Create the output image
+        stride = (stride, stride) if isinstance(stride, int) else stride
+        output_height = (image_height - kernel_height) // stride[0] + 1
+        output_width = (image_width - kernel_width) // stride[1] + 1
+        convolved_image = np.zeros((output_height, output_width))
