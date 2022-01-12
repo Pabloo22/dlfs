@@ -27,9 +27,18 @@ class Conv2D(Layer):
     the spatial location. It also concerns some other parameters such as stride, kernel size, padding,
     etc; which are essential characteristics in order to carry out a convolution.
 
+    Technical details:
+        - The input is a 4D tensor (batch, height, width, number of input channels).
+        - The output is a 4D tensor (batch, height, width, n_filters). (see _get_output_shape for more details)
+        - Each kernel is a 3D tensor (kernel_size, kernel_size, number of input channels).
+        - The weights are a 4D tensor (kernel_size, kernel_size, number of input channels, n_filters).
+        - The bias is a 4D tensor (1, 1, 1, n_filters).
+        - The layer performs a '3D' convolution on the input tensor for each kernel.
+
+
     Args:
         kernel_size (tuple): tuple of 2 integers, specifying the height and width of the 2D convolution window.
-        n_filters (int): Number of filters
+        n_filters (int): Number of filters/kernels.
         stride (tuple or int): specifying the strides of the convolution along the height and width.
             Can be a single integer to specify the same value for all spatial dimensions
         padding (bool, tuple or int): If True, add padding to the input so that the output has the same shape as the
@@ -38,7 +47,7 @@ class Conv2D(Layer):
             is added to the input on both sides.
         activation (ActivationFunction): Activation function
         use_bias (bool): Whether to use bias
-        convolution_type (str): convolution mode. Can be 'winograd' or 'naive'
+        convolution_type (str): convolution mode. Can be 'winograd', 'direct' or 'patch'.
         name (str): Name of the layer
         input_shape (tuple): shape of the input
         weights_init (str): Initialization method for the weights
@@ -56,6 +65,8 @@ class Conv2D(Layer):
         convolution_type (str): convolution mode. Recommended to be 'winograd'.
         name (str): Name of the layer
 
+    Raises:
+        ValueError: If using padding and stride != 1.
     """
 
     def __init__(self,
@@ -65,25 +76,25 @@ class Conv2D(Layer):
                  padding: Union[bool, tuple, int] = False,
                  activation: str = None,
                  use_bias: bool = True,
-                 convolution_type: str = 'winograd',
+                 convolution_type: str = "winograd",
                  name: str = "Conv2D",
                  input_shape: tuple = None,
                  weights_init: str = "xavier",
                  bias_init: str = "zeros"):
 
-        if n_filters <= 0:
-            raise ValueError("The number of filters should be greater than 0")
-        if len(kernel_size) != 2:
-            raise ValueError("The kernel size should be a tuple of two integers")
-        if kernel_size[0] <= 0 or kernel_size[1] <= 0:
-            raise ValueError("The kernel size should be greater than 0")
-        if stride <= 0:
-            raise ValueError("The stride should be greater than 0")
-
         if isinstance(kernel_size, int):
             kernel_size = (kernel_size, kernel_size)
         if isinstance(stride, int):
             stride = (stride, stride)
+
+        if n_filters < 0:
+            raise ValueError("The number of filters must be greater than 0")
+
+        if len(kernel_size) != 2:
+            raise ValueError("The kernel size should be a tuple of two integers")
+
+        if kernel_size[0] <= 0 or kernel_size[1] <= 0:
+            raise ValueError("The kernel size should be greater than 0")
 
         input_shape = None if input_shape is None else (None, *input_shape)
         output_shape = None
@@ -146,7 +157,7 @@ class Conv2D(Layer):
         if weights is not None:
             if weights.shape != weights_shape:
                 raise ValueError(f"The shape of the weights should be "
-                                 "(n_channels_prev_layer, kernel_height, kernel_width, n_channels_current_layer). "
+                                 "(n_filters, kernel_height, kernel_width, n_channels_previous_layer). "
                                  f"Got {weights.shape}, expected {weights_shape}")
             self.weights = weights
         elif self.weights_init == "xavier":
@@ -250,7 +261,8 @@ class Conv2D(Layer):
             output data
         """
         self.inputs = x
-        self.outputs = self.forward_conv.convolve(x, self.weights) + self.bias
+        self.outputs = np.array([self.forward_conv.convolve(x, self.weights[:, :, :, i]) + self.bias[i]
+                                 for i in range(self.n_filters)])
         return self.outputs if self.activation is None else self.activation(self.outputs)
 
     def get_d_inputs(self, delta: np.ndarray) -> np.ndarray:
@@ -265,11 +277,22 @@ class Conv2D(Layer):
     def count_params(self) -> int:
         return self.weights.size + self.bias.size
 
-    def _get_output_shape(self) -> tuple:
-        return (self.input_shape[0],
-                self.input_shape[1] - self.kernel_size[0] + 1,
-                self.input_shape[2] - self.kernel_size[1] + 1,
-                self.n_filters)
+    def _get_output_shape(self) -> Tuple[int, int, int, int]:
+        """Returns the shape of the output of the layer, taking into account the already defined attributes.
+
+        If the convolution mode is not 'winograd', the output shape could be computed as usual:
+        batch_size = self.input_shape[0]
+        output_height = (self.input_shape[1] - self.kernel_size[0] + 2 * self.padding[0]) // self.stride[0] + 1
+        output_width = (self.input_shape[2] - self.kernel_size[1] + 2 * self.padding[1]) // self.stride[1] + 1
+
+        return batch_size, output_height, output_width, self.n_filters
+
+        However, if the convolution mode is 'winograd', the output shape is computed differently (see the
+        `get_output_shape` method of the `WinogradConvolutioner` class for more details). For
+         this reason we need to call the `get_output_shape` method of the `Convolution` class."""
+        batch_size = self.input_shape[0]
+        output_height, output_width = self.forward_conv.get_output_shape()
+        return batch_size, output_height, output_width, self.n_filters
 
     def update(self, optimizer, delta: np.ndarray):
         """Updates the weights and biases of this layer.

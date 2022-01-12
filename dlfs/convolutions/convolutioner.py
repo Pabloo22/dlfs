@@ -56,14 +56,14 @@ class Convolutioner(ABC):
         pass
 
     @staticmethod
-    def get_patches(image: np.ndarray,
+    def get_patches(x: np.ndarray,
                     patch_size: Union[Tuple[int, int], Tuple[int, int, int]],
                     step: int = 1,
                     using_batches: bool = False) -> np.ndarray:
         """Returns the patches of the image.
 
         Args:
-            image: The image to extract patches from. The image must be a numpy array and must be already
+            x: The image to extract patches from. The image must be a numpy array and must be already
                 padded (if necessary).
             patch_size: The size of the patches to extract.
             step: The step size between patches.
@@ -73,9 +73,19 @@ class Convolutioner(ABC):
             The patches of the image.
         """
         if using_batches:
-            return np.array([patchify(image[i], patch_size, step) for i in range(image.shape[0])])
+            return np.array([patchify(image, patch_size, step) for image in x])
         else:
-            return patchify(image, patch_size, step)
+            return patchify(x, patch_size, step)
+
+    def get_output_shape(self) -> Tuple[int, int]:
+        """Returns the output shape of the convolution.
+
+        Returns:
+            The output shape of the convolution.
+        """
+        output_height = (self.image_size[0] - self.kernel_size[0] + 2 * self.padding[0]) // self.stride[0] + 1
+        output_width = (self.image_size[1] - self.kernel_size[1] + 2 * self.padding[1]) // self.stride[1] + 1
+        return output_height, output_width
 
     def convolve(self,
                  x: np.ndarray,

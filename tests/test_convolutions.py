@@ -80,6 +80,18 @@ def test_conv():
     print(convolutioner.convolve(img, filter, using_batches=False))
 
 
+def test_get_patches():
+    pass
+
+
+def load_cifar10():
+    import keras.datasets.cifar10 as cifar10
+
+    (x_train, y_train), _ = cifar10.load_data()
+
+    return x_train
+
+
 def test_conv_multichannel():
     img = np.array([[[2, 2, 1, 3],
                      [0, 3, 2, 1],
@@ -98,12 +110,6 @@ def test_conv_multichannel():
 
     convolutioner = SimpleConvolutioner(img.shape, k.shape, stride=1, padding=0)
     # print(convolutioner.convolve(img, k, using_batches=False))
-
-def test_winograd_3d():
-    # F (3x4x5, 2,2,2), input size (4x5x6), filter size (2x2x2) output size(3x4x5)
-    test_image = np.arange(4 * 4).reshape(4,4)
-    test_filter = np.arange(2 * 2).reshape(2, 2)
-    print(WinogradVandermonde.winograd_convolution(test_image, test_filter))
 
 
 if __name__ == '__main__':
