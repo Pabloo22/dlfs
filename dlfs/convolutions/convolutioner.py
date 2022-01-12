@@ -45,14 +45,16 @@ class Convolutioner(ABC):
     @abstractmethod
     def convolve_grayscale(image: np.ndarray,
                            kernel: np.ndarray,
-                           stride: Union[int, tuple] = (1, 1)) -> np.ndarray:
+                           stride: Union[int, tuple] = (1, 1),
+                           **kwargs) -> np.ndarray:
         pass
 
     @staticmethod
     @abstractmethod
     def convolve_multichannel(image: np.ndarray,
                               kernel: np.ndarray,
-                              stride: Union[int, tuple] = (1, 1)) -> np.ndarray:
+                              stride: Union[int, tuple] = (1, 1),
+                              **kwargs) -> np.ndarray:
         pass
 
     @staticmethod
@@ -86,7 +88,8 @@ class Convolutioner(ABC):
     def convolve(self,
                  x: np.ndarray,
                  kernel: np.ndarray,
-                 using_batches: bool = True) -> np.ndarray:
+                 using_batches: bool = True,
+                 **kwargs) -> np.ndarray:
 
         # Add padding to the image if necessary
         if self.padding != (0, 0):
@@ -94,16 +97,16 @@ class Convolutioner(ABC):
 
         if using_batches:
             if x.ndim == 4:
-                return np.array([self.convolve_multichannel(image, kernel, self.stride)
+                return np.array([self.convolve_multichannel(image, kernel, self.stride, **kwargs)
                                  for image in x])
             elif x.ndim == 3:
-                return np.array([self.convolve_grayscale(image, kernel, self.stride)
+                return np.array([self.convolve_grayscale(image, kernel, self.stride, **kwargs)
                                  for image in x])
         else:
             if x.ndim == 2:
-                return self.convolve_grayscale(x, kernel, self.stride)
+                return self.convolve_grayscale(x, kernel, self.stride, **kwargs)
             elif x.ndim == 3:
-                return self.convolve_multichannel(x, kernel, self.stride)
+                return self.convolve_multichannel(x, kernel, self.stride, **kwargs)
 
         raise ValueError("Image must be 2D or 3D.")
 
