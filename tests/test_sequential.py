@@ -171,10 +171,10 @@ def test_cancer():
 def test_mnist_denses():
     from keras.utils import np_utils
 
-    # TEST 1
-
     # LOAD DATA
     from keras.datasets import mnist
+
+
     (X_train, y_train), (X_test, y_test) = mnist.load_data()
     num_train_image = X_train.shape[0]
     num_test_image = X_test.shape[0]
