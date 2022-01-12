@@ -268,14 +268,15 @@ class Sequential(Model):
         using_validation = val_metrics is not None
         if using_validation:
             # print the results
-            print(f"{title} ({progress}/{total}) - loss: {metrics['loss']} - val_loss: {val_metrics['val_loss']}")
+            print(f"{title} ({progress}/{total}) - loss: {metrics['loss']:.4f}"
+                  f" - val_loss: {val_metrics['val_loss']:.4f}")
             for metric in self.metrics:
-                print(f"- {metric}: {metrics[metric]} - val_{metric}: {val_metrics['val_' + metric]}")
+                print(f"- {metric}: {metrics[metric]:.4f} - val_{metric}: {val_metrics['val_' + metric]:.4f}")
         else:
             # print the results
-            print(f"{title} ({progress}/{total}) - loss: {metrics['loss']}")
+            print(f"{title} ({progress}/{total}) - loss: {metrics['loss']:.4f}")
             for metric in self.metrics:
-                print(f"- {metric}: {metrics[metric]}")
+                print(f"- {metric}: {metrics[metric]:.4f}")
 
         if history is not None:
             for metric in metrics:
@@ -342,7 +343,6 @@ class Sequential(Model):
 
         # INITIALIZATION:
         # --------------------------------------------------
-        np.set_printoptions(precision=4)
 
         # Update the input_shape of the layers to take into account the batch_size
         for layer in self.layers:
