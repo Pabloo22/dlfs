@@ -424,13 +424,9 @@ class Sequential(Model):
                     # add val_loss to val_metrics
                     val_epoch_metrics["val_loss"] = val_epoch_loss
 
-                # print the metrics of the epoch
+                # print the metrics of the epoch and update the history
                 self.__print_results(epoch_metrics, val_epoch_metrics, "Epoch",
                                      progress=epoch + 1, total=epochs, history=history)
-
-            # save the history
-            for metric in epoch_metrics:
-                history[metric].append(epoch_metrics[metric] / (len(x) // batch_size))
 
         if verbose == 3:
             # print final results
