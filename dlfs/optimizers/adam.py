@@ -17,21 +17,3 @@ class Adam(Optimizer):
         self.__epsilon = epsilon
         self.__iterations = 0
         self.__decay = 0
-        self.init_layer()
-
-    def init_layer(self):
-        self.__layers = []
-        for layer in sequential.layers:
-            ...
-
-    def update(self, layer):
-        if not hasattr(layer, 'weight_cache'):
-            layer.weight_momentums = np.zeros_like(layer.__weights)
-            layer.weight_cache = np.zeros_like(layer.__weights)
-            layer.bias_momentums = np.zeros_like(layer.__bias)
-            layer.bias_cache = np.zeros_like(layer.__bias)
-
-        layer.weight_momentums = self.__beta1 * layer.weight_momentums + (1 - self.__beta1) * layer.dweights
-
-    # Call once before any parameter updates
-
