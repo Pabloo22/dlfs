@@ -4,6 +4,8 @@
 
 import numpy as np
 from typing import Union, List, Tuple
+import tensorly
+from skimage.util import view_as_blocks
 
 np.set_printoptions(formatter={
     'float': lambda x: "{0:0.3f}".format(x)
@@ -65,18 +67,66 @@ def winograd_get_matrices(m: int, n: int) -> Tuple[np.ndarray, np.ndarray, np.nd
         n (int): The size of the filter
 
     Returns:
-        A tuple with the aforementioned Y, X, W in this order.
+        A tuple with the aforementioned Y.T, X, W in this order.
     """
     num_points = m + n - 1
     points = gen_points(num_points)
     Y = vandermonde_matrix(m, points)
     X = np.linalg.inv(vandermonde_matrix(num_points, points))
     W = vandermonde_matrix(n, points)
-    return Y, X, W
+    return Y.T, X, W
+
+
+def winograd_chunk_2D(chunk, filter, YT, X1, W1, Y, X2, W2):
+    return YT @ ((X1.T @ chunk @ X2) * (W1 @ filter @ W2.T)) @ Y.T
+
+
+def winograd_chunk_3D(chunk, filter, winograd_matrices):
+    part1 = tensorly.tenalg.multi_mode_dot(chunk, [t[1] for t in winograd_matrices], list(range(chunk.ndim)))
+    part2 = tensorly.tenalg.multi_mode_dot(filter, [t[2] for t in winograd_matrices], list(range(filter.ndim)))
+    part3 = part1 * part2
+    return tensorly.tenalg.multi_mode_dot(part3, [t[0] for t in winograd_matrices], list(range(part3.ndim)))
+
+
+def winograd_convolution(source, filter):
+    if not source.ndim == filter.ndim:
+        raise IndexError
+    already_calculated = []
+    winograd_matrices = []
+    if source.ndim == 1:
+        out_dim = source.shape[0] - filter.shape[0] + 1
+        YT, X, W = winograd_get_matrices(out_dim, filter.shape[0])
+        out = YT @ ((X.T @ source @ X) * (W @ filter))
+    elif source.ndim == 2:
+        out_dim1 = source.shape[0] - filter.shape[0] + 1
+        YT, X1, W1 = winograd_get_matrices(out_dim1, filter.shape[0])
+        out_dim2 = source.shape[1] - filter.shape[1] + 1
+        if out_dim1 != out_dim2 or filter.shape[0] != filter.shape[1]:
+            Y, X2, W2 = winograd_get_matrices(out_dim2, filter.shape[1])
+        else:
+            Y, X2, W2 = YT, X1, W1
+        #out = YT @ ((X1.T @ source @ X2) * (W1 @ filter @ W2.T)) @ Y.T
+    else:
+        for i, j in zip(source.shape, filter.shape):
+            out_dim = i - j + 1
+            if not (out_dim, j) in already_calculated:
+                already_calculated.append((out_dim, j))
+                winograd_matrices.append(winograd_get_matrices(out_dim, j))
+            else:
+                winograd_matrices.append(winograd_matrices[already_calculated.index((out_dim, j))])
+
+        #part1 = tensorly.tenalg.multi_mode_dot(source, [t[1] for t in winograd_matrices], list(range(source.ndim)))
+        #part2 = tensorly.tenalg.multi_mode_dot(filter, [t[2] for t in winograd_matrices], list(range(filter.ndim)))
+        #part3 = part1 * part2
+        #out = tensorly.tenalg.multi_mode_dot(part3, [t[0] for t in winograd_matrices], list(range(part3.ndim)))
+    return out
 
 
 if __name__ == "__main__":
-    Y, X, W = winograd_get_matrices(3, 3)
+    '''Y, X, W = winograd_get_matrices(3, 3)
     print('Y:\n', Y)
     print('X:\n', X)
-    print('W:\n', W)
+    print('W:\n', W)'''
+    test_image = np.arange(4 * 4).reshape(4, 4)
+    test_filter = np.arange(2 * 2).reshape(2, 2)
+    print(winograd_convolution(test_image, test_filter))

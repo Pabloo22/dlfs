@@ -2,6 +2,8 @@ import numpy as np
 
 from dlfs.layers import Conv2D
 from dlfs.convolutions import SimpleConvolutioner
+from skimage.util.shape import view_as_windows
+from dlfs.convolutions import winograd_alvaro as WinogradVandermonde
 
 
 def add_padding1(image, kernel, padding=True):
@@ -97,6 +99,12 @@ def test_conv_multichannel():
     convolutioner = SimpleConvolutioner(img.shape, k.shape, stride=1, padding=0)
     # print(convolutioner.convolve(img, k, using_batches=False))
 
+def test_winograd_3d():
+    # F (3x4x5, 2,2,2), input size (4x5x6), filter size (2x2x2) output size(3x4x5)
+    test_image = np.arange(4 * 4).reshape(4,4)
+    test_filter = np.arange(2 * 2).reshape(2, 2)
+    print(WinogradVandermonde.winograd_convolution(test_image, test_filter))
+
 
 if __name__ == '__main__':
-    test_conv_multichannel()
+    test_winograd_3d()

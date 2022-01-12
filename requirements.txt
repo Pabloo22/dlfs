@@ -2,3 +2,5 @@ numpy~=1.20.1
 sympy~=1.9
 tqdm~=4.62.3
 patchify~=0.2.3
+tensorly~=0.7.0
+scikit-image~=0.18.3
