@@ -18,8 +18,16 @@ from patchify import patchify
 
 
 class Convolutioner(ABC):
-    """
-    Abstract class for convolutioners.
+    """Abstract class for convolutioners.
+
+    A convolutioner is a class that can be used to convolve a given image with
+    a given kernel.
+
+    Attributes:
+        image_size: The size of the image to be convolved.
+        kernel_size: The size of the kernel to be convolved with.
+        padding: The amount of padding to be used.
+        stride: The amount of stride to be used.
     """
 
     def __init__(self,
@@ -37,18 +45,14 @@ class Convolutioner(ABC):
     @abstractmethod
     def convolve_grayscale(image: np.ndarray,
                            kernel: np.ndarray,
-                           padding: Union[int, tuple] = (0, 0),
-                           stride: Union[int, tuple] = (1, 1),
-                           using_batches: bool = False) -> np.ndarray:
+                           stride: Union[int, tuple] = (1, 1)) -> np.ndarray:
         pass
 
     @staticmethod
     @abstractmethod
     def convolve_multichannel(image: np.ndarray,
                               kernel: np.ndarray,
-                              padding: tuple = (0, 0),
-                              stride: Union[int, tuple] = (1, 1),
-                              using_batches: bool = False) -> np.ndarray:
+                              stride: Union[int, tuple] = (1, 1)) -> np.ndarray:
         pass
 
     @staticmethod
@@ -74,20 +78,26 @@ class Convolutioner(ABC):
             return patchify(image, patch_size, step)
 
     def convolve(self,
-                 image: np.ndarray,
+                 x: np.ndarray,
                  kernel: np.ndarray,
                  using_batches: bool = True) -> np.ndarray:
 
+        # Add padding to the image if necessary
+        if self.padding != (0, 0):
+            x = self.pad_image(x, self.padding, using_batches)
+
         if using_batches:
-            if image.ndim == 4:
-                return self.convolve_multichannel(image, kernel, self.padding, self.stride, using_batches)
-            elif image.ndim == 3:
-                return self.convolve_grayscale(image, kernel, self.padding, self.stride, using_batches)
+            if x.ndim == 4:
+                return np.array([self.convolve_multichannel(image, kernel, self.stride)
+                                 for image in x])
+            elif x.ndim == 3:
+                return np.array([self.convolve_grayscale(image, kernel, self.stride)
+                                 for image in x])
         else:
-            if image.ndim == 2:
-                return self.convolve_grayscale(image, kernel, self.padding, self.stride, using_batches=False)
-            elif image.ndim == 3:
-                return self.convolve_multichannel(image, kernel, self.padding, self.stride, using_batches=False)
+            if x.ndim == 2:
+                return self.convolve_grayscale(x, kernel, self.stride)
+            elif x.ndim == 3:
+                return self.convolve_multichannel(x, kernel, self.stride)
 
         raise ValueError("Image must be 2D or 3D.")
 
@@ -118,13 +128,13 @@ class Convolutioner(ABC):
         return image
 
     @staticmethod
-    def extract_blocks(matrix, blocksize, keep_as_view=False):
+    def extract_blocks(matrix: np.ndarray, blocksize: Tuple[int, int], keep_as_view=False):
         m, n = matrix.shape
         b0, b1 = blocksize
         if not keep_as_view:
-            return matrix.reshape(m // b0, b0, n // b1, b1).swapaxes(1, 2).reshape(-1, b0, b1)
+            return matrix.reshape((m // b0, b0, n // b1, b1)).swapaxes(1, 2).reshape(-1, b0, b1)
         else:
-            return matrix.reshape(m // b0, b0, n // b1, b1).swapaxes(1, 2)
+            return matrix.reshape((m // b0, b0, n // b1, b1)).swapaxes(1, 2)
 
     def __call__(self, image: np.ndarray, kernel: np.ndarray) -> np.ndarray:
         return self.convolve(image, kernel)
