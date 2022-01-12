@@ -64,6 +64,7 @@ class Conv2D(Layer):
         use_bias (bool): Whether to use bias.
         convolution_type (str): convolution mode. Recommended to be 'winograd'.
         name (str): Name of the layer
+        blocksize (Tuple[int, int]): the size of the block, only used with Winograd.
 
     Raises:
         ValueError: If using padding and stride != 1.
@@ -80,7 +81,8 @@ class Conv2D(Layer):
                  name: str = "Conv2D",
                  input_shape: tuple = None,
                  weights_init: str = "xavier",
-                 bias_init: str = "zeros"):
+                 bias_init: str = "zeros",
+                 blocksize: Tuple[int, int] = None):
 
         if isinstance(kernel_size, int):
             kernel_size = (kernel_size, kernel_size)

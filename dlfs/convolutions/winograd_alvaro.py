@@ -105,7 +105,7 @@ def winograd_convolution(source, filter):
             Y, X2, W2 = winograd_get_matrices(out_dim2, filter.shape[1])
         else:
             Y, X2, W2 = YT, X1, W1
-        #out = YT @ ((X1.T @ source @ X2) * (W1 @ filter @ W2.T)) @ Y.T
+        # out = YT @ ((X1.T @ source @ X2) * (W1 @ filter @ W2.T)) @ Y.T
     else:
         for i, j in zip(source.shape, filter.shape):
             out_dim = i - j + 1
@@ -115,12 +115,37 @@ def winograd_convolution(source, filter):
             else:
                 winograd_matrices.append(winograd_matrices[already_calculated.index((out_dim, j))])
 
-        #part1 = tensorly.tenalg.multi_mode_dot(source, [t[1] for t in winograd_matrices], list(range(source.ndim)))
-        #part2 = tensorly.tenalg.multi_mode_dot(filter, [t[2] for t in winograd_matrices], list(range(filter.ndim)))
-        #part3 = part1 * part2
-        #out = tensorly.tenalg.multi_mode_dot(part3, [t[0] for t in winograd_matrices], list(range(part3.ndim)))
+        # part1 = tensorly.tenalg.multi_mode_dot(source, [t[1] for t in winograd_matrices], list(range(source.ndim)))
+        # part2 = tensorly.tenalg.multi_mode_dot(filter, [t[2] for t in winograd_matrices], list(range(filter.ndim)))
+        # part3 = part1 * part2
+        # out = tensorly.tenalg.multi_mode_dot(part3, [t[0] for t in winograd_matrices], list(range(part3.ndim)))
     return out
 
+
+def winograd_convolution_with_blocks(source, filter, blocksize=None):
+    if not source.ndim == filter.ndim:
+        raise IndexError
+    already_calculated = []
+    winograd_matrices = []
+    if source.ndim == 2:
+        if blocksize == None:
+            num_of_passes = (source.shape[0] - filter.size[0], source.shape[1] - filter.size[1])
+            shape1 = -1
+            shape2 = -1
+            for i in range(source.shape[0] + 1, source.shape[0]):
+                if num_of_passes[0] % shape1 == 0:
+                    shape1 = i
+                    break
+            for i in range(source.shape[1] + 1, source.shape[1]):
+                if num_of_passes[1] % shape2 == 0:
+                    shape2 = i
+                    break
+            blocksize = np.array((shape1, shape2))
+        num_of_blocks = np.array((source.shape[0]/blocksize[0], source.shape[1]/blocksize[1]))
+        if np.prod(num_of_blocks).dtype != int:
+            raise ValueError
+        block_output_size = blocksize + 1 - filter.size
+        output_size = block_output_size * num_of_blocks
 
 if __name__ == "__main__":
     '''Y, X, W = winograd_get_matrices(3, 3)
