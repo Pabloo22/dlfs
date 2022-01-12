@@ -13,10 +13,10 @@ class Optimizer(ABC):
 
     @abstractmethod
     def update(self, layer: Layer, gradients: Tuple[np.ndarray, np.ndarray]):
-        """Update parameters based on gradients.
+        """Update parameters based on delta.
         Args:
             layer: The layer to update.
-            gradients: Gradients of the parameters passed as a tuple of two numpy arrays composed of the gradients of
+            gradients: Gradients of the parameters passed as a tuple of two numpy arrays composed of the delta of
                 the weights and biases.
         """
         raise NotImplementedError

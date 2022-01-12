@@ -4,7 +4,7 @@ will be removed in the future.
 """
 import numpy as np
 
-from dlfs import Sequential
+from dlfs.models import Sequential
 from dlfs.layers import Dense, Dropout
 from dlfs.optimizers import SGD, SGDMomentum
 from dlfs.losses import MSE, MAE, BinaryCrossentropy, CategoricalCrossentropy
@@ -168,7 +168,5 @@ def test_loss_functions():
 
 
 if __name__ == '__main__':
-    A = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
-    B = np.array([[1, 2], [3, 4], [5, 6]])
+    test1()
 
-    print(np.dot(A, B) == (A @ B))

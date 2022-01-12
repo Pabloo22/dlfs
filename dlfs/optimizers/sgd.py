@@ -19,12 +19,12 @@ class SGD(Optimizer):
 
         Args:
             layer: The layer to update.
-            gradients: gradients of parameters (weights and bias)
+            gradients: delta of parameters (weights and bias)
         """
         dw, db = gradients
 
-        layer.weights -= self.learning_rate * dw
-        layer.bias -= self.learning_rate * db
+        layer.__weights -= self.learning_rate * dw
+        layer.__bias -= self.learning_rate * db
 
     def add_slot(self, layer: Layer):
         """

@@ -1,21 +1,61 @@
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ==============================================================================
+"""Contains the Sequential model class."""
+
+
 from collections import deque
 from copy import deepcopy
 import numpy as np
-from sklearn.model_selection import train_test_split
 from typing import List, Dict, Tuple
 from tqdm import tqdm
 import pickle
 
 
+from . import Model
 from dlfs.layers import Layer
 from dlfs.optimizers import Optimizer, get_optimizer
 from dlfs.losses import LossFunction, get_loss_function
 from dlfs.metrics import Metric, get_metric
+from dlfs.preprocessing import train_test_split
 
 
-class Sequential:
-    """
-    A sequential model is a linear stack of layers.
+class Sequential(Model):
+    """A sequential model is a linear stack of layers.
+
+    Args:
+        layers (List[Layer]): A list of layers.
+        name (str): The name of the model.
+
+    Attributes:
+        layers (List[Layer]): A list of layers.
+        name (str): The name of the model.
+        optimizer (Optimizer): The optimizer used to optimize the model.
+        loss (LossFunction): The loss function used to compute the loss.
+        metrics (Dict[str, Union[Metric, LossFunction]]): A dictionary of metrics.
+        __trainable (bool): Whether the model is trainable.
+
+    Usage:
+        >>> from dlfs.layers import Dense
+
+        >>> model = Sequential([Dense(10, activation='relu'), Dense(1)])
+
+        >>> model.summary()
+
+        >>> model.compile(optimizer='sgd', loss='mse', metrics=['mae'])
+
+        >>> model.fit(x_train, y_train, epochs=10)
+
+
     """
 
     layers: List[Layer]
@@ -26,6 +66,8 @@ class Sequential:
     trainable: bool
 
     def __init__(self, layers: List[Layer] = None, name: str = "Sequential"):
+
+        super().__init__(name=name)
 
         # check that the first layers has set the input shape
         if layers and layers[0].input_shape is None:
@@ -39,7 +81,7 @@ class Sequential:
         self.optimizer = None
         self.metrics = None
         self.__trainable = True
-        self.counter = 1
+        self.__counter = 1
 
     @property
     def trainable(self):
@@ -52,8 +94,8 @@ class Sequential:
             layer.trainable = value
 
     def add(self, layer: Layer):
-        """
-        Add a layer to the model
+        """Adds a layer to the model
+
         Args:
             layer (Layer): the layer to add
         """
@@ -70,14 +112,14 @@ class Sequential:
                 layer.initialize(input_shape=layer.input_shape)
 
         # each layer must have an unique name
-        layer.name = f"{layer.name}{self.counter}"
-        self.counter += 1
+        layer.name = f"{layer.name}{self.__counter}"
+        self.__counter += 1
 
         self.layers.append(layer)
 
     def concatenate(self, model: 'Sequential'):
-        """
-        Concatenate two models
+        """Concatenates two models.
+        
         Args:
             model (Sequential): the model to concatenate
         """
@@ -139,29 +181,7 @@ class Sequential:
         deltas = deque()
 
         last_layer = self.layers[-1]
-
-        # initialize the deltas of the last layer
-        if last_layer.activation is None:
-            deltas.appendleft(self.loss.gradient(y_true, y_pred))
-        else:
-            activation_gradient = last_layer.activation.gradient(last_layer.z)
-            # check if the gradient is a matrix of tensors with shape=(m, n_neurons) or a tensor of jacobian matrices
-            # with shape (m, n_neurons, n_neurons). (m is the number of samples)
-            if activation_gradient.ndim == 2:
-                deltas.appendleft(self.loss.gradient(y_true, y_pred) * activation_gradient)
-            else:
-
-                loss_gradient = self.loss.gradient(y_true, y_pred)[:, np.newaxis, :]
-
-                delta = np.einsum('ijk,ikl->il', loss_gradient, activation_gradient)
-
-                # The above einsum is equivalent to:
-                # delta = np.empty_like(last_layer.z)
-                # batch_size = y_true.shape[0]
-                # for i in range(batch_size):  # for each sample
-                #     delta[i] = loss_gradient[i] @ activation_gradient[i]
-
-                deltas.appendleft(delta)
+        deltas.appendleft(last_layer.get_delta(self.loss.gradient(y_true, y_pred)))
 
         # backward pass
         for layer in reversed(self.layers[:-1]):
@@ -217,6 +237,16 @@ class Sequential:
 
         return x, y
 
+    def __update_io_shapes(self, batch_size: int):
+        """
+        Update the input and output shapes of the layers to match the batch size
+        Args:
+            batch_size: the batch size
+        """
+        for layer in self.layers:
+            layer.input_shape = (batch_size, *layer.input_shape[1:])
+            layer.output_shape = (batch_size, *layer.output_shape[1:])
+
     def __print_results(self,
                         metrics: Dict[str, float],
                         val_metrics: Dict[str, float] = None,
@@ -238,14 +268,15 @@ class Sequential:
         using_validation = val_metrics is not None
         if using_validation:
             # print the results
-            print(f"{title} ({progress}/{total}) - loss: {metrics['loss']} - val_loss: {val_metrics['val_loss']}")
+            print(f"{title} ({progress}/{total}) - loss: {metrics['loss']:.4f}"
+                  f" - val_loss: {val_metrics['val_loss']:.4f}")
             for metric in self.metrics:
-                print(f"- {metric}: {metrics[metric]} - val_{metric}: {val_metrics['val_' + metric]}")
+                print(f"- {metric}: {metrics[metric]:.4f} - val_{metric}: {val_metrics['val_' + metric]:.4f}")
         else:
             # print the results
-            print(f"{title} ({progress}/{total}) - loss: {metrics['loss']}")
+            print(f"{title} ({progress}/{total}) - loss: {metrics['loss']:.4f}")
             for metric in self.metrics:
-                print(f"- {metric}: {metrics[metric]}")
+                print(f"- {metric}: {metrics[metric]:.4f}")
 
         if history is not None:
             for metric in metrics:
@@ -312,7 +343,6 @@ class Sequential:
 
         # INITIALIZATION:
         # --------------------------------------------------
-        np.set_printoptions(precision=4)
 
         # Update the input_shape of the layers to take into account the batch_size
         for layer in self.layers:
@@ -394,13 +424,9 @@ class Sequential:
                     # add val_loss to val_metrics
                     val_epoch_metrics["val_loss"] = val_epoch_loss
 
-                # print the metrics of the epoch
+                # print the metrics of the epoch and update the history
                 self.__print_results(epoch_metrics, val_epoch_metrics, "Epoch",
                                      progress=epoch + 1, total=epochs, history=history)
-
-            # save the history
-            for metric in epoch_metrics:
-                history[metric].append(epoch_metrics[metric] / (len(x) // batch_size))
 
         if verbose == 3:
             # print final results
@@ -452,7 +478,8 @@ class Sequential:
             x: the input data
             y: the labels
             batch_size: the batch size (default: len(x))
-            verbose: the verbosity mode (0 or 1)
+            verbose: the verbosity mode (0, 1, or 2)
+            prefix: the prefix to print
 
         Returns:
             The average loss and the average metrics of the model on the given data
@@ -462,6 +489,9 @@ class Sequential:
 
         # get the batch size
         batch_size = batch_size or len(x)
+
+        # update input and output shapes of the model
+        self.__update_io_shapes(batch_size)
 
         # initialize the metrics
         avg_loss = 0.0
@@ -490,7 +520,7 @@ class Sequential:
                 avg_metrics[prefix + metric] += 1/(i + 1) * (metrics[prefix + metric] - avg_metrics[prefix + metric])
 
             # print the loss and the metrics per batch (if verbose is 1)
-            if verbose > 0 and batch_size != len(x):
+            if verbose == 2 and batch_size != len(x):
                 print(f"Batch ({i // batch_size + 1}/{n_batches}) - loss: {loss}")
                 print(f"\t{', '.join([prefix + f'{metric}: {metrics[prefix + metric]:.4f}' for metric in self.metrics])}")
 
@@ -510,6 +540,9 @@ class Sequential:
         Returns:
             y_pred : the predictions
         """
+
+        if not training:
+            self.__update_io_shapes(len(x))
 
         last_input = x
         for layer in self.layers:

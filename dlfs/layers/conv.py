@@ -1,3 +1,17 @@
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ==============================================================================
+"""Contains the convolutional layers classes (only the 2D convolution has been implemented by now)."""
+
 import numpy as np
 from typing import Tuple, Union
 
@@ -7,38 +21,55 @@ from dlfs.convolutions import Convolutioner, get_convolution
 
 
 class Conv2D(Layer):
-    """
-    Convolutional layer
+    """A 2D convolution layer.
+
+    Conv2D is analogous to the Dense layer. They differ in the fact that Conv2D takes into account
+    the spatial location. It also concerns some other parameters such as stride, kernel size, padding,
+    etc; which are essential characteristics in order to carry out a convolution.
+
+    Args:
+        kernel_size (tuple): tuple of 2 integers, specifying the height and width of the 2D convolution window.
+        n_filters (int): Number of filters
+        stride (tuple or int): specifying the strides of the convolution along the height and width.
+            Can be a single integer to specify the same value for all spatial dimensions
+        padding (bool, tuple or int): If True, add padding to the input so that the output has the same shape as the
+            input (assuming stride = 1). If padding is a tuple of two integers, this defines the amount of padding
+            to add to the top, bottom, left and right of the input. If padding is an integer, this number of zeros
+            is added to the input on both sides.
+        activation (ActivationFunction): Activation function
+        use_bias (bool): Whether to use bias
+        convolution_type (str): convolution mode. Can be 'winograd' or 'naive'
+        name (str): Name of the layer
+        input_shape (tuple): shape of the input
+        weights_init (str): Initialization method for the weights
+        bias_init (str): Initialization method for the bias
+
+    Attributes:
+        n_filters (int): Number of filters
+        kernel_size (tuple): tuple of 2 integers, specifying the height and width of the 2D convolution window.
+        stride (tuple): specifying the strides of the convolution along the height and width.
+        padding (tuple): tuple of 2 integers, specifying the padding of the convolution along the height and width.
+            This values are computed from the stride and kernel size in order to ensure that the output has the same
+            shape as the input (if padding = True).
+        activation (ActivationFunction): Activation function
+        use_bias (bool): Whether to use bias.
+        convolution_type (str): convolution mode. Recommended to be 'winograd'.
+        name (str): Name of the layer
+
     """
 
     def __init__(self,
-                 kernel_size: Union[Tuple[int, int], int],
                  n_filters: int,
+                 kernel_size: Union[Tuple[int, int], int],
                  stride: Union[Tuple[int, int], int] = (1, 1),
-                 padding: bool = False,
+                 padding: Union[bool, tuple, int] = False,
                  activation: str = None,
                  use_bias: bool = True,
-                 mode: str = 'winograd',
+                 convolution_type: str = 'winograd',
                  name: str = "Conv2D",
                  input_shape: tuple = None,
                  weights_init: str = "xavier",
                  bias_init: str = "zeros"):
-        """
-        Initialize the convolutional layer.
-         Args:
-            kernel_size (tuple): tuple of 2 integers, specifying the height and width of the 2D convolution window.
-            n_filters (int): Number of filters
-            stride (tuple or int): specifying the strides of the convolution along the height and width.
-                            Can be a single integer to specify the same value for all spatial dimensions
-            padding (bool): If True, add padding to the input so that the output has the same shape as the input
-                            (assuming stride = 1)
-            activation (ActivationFunction): Activation function
-            use_bias (bool): Whether to use bias
-            name (str): Name of the layer
-            input_shape (tuple): shape of the input
-            weights_init (str): Initialization method for the weights
-            bias_init (str): Initialization method for the bias
-        """
 
         if n_filters <= 0:
             raise ValueError("The number of filters should be greater than 0")
@@ -48,8 +79,6 @@ class Conv2D(Layer):
             raise ValueError("The kernel size should be greater than 0")
         if stride <= 0:
             raise ValueError("The stride should be greater than 0")
-        if mode not in {'winograd', 'simple'}:
-            raise ValueError("Unknown convolution mode")
 
         if isinstance(kernel_size, int):
             kernel_size = (kernel_size, kernel_size)
@@ -58,7 +87,10 @@ class Conv2D(Layer):
 
         input_shape = None if input_shape is None else (None, *input_shape)
         output_shape = None
-        padding = (0, 0) if padding is False else (kernel_size[0] // 2, kernel_size[1] // 2)
+        if isinstance(padding, bool):
+            padding = (0, 0) if padding is False else (kernel_size[0] // 2, kernel_size[1] // 2)
+        else:
+            padding = (padding, padding) if isinstance(padding, int) else padding
 
         # get the output shape if the input shape is known
         if input_shape is not None:
@@ -75,19 +107,30 @@ class Conv2D(Layer):
         self.n_filters = n_filters
         self.stride = stride
         self.padding = padding
+        self.convolution_type = convolution_type
         self.use_bias = use_bias
         self.weights_init = weights_init
         self.bias_init = bias_init
-        self.convolution = get_convolution(mode, kernel_size, stride, padding)
+        self.forward_conv = get_convolution(convolution_type, kernel_size, stride, padding)
+        self.backward_conv = None
+        self.update_conv = None
 
     def initialize(self, input_shape: tuple, weights: np.ndarray = None, bias: np.ndarray = None):
-        """
-        Initialize the layer. Should be called after the input shape is set.
+        """Initializes the layer.
+
+        If weights and bias are not provided, they are initialized using the specified initialization method.
 
         Args:
             input_shape (tuple): input shape of the layer, it has the form (n_samples, height, width, n_channels)
             weights (np.ndarray): weights of the layer (optional, recommended to be None).
             bias (np.ndarray): bias of the layer (optional, recommended to be None).
+
+        Raises:
+            ValueError: if the input shape is not valid.
+            ValueError: if the weights and bias are not of the shape:
+                (input_shape[3], self.kernel_size[0], self.kernel_size[1], self.n_filters),
+                (self.n_filters,), respectively.
+            ValueError: if trying to set bias and `self.use_bias` is False.
         """
 
         # check if the input shape is correct
@@ -125,34 +168,53 @@ class Conv2D(Layer):
         else:
             raise ValueError("Unknown weights initialization")
 
-        bias_shape = (self.n_filters,)
-        # initialize bias
-        if bias is not None:
-            if bias.shape != bias_shape:
-                raise ValueError(f"The shape of the bias should be "
-                                 "(n_channels_current_layer). "
-                                 f"Got {bias.shape}, expected {bias_shape}")
-            self.bias = bias
-        elif self.bias_init == "zeros":
-            self.bias = np.zeros(bias_shape)
-        elif self.bias_init == "ones":
-            self.bias = np.ones(bias_shape)
-        elif self.bias_init == "uniform":
-            self.bias = np.random.uniform(low=-1, high=1, size=bias_shape)
-        elif self.bias_init == "normal":
-            self.bias = np.random.normal(loc=0, scale=1, size=bias_shape)
+        if self.use_bias:
+            bias_shape = (self.n_filters,)
+            # initialize bias
+            if bias is not None:
+                if bias.shape != bias_shape:
+                    raise ValueError(f"The shape of the bias should be "
+                                     "(n_channels_current_layer). "
+                                     f"Got {bias.shape}, expected {bias_shape}")
+                self.bias = bias
+            elif self.bias_init == "zeros":
+                self.bias = np.zeros(bias_shape)
+            elif self.bias_init == "ones":
+                self.bias = np.ones(bias_shape)
+            elif self.bias_init == "uniform":
+                self.bias = np.random.uniform(low=-1, high=1, size=bias_shape)
+            elif self.bias_init == "normal":
+                self.bias = np.random.normal(loc=0, scale=1, size=bias_shape)
+            else:
+                raise ValueError("Unknown bias initialization")
         else:
-            raise ValueError("Unknown bias initialization")
+            if bias is not None:
+                raise ValueError("The bias should be None if the layer is not using bias")
+
+        # INITIALIZE BACKWARD CONVOLUTION
+        # compute the padding needed for the backward convolution
+        padding_backward = ((self.kernel_size[0] - 1) // 2, (self.kernel_size[1] - 1) // 2)
+
+        # initialize the backward convolution. This convolution is used to compute the gradient of the loss
+        # with respect to input.
+        self.backward_conv = get_convolution(self.convolution_type,
+                                             image_size=self.output_shape,  # delta.shape
+                                             kernel_size=self.kernel_size,
+                                             stride=self.stride,
+                                             padding=padding_backward)
 
         self.initialized = True
 
     def set_weights(self, weights: np.ndarray = None, bias: np.ndarray = None):
-        """
-        Set the weights and bias of the layer.
+        """Sets the weights and bias of the layer.
 
         Args:
             weights (np.ndarray): weights of the layer.
             bias (np.ndarray): bias of the layer.
+
+        Raises:
+            ValueError: if the shape of the weights or bias is not correct.
+            ValueError: if trying to set bias and `self.use_bias` is False.
         """
         if weights is not None:
             # check if the weights shape is correct
@@ -164,6 +226,10 @@ class Conv2D(Layer):
             self.weights = weights
 
         if bias is not None:
+
+            if not self.use_bias:
+                raise ValueError("The layer does not use bias")
+
             # check if the bias shape is correct
             bias_shape = (self.n_filters,)
             if bias.shape != bias_shape:
@@ -174,71 +240,54 @@ class Conv2D(Layer):
             self.bias = bias
 
     def forward(self, x: np.ndarray, training: bool = False) -> np.ndarray:
-        """
-        Forward pass
+        """Forward pass
+
         Args:
             x: input data
             training: for compatibility with other layers
+
         Returns:
             output data
         """
         self.inputs = x
-        self.z = self.convolution.convolve(x, self.weights) + self.bias
-        return self.z if self.activation is None else self.activation(self.z)
+        self.outputs = self.forward_conv.convolve(x, self.weights) + self.bias
+        return self.outputs if self.activation is None else self.activation(self.outputs)
 
-    def get_delta(self, last_delta: np.ndarray, dz_da: np.ndarray) -> np.ndarray:
-        """
-        Backward pass
+    def get_d_inputs(self, delta: np.ndarray) -> np.ndarray:
+        """Returns the derivative of the cost function with respect to the input of the layer.
+
         Args:
-            last_delta: gradients of the loss with respect to the output of this layer (dL/dz) if
-                this layer is the last layer in the network, or gradients of the loss with respect
-                to the output of the next layer (dL/dz_next) if this layer is followed by another
-                Conv2D layer.
-            dz_da: gradients of the activation with respect to the output of this layer (dL/dz)
-        Returns:
-            gradients of the loss with respect to the input of this layer (dL/dx)
+            delta: derivative of the cost function with respect to the output of the layer.
         """
-
-        # get dL/da
-
+        flipped_weights = np.rot90(self.weights, 2, axes=(1, 2))  # 180° rotation of the filters
+        return self.backward_conv.convolve(delta, flipped_weights)
 
     def count_params(self) -> int:
-        """
-        Counts the number of parameters of this layer
-        Returns:
-            number of parameters
-        """
         return self.weights.size + self.bias.size
 
     def _get_output_shape(self) -> tuple:
-        """
-        Get the output shape
-        Returns:
-            tuple: output shape
-        """
         return (self.input_shape[0],
                 self.input_shape[1] - self.kernel_size[0] + 1,
                 self.input_shape[2] - self.kernel_size[1] + 1,
                 self.n_filters)
 
     def update(self, optimizer, delta: np.ndarray):
-        """
-        Update the weights and biases of this layer
+        """Updates the weights and biases of this layer.
+
+        See `base class` for more details.
+
         Args:
             optimizer (Optimizer): optimizer used to update the weights and biases
-            delta: gradients of the loss with respect to the output of this layer
+            delta: delta of the loss with respect to the output of this layer
         """
         # check if the layer is initialized
         if not self.initialized:
             raise ValueError("The layer is not initialized")
 
-        dw = self.convolve(self.inputs, delta, padding=True, stride=self.stride)
+        dw = self.update_conv.convolve(self.inputs, delta.transpose((0, 3, 2, 1)))
         db = np.sum(delta, axis=(1, 2))
 
         optimizer.update(self, (dw, db))
-
-    def get_dz_da(self) -> np.ndarray:
-        pass
 
     def summary(self):
         print(f"Layer: {self.name}, Output shape: {self.output_shape}")

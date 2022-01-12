@@ -1,10 +1,9 @@
 import numpy as np
 
-from dlfs import Sequential
-from dlfs.layers import Dense, Dropout
+from dlfs.models import Sequential
+from dlfs.layers import Dense, Dropout, Flatten
 from dlfs.optimizers import SGD, SGDMomentum
-from dlfs.losses import MSE, MAE, BinaryCrossentropy, CategoricalCrossentropy
-from dlfs.activation_functions import ReLU, Sigmoid, Softmax
+
 
 
 
@@ -121,7 +120,7 @@ def test_train_on_batch():
 
 def test_boston():
     # DATA PREPROCESSING
-    from sklearn.model_selection import train_test_split
+    from dlfs.preprocessing import train_test_split
     from sklearn.datasets import load_boston
 
     boston = load_boston()
@@ -135,12 +134,13 @@ def test_boston():
 
     model = Sequential()
     model.add(Dense(100, input_shape=(x_train.shape[1],), activation='relu'))
+    model.add(Flatten())  # used just for testing purposes
     model.add(Dropout(0.2))
     model.add(Dense(1))
     model.summary()
     model.compile(loss='mse', optimizer=SGDMomentum(learning_rate=0.001), metrics=['mae'])
     model.fit(x_train, y_train, validation_data=(x_test, y_test), epochs=100, batch_size=1, verbose=3)
-    model.evaluate(x_test, y_test)
+    model.evaluate(x_test, y_test, prefix="test_")
 
 
 def test_cancer():
@@ -171,10 +171,10 @@ def test_cancer():
 def test_mnist_denses():
     from keras.utils import np_utils
 
-    # TEST 1
-
     # LOAD DATA
     from keras.datasets import mnist
+
+
     (X_train, y_train), (X_test, y_test) = mnist.load_data()
     num_train_image = X_train.shape[0]
     num_test_image = X_test.shape[0]

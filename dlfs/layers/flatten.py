@@ -1,11 +1,31 @@
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ==============================================================================
+"""Home of the Flatten layer."""
+
 import numpy as np
 
 from .layer import Layer
 
 
 class Flatten(Layer):
-    """
-    Flatten layer. It flattens the input to a 1D vector.
+    """Flattens the input while preserving the batch dimension.
+
+    This utility layer is responsible for flattening and reducing to one dimension the internal matrix
+    of the neural network to later on process a simpler output vector. The main purpose of this layer is to connect
+    the last convolutional layer to the fully connected layer. Note that this does not affect the batch size.
+
+    Args:
+        name (str): Name of the layer.
     """
 
     def __init__(self, name: str = "Flatten"):
@@ -13,7 +33,8 @@ class Flatten(Layer):
 
     def initialize(self, input_shape: tuple):
         """
-        Initialize the layer.
+        Initialize the layer. This method is called by the model when the model is being compiled.
+
         Args:
             input_shape: The input shape.
         """
@@ -24,26 +45,25 @@ class Flatten(Layer):
     def forward(self, x: np.ndarray, training: bool = True) -> np.ndarray:
         """
         Forward pass of the layer.
+
         Args:
             x: Input to the layer.
             training: For compatibility with the base class.
+
         Returns:
             A 1D vector.
         """
-        return np.reshape(x, self.output_shape)
+        self.outputs = np.reshape(x, self.output_shape)
+        return self.outputs
 
-    def get_delta(self, last_delta: np.ndarray, dz_da: np.ndarray) -> np.ndarray:
-        """
-        Calculates the delta of the layer based on the delta of the next layer and derivative of the output of this
-        layer (i) with respect to the z of the next layer (i+1).
+    def get_d_inputs(self, delta: np.ndarray) -> np.ndarray:
+        """Returns the gradient of the loss with respect to the inputs of the layer.
+
         Args:
-            last_delta: delta of the next layer.
-            dz_da: derivative of the output of this layer (i) with respect to the z of the next layer (i+1). The
-                expected value od dz_da here is W.T assuming that the next layer is a dense layer.
+            delta: Delta of the loss with respect to the outputs of the layer.
         Returns:
             The corresponding delta of the layer (d_cost/d_z).
         """
-        delta = last_delta * dz_da if last_delta.shape == self.output_shape else last_delta @ dz_da
         return np.reshape(delta, self.input_shape)
 
     def summary(self) -> str:
@@ -52,10 +72,7 @@ class Flatten(Layer):
     def set_weights(self, weights: np.ndarray = None, bias: np.ndarray = None):
         raise NotImplementedError("Flatten layer has no weights")
 
-    def get_dz_da(self) -> np.ndarray:
-        return np.ones(self.output_shape)
-
-    def update(self, optimizer, gradients: np.ndarray):
+    def update(self, optimizer, delta: np.ndarray):
         pass
 
     def count_params(self) -> int:

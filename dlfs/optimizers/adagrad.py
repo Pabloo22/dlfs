@@ -18,7 +18,7 @@ class Adagrad(Optimizer):
 
         Args:
             parameters: Parameters to update passed as a tuple of two numpy arrays composed of the weights and biases.
-            gradients: Gradients of the parameters passed as a tuple of two numpy arrays composed of the gradients of
+            gradients: Gradients of the parameters passed as a tuple of two numpy arrays composed of the delta of
                 the weights and biases.
 
         """
