@@ -1,6 +1,20 @@
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ==============================================================================
+
 from abc import ABC, abstractmethod
 import numpy as np
-from typing import Union
+from typing import Union, Tuple
+from patchify import patchify
 
 
 class Convolutioner(ABC):
@@ -36,6 +50,28 @@ class Convolutioner(ABC):
                               stride: Union[int, tuple] = (1, 1),
                               using_batches: bool = False) -> np.ndarray:
         pass
+
+    @staticmethod
+    def get_patches(image: np.ndarray,
+                    patch_size: Union[Tuple[int, int], Tuple[int, int, int]],
+                    step: int = 1,
+                    using_batches: bool = False) -> np.ndarray:
+        """Returns the patches of the image.
+
+        Args:
+            image: The image to extract patches from. The image must be a numpy array and must be already
+                padded (if necessary).
+            patch_size: The size of the patches to extract.
+            step: The step size between patches.
+            using_batches: Whether to use batches or not.
+
+        Returns:
+            The patches of the image.
+        """
+        if using_batches:
+            return np.array([patchify(image[i], patch_size, step) for i in range(image.shape[0])])
+        else:
+            return patchify(image, patch_size, step)
 
     def convolve(self,
                  image: np.ndarray,
