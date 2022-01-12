@@ -477,7 +477,7 @@ class Sequential(Model):
         Args:
             x: the input data
             y: the labels
-            batch_size: the batch size (default: len(x))
+            batch_size: the batch size (default: len(image))
             verbose: the verbosity mode (0, 1, or 2)
             prefix: the prefix to print
 
