@@ -33,9 +33,9 @@ All contributions are welcome once the deadline to submit the project has passed
 
 ### Contributors
 * [Pablo Ariño](https://github.com/Pabloo22)
+* [Noa Chu](https://github.com/noachuartzt)
 * [Jorge de la Rosa](https://github.com/Mixnikon108)
 * [Álvaro Laguna](https://github.com/alvarola17)
-* [Noa Chu](https://github.com/noachuartzt)
 * [Carlota Medrano](https://github.com/carlota-upm)
 * [María Xue](https://github.com/maria-xue)
 
