@@ -46,7 +46,8 @@ class WinogradConvolutioner(Convolutioner):
                               transformed_image: np.ndarray = None,
                               y_t_matrices: List[np.ndarray] = None,
                               image_transformers=None) -> np.ndarray:
-        out = np.array([tensorly.tenalg.multi_mode_dot(i * kernel, y_t_matrices, list(range(3))) for i in transformed_image])
+        out = np.array(
+            [tensorly.tenalg.multi_mode_dot(i * kernel, y_t_matrices, list(range(3))) for i in transformed_image])
         print(out)
 
     @staticmethod
@@ -80,8 +81,10 @@ class WinogradConvolutioner(Convolutioner):
         '''if not len(self.image_size) == len(self.kernel_size):
             raise ValueError('Image and kernel must have the same number of dimensions.')'''
 
-        self.block_output_size = np.array([self.blocksize[i] + self.kernel_size[i] - 1 for i in range(len(self.blocksize))])
-        num_of_blocks = np.array((self.image_size[1] / self.block_output_size[0], self.image_size[2] / self.block_output_size[1]))
+        self.block_output_size = np.array(
+            [self.blocksize[i] + self.kernel_size[i] - 1 for i in range(len(self.blocksize))])
+        num_of_blocks = np.array(
+            (self.image_size[1] / self.block_output_size[0], self.image_size[2] / self.block_output_size[1]))
 
         if not float(np.prod(num_of_blocks)).is_integer():
             raise ValueError(f'The image size must be divisible by the blocksize. {self.image_size} is not divisible '
@@ -105,8 +108,9 @@ class WinogradConvolutioner(Convolutioner):
         #     return tensorly.tenalg.multi_mode_dot(block, x, list(range(block.ndim)))
 
         print(block.shape)
-        return np.array([tensorly.tenalg.multi_mode_dot(block[i, j, 0], x, list(range(3))) for j in range(block.shape[1])
-                         for i in range(block.shape[0])])
+        return np.array(
+            [tensorly.tenalg.multi_mode_dot(block[i, j, 0], x, list(range(3))) for j in range(block.shape[1])
+             for i in range(block.shape[0])])
 
     @staticmethod
     def __transform_grayscale(block: np.ndarray, x: List[np.ndarray]):
@@ -183,7 +187,7 @@ class WinogradConvolutioner(Convolutioner):
 
         if using_batches:
             # Move batch dimension to the last dimension
-            x = np.moveaxis(x, 0, -1)
+            # x = np.moveaxis(x, 0, -1)
 
             if x.ndim == 4:
 
@@ -192,12 +196,13 @@ class WinogradConvolutioner(Convolutioner):
                     x = np.moveaxis(x, 0, 2)
 
                 # get the blocks
-                n_channels = x.shape[2]  # The only data format allowed is 'channels_last'
+                n_channels = x.shape[3]  # The only data format allowed is 'channels_last'
 
                 # blocks contains 'batch_size' number of numpy arrays each one containing the
                 # blocks of the image (views)
-                print(x[...,0].shape, (*self.block_output_size, n_channels))
-                blocks = [view_as_blocks(image, (*self.block_output_size, n_channels)) for image in x]
+                block_shape = (*self.block_output_size, n_channels)
+                #print(x.shape, block_shape)
+                blocks = [view_as_blocks(x[i, ...], block_shape) for i in range(x.shape[0]-1)]
 
                 if self.batch_count != kwargs.get('batch_count', None):
                     # blocks contains 'batch_size' number of numpy arrays each one containing the
@@ -205,7 +210,7 @@ class WinogradConvolutioner(Convolutioner):
                     self.blocks = [view_as_blocks(x[..., i], (*self.blocksize, n_channels)) for i in range(x.shape[-1])]
                     self.batch_count = kwargs['batch_count']
                     self.__transformed_images = [
-                        WinogradConvolutioner.__transform_multichannel(block, self.__image_transformers,)
+                        WinogradConvolutioner.__transform_multichannel(block, self.__image_transformers, )
                         for block in blocks]
 
                 return np.array([self.convolve_multichannel(x[i],
@@ -220,7 +225,7 @@ class WinogradConvolutioner(Convolutioner):
                 # get the blocks
                 blocks = [view_as_blocks(image, tuple(self.block_output_size)) for image in x]
                 self.__transformed_images = [WinogradConvolutioner.__transform_grayscale(block,
-                                                                                            self.__image_transformers)
+                                                                                         self.__image_transformers)
                                              for block in blocks]
                 return np.array([self.convolve_grayscale(image, self.__transformed_filter, self.stride, **kwargs,
                                                          transformed_image=self.__transform_multichannel(x,

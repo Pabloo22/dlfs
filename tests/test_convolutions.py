@@ -146,7 +146,7 @@ def test_conv_multichannel():
 
 
 def test_winograd_conv_multichannel():
-    img = np.arange(28 * 28 *3*2 ).reshape((2,28, 28, 3))
+    img = np.arange(28 * 28 * 3 * 2).reshape((2, 28, 28, 3))
 
     k = np.arange(3 * 3 * 3).reshape((3, 3, 3))
 
