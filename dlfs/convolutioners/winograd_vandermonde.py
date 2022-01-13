@@ -46,28 +46,27 @@ def vandermonde_matrix(b: int, points: List[Tuple[Union[int, float]]]) -> np.nda
     return np.array([[i[0] ** j * i[1] ** (b - j - 1) for j in range(b)] for i in points])
 
 
-# commented to avoid duplicate code warnings
-# def gen_points(num_points: int) -> List[Tuple[float, int]]:
-#     """
-#     This function generates homogeneous coordinates, starting from (0, 1), then, (1/2, 1), then (-1/2, 1),
-#     and the infinite point (0, 1).
-#
-#         [(f_0, g_0), ..., (f_a-1, g_a-1)]
-#
-#     Args:
-#         num_points (int): The desired number of points
-#
-#     Returns:
-#         list[tuple[Union[int, float]]]: List of homogeneous coordinates
-#     """
-#     points = [(0, 1)]
-#     if num_points % 2:
-#         points.extend([(y / 2, 1) for x in range(1, num_points // 2) for y in (x, -x)])
-#         points.extend([(num_points // 2 / 2, 1), (1, 0)])
-#     else:
-#         points.extend([(y / 2, 1) for x in range(1, num_points // 2) for y in (x, -x)])
-#         points.append((1, 0))
-#     return points
+def gen_points(num_points: int) -> List[Tuple[float, int]]:
+    """
+    This function generates homogeneous coordinates, starting from (0, 1), then, (1/2, 1), then (-1/2, 1),
+    and the infinite point (0, 1).
+
+        [(f_0, g_0), ..., (f_a-1, g_a-1)]
+
+    Args:
+        num_points (int): The desired number of points
+
+    Returns:
+        list[tuple[Union[int, float]]]: List of homogeneous coordinates
+    """
+    points = [(0, 1)]
+    if num_points % 2:
+        points.extend([(y / 2, 1) for x in range(1, num_points // 2) for y in (x, -x)])
+        points.extend([(num_points // 2 / 2, 1), (1, 0)])
+    else:
+        points.extend([(y / 2, 1) for x in range(1, num_points // 2) for y in (x, -x)])
+        points.append((1, 0))
+    return points
 
 
 def winograd_get_matrices(m: int, n: int) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:

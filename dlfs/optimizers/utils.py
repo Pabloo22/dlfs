@@ -12,7 +12,7 @@
 # ==============================================================================
 """Contains the get_optimizer function."""
 
-from . import Optimizer, SGD, SGDMomentum, Adam, Adagrad
+from . import Optimizer, SGD, SGDMomentum
 
 
 def get_optimizer(optimizer_name: str) -> Optimizer:
@@ -32,9 +32,5 @@ def get_optimizer(optimizer_name: str) -> Optimizer:
         return SGD()
     elif optimizer_name == "sgd_momentum":
         return SGDMomentum()
-    elif optimizer_name == "adam":
-        return Adam()
-    elif optimizer_name == "adagrad":
-        return Adagrad()
     else:
         raise ValueError(f"Unknown optimizer name: {optimizer_name}")
