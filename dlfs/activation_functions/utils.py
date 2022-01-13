@@ -13,7 +13,6 @@
 """Contains functions related to the Activation Functions."""
 
 from typing import Union
-
 from . import ActivationFunction, Sigmoid, ReLU, Softmax, Linear, Tanh
 
 

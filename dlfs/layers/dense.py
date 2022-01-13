@@ -13,7 +13,6 @@
 """Contains the definition of the Dense layer class."""
 
 import numpy as np
-
 from .layer import Layer
 from dlfs.optimizers import Optimizer
 

@@ -13,7 +13,6 @@
 """Contains the dropout layer."""
 
 import numpy as np
-
 from .layer import Layer
 from dlfs.optimizers import Optimizer
 

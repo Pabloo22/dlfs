@@ -10,8 +10,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""dlfs metrics classes API."""
+"""dlfs convolutioners API."""
 
-from .metric import Metric
-from .accuracy import Accuracy
-from .utils import get_metric
+from .convolutioner import Convolutioner
+from .simple_convolutioner import SimpleConvolutioner
+from .winograd_convolutioner import WinogradConvolutioner
+from .patch_convolutioner import PatchConvolutioner
+from .utils import *

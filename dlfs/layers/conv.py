@@ -14,7 +14,6 @@
 
 import numpy as np
 from typing import Tuple, Union
-
 from .layer import Layer
 from dlfs.activation_functions import ActivationFunction
 from dlfs.convolutioners import Convolutioner, get_convolution
