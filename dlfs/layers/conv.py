@@ -14,10 +14,9 @@
 
 import numpy as np
 from typing import Tuple, Union
-
 from .layer import Layer
 from dlfs.activation_functions import ActivationFunction
-from dlfs.convolutions import Convolutioner, get_convolution
+from dlfs.convolutioners import Convolutioner, get_convolution
 
 
 class Conv2D(Layer):
@@ -79,7 +78,7 @@ class Conv2D(Layer):
                  padding: Union[bool, tuple, int] = False,
                  activation: str = None,
                  use_bias: bool = True,
-                 convolution_type: str = "winograd",
+                 convolution_type: str = "simple",
                  name: str = "Conv2D",
                  input_shape: tuple = None,
                  weights_init: str = "glorot_uniform",
@@ -419,7 +418,7 @@ class Conv2D(Layer):
             # We can not perform this operation directly because the convolution function expects the inputs to
             # have the shape (batch_size, inputs_height, inputs_width, n_channels) and the kernel (deltas) to have
             # the shape (kernel_height, kernel_width, n_channels). Thus, we have to use a list comprehension to
-            # perform 'n_filters*batch_size' convolutions and then sum the results and move the axes to the correct
+            # perform 'n_filters*batch_size' convolutioners and then sum the results and move the axes to the correct
             # positions.
 
             dw = np.zeros(self.weights.shape)
@@ -434,4 +433,4 @@ class Conv2D(Layer):
         optimizer.update(self, (dw, db))
 
     def summary(self):
-        return f"Conv2D: {self.name}, Output shape: {self.output_shape}"
+        return f"{self.name[:-1]}_{self.name[-1]}: output shape={self.output_shape}, n_params={self.count_params()}"

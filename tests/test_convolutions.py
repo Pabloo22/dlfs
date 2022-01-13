@@ -2,7 +2,7 @@ import numpy as np
 
 from dlfs.layers import Conv2D
 from dlfs.layers import MaxPooling2D
-from dlfs.convolutions import SimpleConvolutioner, Convolutioner, WinogradConvolutioner
+from dlfs.convolutioners import SimpleConvolutioner, Convolutioner, WinogradConvolutioner
 from skimage.util.shape import view_as_windows
 
 

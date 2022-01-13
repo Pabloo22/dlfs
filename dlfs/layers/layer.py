@@ -15,7 +15,6 @@
 from abc import ABC, abstractmethod
 import numpy as np
 from typing import Optional
-
 from dlfs.activation_functions import ActivationFunction, get_activation_function
 
 

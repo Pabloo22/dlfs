@@ -13,7 +13,6 @@
 """Contains the definition of the Dense layer class."""
 
 import numpy as np
-
 from .layer import Layer
 from dlfs.optimizers import Optimizer
 
@@ -39,8 +38,13 @@ class Dense(Layer):
         bias_init (str): The initialization method for the bias. Default is 'zeros'.
     """
 
-    def __init__(self, n_neurons: int, activation: str = None, name: str = "Dense", input_shape: tuple = None,
-                 weights_init: str = "xavier", bias_init: str = "zeros"):
+    def __init__(self,
+                 n_neurons: int,
+                 activation: str = None,
+                 name: str = "Dense",
+                 input_shape: tuple = None,
+                 weights_init: str = "xavier",
+                 bias_init: str = "zeros"):
 
         if n_neurons <= 0:
             raise ValueError("The number of neurons should be greater than 0")
@@ -155,8 +159,11 @@ class Dense(Layer):
             self.bias = bias
 
     def forward(self, inputs, training: bool = False) -> np.ndarray:
-        """
-        Forward pass of the layer.
+        """Forward pass of the layer.
+
+        It realizes the following operation:
+            outputs = inputs @ weights + bias
+
 
         Args:
             inputs (np.ndarray): inputs of the layer

@@ -1,3 +1,19 @@
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ==============================================================================
+"""Contains the functions related to the Winograd algorithm using Vandermonde matrices. The function of this file
+    is to show an implementation of some functions rather than to provide a full implementation of the Winograd
+    algorithm."""
+
 # Source: On Improving the Numerical Stability of Winograd Convolutions
 # By: Kevin Vincent and Kevin J. Stephano and Michael A. Frumkin and Boris Ginsburg and Julien Demouth
 # (https://openreview.net/pdf?id=H1ZaRZVKg)
@@ -5,7 +21,6 @@
 import numpy as np
 from typing import Union, List, Tuple
 import tensorly
-from skimage.util import view_as_blocks
 
 np.set_printoptions(formatter={
     'float': lambda x: "{0:0.3f}".format(x)
@@ -31,28 +46,27 @@ def vandermonde_matrix(b: int, points: List[Tuple[Union[int, float]]]) -> np.nda
     return np.array([[i[0] ** j * i[1] ** (b - j - 1) for j in range(b)] for i in points])
 
 
-# commented to avoid duplicate code warnings
-# def gen_points(num_points: int) -> List[Tuple[float, int]]:
-#     """
-#     This function generates homogeneous coordinates, starting from (0, 1), then, (1/2, 1), then (-1/2, 1),
-#     and the infinite point (0, 1).
-#
-#         [(f_0, g_0), ..., (f_a-1, g_a-1)]
-#
-#     Args:
-#         num_points (int): The desired number of points
-#
-#     Returns:
-#         list[tuple[Union[int, float]]]: List of homogeneous coordinates
-#     """
-#     points = [(0, 1)]
-#     if num_points % 2:
-#         points.extend([(y / 2, 1) for x in range(1, num_points // 2) for y in (x, -x)])
-#         points.extend([(num_points // 2 / 2, 1), (1, 0)])
-#     else:
-#         points.extend([(y / 2, 1) for x in range(1, num_points // 2) for y in (x, -x)])
-#         points.append((1, 0))
-#     return points
+def gen_points(num_points: int) -> List[Tuple[float, int]]:
+    """
+    This function generates homogeneous coordinates, starting from (0, 1), then, (1/2, 1), then (-1/2, 1),
+    and the infinite point (0, 1).
+
+        [(f_0, g_0), ..., (f_a-1, g_a-1)]
+
+    Args:
+        num_points (int): The desired number of points
+
+    Returns:
+        list[tuple[Union[int, float]]]: List of homogeneous coordinates
+    """
+    points = [(0, 1)]
+    if num_points % 2:
+        points.extend([(y / 2, 1) for x in range(1, num_points // 2) for y in (x, -x)])
+        points.extend([(num_points // 2 / 2, 1), (1, 0)])
+    else:
+        points.extend([(y / 2, 1) for x in range(1, num_points // 2) for y in (x, -x)])
+        points.append((1, 0))
+    return points
 
 
 def winograd_get_matrices(m: int, n: int) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:

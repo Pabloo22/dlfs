@@ -10,7 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""Contains the PatchConvolutioner class"""
+"""Contains the PatchConvolutioner class-."""
 
 import numpy as np
 from typing import Union
@@ -20,10 +20,23 @@ from .convolutioner import Convolutioner
 
 
 class PatchConvolutioner(Convolutioner):
-    """Convolutioner for patch-based convolutions.
+    """Convolutioner for patch-based convolutioners.
 
-    This class implements the convolutioner interface for patch-based convolutions. For avoid using
+    This class implements the convolutioner interface for patch-based convolutioners. For avoid using
     for loops (which are slow), we can take advantage of how numpy arrays are stored in memory.
+
+    This class is not ready for use yet.
+
+    Args:
+        image_size (tuple[int, int] or int): The size of the image to convolve. If an int is provided,
+            it is assumed to be the size of the image along the first two dimensions.
+        kernel_size (tuple[int, int] or int): The size of the kernel to convolve. If an int is provided,
+            it is assumed to be the size of the kernel along the first two dimensions.
+        padding (tuple[int, int] or int): The padding to apply to the image. If an int is provided,
+            it is assumed to be the padding along the first two dimensions.
+        stride (tuple[int, int] or int): The stride of the convolution. If an int is provided,
+            it is assumed to be the stride along the first two dimensions.
+        data_format (str): The data format of the image and kernel. Must be either 'channels_first' or 'channels_last'.
     """
     def __init__(self,
                  image_size: Union[int, tuple],

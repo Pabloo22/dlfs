@@ -10,6 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+"""Home of the base Convolutioner class."""
 
 from abc import ABC, abstractmethod
 import numpy as np
@@ -21,7 +22,23 @@ class Convolutioner(ABC):
     """Abstract class for convolutioners.
 
     A convolutioner is a class that can be used to convolve a given image with
-    a given kernel.
+    a given kernel. It does not store any kernel or image data, but instead
+    provides a method to convolve the image with the kernel. However, WinogradConvolutioner
+    makes some pre-processing steps to make the convolution faster storing transformed matrices based on the kernel
+    and the image dimensions. This is the reason the convolutioner takes this parameters as input. Currently,
+    it does not support dilation.
+
+    Args:
+        image_size (tuple[int, int] or int): The size of the image to convolve. If an int is provided,
+            it is assumed to be the size of the image along the first two dimensions.
+        kernel_size (tuple[int, int] or int): The size of the kernel to convolve. If an int is provided,
+            it is assumed to be the size of the kernel along the first two dimensions.
+        padding (tuple[int, int] or int): The padding to apply to the image. If an int is provided,
+            it is assumed to be the padding along the first two dimensions.
+        stride (tuple[int, int] or int): The stride of the convolution. If an int is provided,
+            it is assumed to be the stride along the first two dimensions.
+        data_format (str): The data format of the image and kernel. Must be either 'channels_first' or 'channels_last'.
+
 
     Attributes:
         image_size: The size of the image to be convolved.
@@ -50,7 +67,20 @@ class Convolutioner(ABC):
                            stride: Union[int, tuple] = (1, 1),
                            data_format: str = "channels_last",
                            **kwargs) -> np.ndarray:
-        pass
+        """Convolves a grayscale image with a grayscale kernel.
+
+        Args:
+            image (np.ndarray): The image to convolve.
+            kernel (np.ndarray): The kernel to convolve with.
+            stride (Union[int, tuple]): The stride to use.
+            data_format (str): The data format of the image and kernel. Must be either 'channels_first' or
+            'channels_last'.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            np.ndarray: The result of the convolution.
+        """
+        raise NotImplementedError
 
     @staticmethod
     @abstractmethod
@@ -59,7 +89,25 @@ class Convolutioner(ABC):
                               stride: Union[int, tuple] = (1, 1),
                               data_format: str = "channels_last",
                               **kwargs) -> np.ndarray:
-        pass
+        """Convolves a multichannel image with a 3D kernel.
+
+        This video of DeepLearning.ai explains the process:
+        https://www.youtube.com/watch?v=KTB_OFoAQcc&t=9s
+
+        Note that the number of channels in the image and kernel must be equal.
+
+        Args:
+            image (np.ndarray): The image to convolve.
+            kernel (np.ndarray): The kernel to convolve with.
+            stride (Union[int, tuple]): The stride to use.
+            data_format (str): The data format of the image and kernel. Must be either 'channels_first' or
+            'channels_last'.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            np.ndarray: The result of the convolution.
+        """
+        raise NotImplementedError
 
     @staticmethod
     def get_patches(x: np.ndarray,
@@ -78,6 +126,7 @@ class Convolutioner(ABC):
         Returns:
             The patches of the image.
         """
+        # we make use of the patchify library to extract the patches
         if using_batches:
             return np.array([patchify(image, patch_size, step) for image in x])
         else:
@@ -95,6 +144,20 @@ class Convolutioner(ABC):
                  using_batches: bool = True,
                  data_format: str = "channels_last",
                  **kwargs) -> np.ndarray:
+        """Convolves the image with the given kernel.
+
+        This method is used as an abstraction layer for the convolution of grayscale and multichannel
+        images. It calls the appropriate convolution method depending on the number of channels in the
+        image.
+
+        Args:
+            x (np.ndarray): The image to convolve.
+            kernel (np.ndarray): The kernel to convolve with.
+            using_batches (bool): Whether if the 'x' argument is a batch of images or not.
+            data_format (str): The data format of the image and kernel. Must be either 'channels_first' or
+                'channels_last'.
+            **kwargs: Additional keyword arguments.
+        """
 
         # Add padding to the image if necessary
         if self.padding != (0, 0):

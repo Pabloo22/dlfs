@@ -1,12 +1,29 @@
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ==============================================================================
+"""Contains the SimpleConvolutioner class."""
+
 import numpy as np
 from typing import Union
 
-from dlfs.convolutions import Convolutioner
+from dlfs.convolutioners import Convolutioner
 
 
 class SimpleConvolutioner(Convolutioner):
     """
     A simple convolutioner that performs a convolution on a single image.
+
+    This convolutioner can be used by Conv2D layers. However, it is not intended to be
+    an efficient implementation.
 
     Usage:
         img = np.array([[2, 2, 1, 3],
@@ -19,6 +36,16 @@ class SimpleConvolutioner(Convolutioner):
         conv = SimpleConvolutioner(img.shape, k.shape)
         print(conv.convolve(img, k, using_batches=False))
 
+    Args:
+        image_size (tuple[int, int] or int): The size of the image to convolve. If an int is provided,
+            it is assumed to be the size of the image along the first two dimensions.
+        kernel_size (tuple[int, int] or int): The size of the kernel to convolve. If an int is provided,
+            it is assumed to be the size of the kernel along the first two dimensions.
+        padding (tuple[int, int] or int): The padding to apply to the image. If an int is provided,
+            it is assumed to be the padding along the first two dimensions.
+        stride (tuple[int, int] or int): The stride of the convolution. If an int is provided,
+            it is assumed to be the stride along the first two dimensions.
+        data_format (str): The data format of the image and kernel. Must be either 'channels_first' or 'channels_last'.
     """
 
     def __init__(self,
@@ -36,8 +63,7 @@ class SimpleConvolutioner(Convolutioner):
                            stride: Union[int, tuple] = (0, 0),
                            data_format: str = 'channels_last',
                            **kwargs) -> np.ndarray:
-        """
-        Performs a valid convolution on an image (with only a channel) with a kernel.
+        """Performs a valid convolution on a grayscale image with a 2D kernel.
 
         Args:
             image: A grayscale image.
@@ -72,8 +98,7 @@ class SimpleConvolutioner(Convolutioner):
                               stride: Union[int, tuple] = (1, 1),
                               data_format: str = 'channels_last',
                               **kwargs) -> np.ndarray:
-        """
-        Performs a valid convolution on an image (with multiple channels) with a kernel.
+        """Performs a valid convolution on an image (with multiple channels) with a 3D kernel.
 
         Args:
             image: A multichannel image.
@@ -99,12 +124,8 @@ class SimpleConvolutioner(Convolutioner):
         kernel_channels, kernel_height, kernel_width = kernel.shape
 
         if kernel_channels != image_channels:
-            error = 0
-            error += 1
-
-        assert kernel_channels == image_channels, f"The number of channels in the image and kernel must be the same. " \
-                                                  f"Image channels: {image_channels}, " \
-                                                  f"kernel channels: {kernel_channels}"
+            raise ValueError('The number of channels in the image and kernel must be the same.'
+                             f'Image channels: {image_channels}, kernel channels: {kernel_channels}')
 
         # Create the output image
         stride = (stride, stride) if isinstance(stride, int) else stride

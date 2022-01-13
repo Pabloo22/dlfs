@@ -13,7 +13,6 @@
 """Home of the Flatten layer."""
 
 import numpy as np
-
 from .layer import Layer
 
 

@@ -4,7 +4,6 @@ filter over the image. This is due to reduction in the number of parameters and 
 """
 import numpy as np
 from typing import Union
-
 from .layer import Layer
 
 

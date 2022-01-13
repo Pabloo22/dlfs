@@ -1,5 +1,17 @@
-import numpy as np
-from sympy import *
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ==============================================================================
+"""Contains Winograd utils functions. The function of this file is to show an implementation of some functions
+    rather than to provide a full implementation of the Winograd algorithm."""
 
 # Source: Fast Algorithms for Convolutional Neural Networks
 # By: Andrew Lavin and Scott Gray Nervana Systems
@@ -7,6 +19,11 @@ from sympy import *
 
 # Appendices
 # (https://openaccess.thecvf.com/content_cvpr_2016/supplemental/Lavin_Fast_Algorithms_for_2016_CVPR_supplemental.pdf)
+
+import numpy as np
+from sympy import *
+
+
 
 x, d, g = symbols('image,d,g')
 
