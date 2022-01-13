@@ -42,7 +42,7 @@ class WinogradConvolutioner(Convolutioner):
                               stride: Union[int, tuple] = (1, 1),
                               blocksize: Tuple[int, int] = None,
                               image_transform: np.ndarray = None,
-                              YT=None, X=None) -> np.ndarray:
+                              yt=None, x=None) -> np.ndarray:
         pass
 
     @staticmethod
