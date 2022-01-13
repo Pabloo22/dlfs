@@ -21,8 +21,8 @@ pip install -r requirements.txt
 Everything is written in Python 3.7 (to be compatible with Google Colab).
 
 ## Usage
-The usage is very similar to the keras library. See the folder 
-[examples](https://github.com/Pabloo22/Deep-Learning-from-Scratch/tree/main/examples) for some examples.
+The usage is very similar to the keras library. For an example of use see:
+[dlfs_examples.pynb](https://colab.research.google.com/drive/1EbiSrOFxtqygvK_wsc41_su8_oUTPL3J?usp=sharing).
 
 ## License
 This project is licensed under the Apache 2.0 license (see 
@@ -45,4 +45,4 @@ Note: some contributors may not have made commits to the repository, they have c
 indirectly (e.g. by being a part of the Numeric Algorithms project).
 
 ## Acknowledgments
-This project was inspired by the [Keras](https://keras.io/) library.
+This project was inspired by the Tensorflow and [Keras](https://keras.io/) framework.
