@@ -433,4 +433,4 @@ class Conv2D(Layer):
         optimizer.update(self, (dw, db))
 
     def summary(self):
-        return f"Conv2D: {self.name}, Output shape: {self.output_shape}"
+        return f"{self.name[:-1]}_{self.name[-1]}: output shape={self.output_shape}, n_params={self.count_params()}"
