@@ -66,7 +66,7 @@ class WinogradConvolutioner(Convolutioner):
         calculated = []
         for i, j in zip(self.block_output_size, self.image_size):
             if (i, j) in calculated:
-                index = calculated.index((i,j))
+                index = calculated.index((i, j))
                 self.__y_t_matrices.append(self.__y_t_matrices[index])
                 self.__image_transformers.append(self.__image_transformers[index])
                 self.__filter_transformers.append(self.__filter_transformers[index])
@@ -83,7 +83,7 @@ class WinogradConvolutioner(Convolutioner):
             raise ValueError('Image and kernel must have the same number of dimensions.')'''
 
         self.block_output_size = np.array([self.blocksize[i] + self.kernel_size[i] - 1 for i in range(len(self.blocksize))])
-        num_of_blocks = np.array((self.image_size[0] / self.block_output_size[0], self.image_size[1] / self.block_output_size[1]))
+        num_of_blocks = np.array((self.image_size[1] / self.block_output_size[0], self.image_size[2] / self.block_output_size[1]))
 
         if not float(np.prod(num_of_blocks)).is_integer():
             raise ValueError(f'The image size must be divisible by the blocksize. {self.image_size} is not divisible '
@@ -141,18 +141,19 @@ class WinogradConvolutioner(Convolutioner):
             return tensorly.tenalg.multi_mode_dot(kernel, m, list(range(kernel.ndim)))
 
     def set_block_size(self):
-        num_of_passes = (self.image_size[0] - self.kernel_size[0], self.image_size[1] - self.kernel_size[1])
+        num_of_passes = (self.image_size[1] - self.kernel_size[0], self.image_size[2] - self.kernel_size[1])
         shape1 = -1
         shape2 = -1
-        for i in range(self.kernel_size[0] + 1, self.image_size[0]):
+        print(self.image_size)
+        for i in range(self.kernel_size[0] + 1, self.image_size[1]):
             if num_of_passes[0] % i == 0:
                 shape1 = i
                 print(i)
                 break
-        for i in range(self.kernel_size[1] + 1, self.image_size[1]):
+        for i in range(self.kernel_size[1] + 1, self.image_size[2]):
             if num_of_passes[1] % i == 0:
                 shape2 = i
-                print(num_of_passes,i)
+                print(num_of_passes, i)
                 break
         self.blocksize = np.array((shape1, shape2))
 
@@ -197,13 +198,13 @@ class WinogradConvolutioner(Convolutioner):
 
                 # blocks contains 'batch_size' number of numpy arrays each one containing the
                 # blocks of the image (views)
-                print(x[0].shape, (*self.block_output_size, n_channels))
+                print(x[...,0].shape, (*self.block_output_size, n_channels))
                 blocks = [view_as_blocks(image, (*self.block_output_size, n_channels)) for image in x]
 
                 if self.batch_count != kwargs.get('batch_count', None):
                     # blocks contains 'batch_size' number of numpy arrays each one containing the
                     # blocks of the image (views)
-                    self.blocks = [view_as_blocks(image, (*self.blocksize, n_channels)) for image in x]
+                    self.blocks = [view_as_blocks(x[..., i], (*self.blocksize, n_channels)) for i in range(x.shape[-1])]
                     self.batch_count = kwargs['batch_count']
                     self.__transformed_images = [
                         WinogradConvolutioner.__transform_multichannel(block, self.__image_transformers,)
