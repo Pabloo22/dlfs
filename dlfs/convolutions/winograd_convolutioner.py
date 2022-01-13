@@ -1,6 +1,7 @@
 import numpy as np
 from typing import Union, Tuple, List
 import tensorly
+from skimage.util import view_as_blocks
 
 from dlfs.convolutions import Convolutioner
 
@@ -41,7 +42,7 @@ class WinogradConvolutioner(Convolutioner):
 
     @staticmethod
     def convolve_multichannel(image: np.ndarray,
-                              kernel: np.ndarray,
+                              kernel: np.ndarray, #
                               stride: Union[int, tuple] = (1, 1),
                               blocksize: Tuple[int, int] = None,
                               image_transform: np.ndarray = None, #
@@ -60,6 +61,7 @@ class WinogradConvolutioner(Convolutioner):
         ...
 
     def __get_matrices(self):
+        calculated = []
         for i, j in zip(self.block_output_size, self.image_size):
             if (i, j) in calculated:
                 index = calculated.index((i,j))
@@ -166,6 +168,8 @@ class WinogradConvolutioner(Convolutioner):
         # Add padding to the image if necessary
         if self.padding != (0, 0):
             x = self.pad_image(x, self.padding, using_batches)
+
+            self.__transformed_filter = WinogradConvolutioner.__transform_filter(kernel, self.__filter_transformers)
 
         if using_batches:
             if x.ndim == 4:
