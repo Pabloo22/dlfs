@@ -58,13 +58,20 @@ def test_padding2():
                      [31, 32, 33, 34, 35],
                      [36, 37, 38, 39, 40]]])
 
+    # convert to data format 'channel last'
+    img = np.moveaxis(img, 0, -1)
+    print(img)
+
     kernel = np.array([[[1, 2],
                         [3, 4]],
                        [[5, 6],
                         [7, 8]]])
 
-    print(add_padding2(img, kernel, padding=True))
-    print(add_padding2(img, kernel, padding=False))
+    padded_img = Convolutioner.pad_image(img, padding=1)
+
+    # convert to data format 'channel first'
+    padded_img = np.moveaxis(padded_img, -1, 0)
+    print(padded_img)
 
 
 def test_conv():
@@ -77,7 +84,7 @@ def test_conv():
                        [2, -2]])
 
     convolutioner = SimpleConvolutioner(4, 2, stride=1, padding=0)
-    print(convolutioner.convolve(img, filter, using_batches=False))
+    print(convolutioner.convolve(img, filter, data_format="channel_last", using_batches=False))
 
 
 def test_get_patches():
@@ -109,13 +116,14 @@ def test_conv_multichannel():
 
     # convert image to channels last
     img = np.moveaxis(img, 0, -1)  # image shape (4, 4, 2)
+    print(k)
     print(img.shape)
 
     convolutioner = SimpleConvolutioner(img.shape, k.shape, stride=1, padding=0)
     convolved_image = convolutioner.convolve(img, k, using_batches=False)
 
     # convert image to channels first
-    convolved_image = np.moveaxis(convolved_image, -1, 0)
+    # convolved_image = np.moveaxis(convolved_image, -1, 0)
     print(convolved_image)
 
 
@@ -126,5 +134,13 @@ def test_winograd_3d():
     print(WinogradVandermonde.winograd_convolution(test_image, test_filter))
 
 
-if __name__ == '__main__':
-    test_conv_multichannel()
+def test_maxpooling():
+    img = np.array([[2, 2, 1, 3],
+                    [0, 3, 2, 1],
+                    [1, 1, 0, 2],
+                    [2, 0, 0, 1]]).reshape((1, 4, 4, 1))
+
+    maxpool = MaxPooling2D()
+    maxpool.initialize(img.shape)
+    maxpooled = maxpool.forward(img)
+    print(maxpooled)

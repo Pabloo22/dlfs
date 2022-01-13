@@ -30,8 +30,8 @@ class Conv2D(Layer):
     Technical details:
         - The input is a 4D tensor (batch, height, width, number of input channels).
         - The output is a 4D tensor (batch, height, width, n_filters). (see _get_output_shape for more details)
-        - Each kernel is a 3D tensor (kernel_size, kernel_size, number of input channels).
-        - The weights are a 4D tensor (kernel_size, kernel_size, number of input channels, n_filters).
+        - Each kernel is a 3D tensor (kernel_height, kernel_width, number of input channels).
+        - The weights are a 4D tensor (kernel_height, kernel_width, number of input channels, n_filters).
         - The bias is a 4D tensor (1, 1, 1, n_filters).
         - The layer performs a '3D' convolution on the input tensor for each kernel.
 
@@ -65,6 +65,7 @@ class Conv2D(Layer):
         convolution_type (str): convolution mode. Recommended to be 'winograd'.
         name (str): Name of the layer
         blocksize (Tuple[int, int]): the size of the block, only used with Winograd.
+        data_format (str): the data format of the input. Can be 'channels_last' or 'channels_first'.
 
     Raises:
         ValueError: If using padding and stride != 1.
@@ -82,7 +83,8 @@ class Conv2D(Layer):
                  input_shape: tuple = None,
                  weights_init: str = "xavier",
                  bias_init: str = "zeros",
-                 blocksize: Tuple[int, int] = None):
+                 blocksize: Tuple[int, int] = None,
+                 data_format: str = "channels_last"):
 
         if isinstance(kernel_size, int):
             kernel_size = (kernel_size, kernel_size)
@@ -121,12 +123,15 @@ class Conv2D(Layer):
         self.stride = stride
         self.padding = padding
         self.convolution_type = convolution_type
+        self.blocksize = blocksize
         self.use_bias = use_bias
         self.weights_init = weights_init
         self.bias_init = bias_init
-        self.forward_conv = get_convolution(convolution_type, kernel_size, stride, padding)
+        self.forward_conv = None
         self.backward_conv = None
         self.update_conv = None
+        self.data_format = data_format
+        self._batch_counter = 0  # needed to preprocess the data in the winograd algorithm
 
     def initialize(self, input_shape: tuple, weights: np.ndarray = None, bias: np.ndarray = None):
         """Initializes the layer.
@@ -152,9 +157,20 @@ class Conv2D(Layer):
                              "(n_samples, height, width, n_channels)")
 
         self.input_shape = input_shape
+        self.forward_conv = get_convolution(self.convolution_type,
+                                            input_shape[1:],
+                                            self.kernel_size,
+                                            self.padding,
+                                            self.stride,
+                                            self.blocksize)
+
         self.output_shape = self._get_output_shape()
 
-        weights_shape = (input_shape[3], self.kernel_size[0], self.kernel_size[1], self.n_filters)
+        if self.data_format == "channels_first":
+            pass
+        else:
+            weights_shape = (self.kernel_size[0], self.kernel_size[1], input_shape[3], self.n_filters)
+
         # initialize weights
         if weights is not None:
             if weights.shape != weights_shape:
@@ -209,12 +225,27 @@ class Conv2D(Layer):
         padding_backward = ((self.kernel_size[0] - 1) // 2, (self.kernel_size[1] - 1) // 2)
 
         # initialize the backward convolution. This convolution is used to compute the gradient of the loss
-        # with respect to input.
-        self.backward_conv = get_convolution(self.convolution_type,
+        # with respect to the input.
+        self.backward_conv = get_convolution("simple",
                                              image_size=self.output_shape,  # delta.shape
                                              kernel_size=self.kernel_size,
                                              stride=self.stride,
-                                             padding=padding_backward)
+                                             padding=padding_backward,
+                                             data_format=self.data_format)
+
+        # INITIALIZE UPDATE CONVOLUTION
+        # This convolution is used to compute the gradient of the loss with respect to the weights.
+
+        # The image size is the size of the output of the convolution but after applying the padding.
+        image_size = (self.output_shape[0] + 2 * padding_backward[0],
+                      self.output_shape[1] + 2 * padding_backward[1])
+
+        self.update_conv = get_convolution("simple",
+                                           image_size=image_size,
+                                           kernel_size=self.kernel_size,
+                                           stride=self.stride,
+                                           padding=padding_backward,
+                                           data_format=self.data_format)
 
         self.initialized = True
 
@@ -263,8 +294,33 @@ class Conv2D(Layer):
             output data
         """
         self.inputs = x
-        self.outputs = np.array([self.forward_conv.convolve(x, self.weights[:, :, :, i]) + self.bias[i]
-                                 for i in range(self.n_filters)])
+        if self.data_format == "channels_last":
+            self.outputs = np.array([self.forward_conv.convolve(x,
+                                                                self.weights[..., i],
+                                                                batch_count=self._batch_counter) + self.bias[i]
+                                     for i in range(self.n_filters)])
+
+            # the shape of self.outputs.shape is (n_filters, batch_size, height, width). So we need to move the axis
+            # to (batch_size, height, width, n_filters)
+            self.outputs = np.moveaxis(self.outputs, 0, -1)
+        else:  # data_format == "channels_first"
+            self.outputs = np.array([self.forward_conv.convolve(x,
+                                                                self.weights[i],
+                                                                batch_count=self._batch_counter) + self.bias[i]
+                                     for i in range(self.n_filters)])
+
+            # the shape of self.outputs.shape is (n_filters, batch_size, height, width). So we need to move the axis
+            # to (batch_size, n_filters, height, width)
+            self.outputs = np.moveaxis(self.outputs, 0, 1)
+
+        self._batch_counter += 1
+        self._batch_counter %= 2
+
+        # the shape of self.outputs.shape is (n_filters, batch_size, height, width). So we need to transpose it.
+        if self.data_format == "channels_last":
+            self.outputs = self.outputs.transpose((1, 2, 3, 0))
+        else:  # channels_first
+            self.outputs = self.outputs.transpose((1, 0, 2, 3))
         return self.outputs if self.activation is None else self.activation(self.outputs)
 
     def get_d_inputs(self, delta: np.ndarray) -> np.ndarray:
@@ -274,7 +330,12 @@ class Conv2D(Layer):
             delta: derivative of the cost function with respect to the output of the layer.
         """
         flipped_weights = np.rot90(self.weights, 2, axes=(1, 2))  # 180° rotation of the filters
-        return self.backward_conv.convolve(delta, flipped_weights)
+
+        d_inputs = np.array([self.backward_conv.convolve(delta, flipped_weights[..., i])
+                             for i in range(self.n_filters)])
+        # change the shape of the output to be compatible with the next layer (move the first dimension to the end)
+        d_inputs = d_inputs.transpose((1, 2, 3, 0))
+        return d_inputs
 
     def count_params(self) -> int:
         return self.weights.size + self.bias.size
@@ -309,10 +370,11 @@ class Conv2D(Layer):
         if not self.initialized:
             raise ValueError("The layer is not initialized")
 
-        dw = self.update_conv.convolve(self.inputs, delta.transpose((0, 3, 2, 1)))
+        dw = np.array([self.backward_conv.convolve(self.inputs, delta[i], using_batches=False)
+                       for i in range(self.n_filters)])
         db = np.sum(delta, axis=(1, 2))
 
         optimizer.update(self, (dw, db))
 
     def summary(self):
-        print(f"Layer: {self.name}, Output shape: {self.output_shape}")
+        return f"Conv2D: {self.name}, Output shape: {self.output_shape}"

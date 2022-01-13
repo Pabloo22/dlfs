@@ -22,7 +22,7 @@ import pickle
 
 
 from . import Model
-from dlfs.layers import Layer
+from dlfs.layers import Layer, Conv2D
 from dlfs.optimizers import Optimizer, get_optimizer
 from dlfs.losses import LossFunction, get_loss_function
 from dlfs.metrics import Metric, get_metric
@@ -225,8 +225,15 @@ class Sequential(Model):
 
     def __check_data(self, x: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
 
+        if isinstance(self.layers[0], Conv2D) and len(x.shape) == 3:
+            # add a channel dimension
+            x = x[:, np.newaxis, :, :]
+            # change to channels last
+            x = np.moveaxis(x, 1, -1)
+
         if x.shape[1:] != self.layers[0].input_shape[1:]:
-            raise ValueError(f"The input shape of the model is {self.layers[0].input_shape}")
+            raise ValueError(f"The input shape of the model is {self.layers[0].input_shape}"
+                             f" but the input shape of the data is {x.shape}")
 
         if y.ndim == 1:
             y = y.reshape(-1, 1)

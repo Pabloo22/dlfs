@@ -29,14 +29,15 @@ class PatchConvolutioner(Convolutioner):
                  image_size: Union[int, tuple],
                  kernel_size: Union[int, tuple],
                  padding: Union[int, tuple] = (0, 0),
-                 stride: Union[int, tuple] = (1, 1)):
+                 stride: Union[int, tuple] = (1, 1),
+                 data_format: str = 'channels_last'):
 
-        super().__init__(image_size, kernel_size, padding, stride)
+        super().__init__(image_size, kernel_size, padding, stride, data_format)
 
     @staticmethod
     def convolve_grayscale(image: np.ndarray, kernel: np.ndarray, padding: Union[int, tuple] = (0, 0),
                            stride: Union[int, tuple] = (1, 1), using_batches: bool = False) -> np.ndarray:
-        pass
+        raise NotImplementedError
 
     @staticmethod
     def convolve_multichannel(image: np.ndarray, kernel: np.ndarray, padding: tuple = (0, 0),

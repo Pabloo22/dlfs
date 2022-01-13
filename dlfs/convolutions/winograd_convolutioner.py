@@ -17,33 +17,37 @@ class WinogradConvolutioner(Convolutioner):
                  kernel_size: Union[int, tuple],
                  padding: Union[int, tuple] = (0, 0),
                  stride: Union[int, tuple] = (1, 1),
-                 blocksize: Tuple[int, int] = None):
+                 blocksize: Tuple[int, int] = None,
+                 data_format: str = 'channels_last'):
 
         if blocksize is None:
             self.blocksize = None
             self.set_block_size()
         else:
             self.blocksize = blocksize if isinstance(blocksize, tuple) else (blocksize, blocksize)
-        self.__image_transform = None
+        self.__transformed_images = []
+        self.__transformed_filter = None
         self.block_output_size = None
         self.get_output_shape()
-        self.__yt = []
-        self.__x = []
-        self.__w = []
+        self.__y_t_matrices = []
+        self.__image_transformers = []  # X
+        self.__filter_transformers = []  # W
         self.__get_matrices()  # List of arrays
         self.image_size = image_size
         self.kernel_size = kernel_size
+        self.batch_count = 0
 
-        super().__init__(image_size, kernel_size, padding, stride)
+        super().__init__(image_size, kernel_size, padding, stride, data_format=data_format)
 
     @staticmethod
     def convolve_multichannel(image: np.ndarray,
                               kernel: np.ndarray,
                               stride: Union[int, tuple] = (1, 1),
                               blocksize: Tuple[int, int] = None,
-                              image_transform: np.ndarray = None,
-                              yt=None, x=None) -> np.ndarray:
-        pass
+                              image_transform: np.ndarray = None, #
+                              y_t_matrices: List[np.ndarray] = None, #
+                              image_transformers=None) -> np.ndarray:
+        out = np.array([tensorly.tenalg.multi_mode_dot(i, y_t_matrices, list(range(3))) for i in image_transform])
 
     @staticmethod
     def convolve_grayscale(image: np.ndarray,
@@ -51,40 +55,84 @@ class WinogradConvolutioner(Convolutioner):
                            stride: Union[int, tuple] = (1, 1),
                            blocksize: Tuple[int, int] = None,
                            image_transform: np.ndarray = None,
-                           yt=None, x=None) -> np.ndarray:
-        pass
+                           y_t_matrix=None,
+                           image_transformer=None) -> np.ndarray:
+        ...
 
     def __get_matrices(self):
         for i, j in zip(self.block_output_size, self.image_size):
-            yt, x, w = WinogradConvolutioner.winograd_get_matrices(i, j)
-            self.__yt.append(yt)
-            self.__x.append(x)
-            self.__w.append(w)
+            if (i, j) in calculated:
+                index = calculated.index((i,j))
+                self.__y_t_matrices.append(self.__y_t_matrices[index])
+                self.__image_transformers.append(self.__image_transformers[index])
+                self.__filter_transformers.append(self.__filter_transformers[index])
+            else:
+                yt, x, w = WinogradConvolutioner.winograd_get_matrices(i, j)
+                self.__y_t_matrices.append(yt)
+                self.__image_transformers.append(x)
+                self.__filter_transformers.append(w)
+                calculated.append((i, j))
 
     def get_output_shape(self) -> Tuple[int, int]:
-        """Returns the output shape of the convolution.
-
-        Returns:
-            The output shape of the convolution.
-        """
+        """Returns the output shape of the convolution."""
         if not len(self.image_size) == len(self.kernel_size):
-            raise ValueError('')
-        already_calculated = []
-        winograd_matrices = []
-        if len(self.image_size) == 2:
-            num_of_blocks = np.array((self.image_size[0] / self.blocksize[0], self.image_size[1] / self.blocksize[1]))
-            if np.prod(num_of_blocks).dtype != int:
-                raise ValueError
-            self.block_output_size = np.array(self.blocksize) + 1 - np.array(self.kernel_size)
-            output_size = self.block_output_size * num_of_blocks
-            return tuple(output_size)
+            raise ValueError('Image and kernel must have the same number of dimensions.')
+
+        num_of_blocks = np.array((self.image_size[0] / self.blocksize[0], self.image_size[1] / self.blocksize[1]))
+
+        if np.prod(num_of_blocks).dtype != int:
+            raise ValueError('The image size must be divisible by the blocksize.')
+
+        self.block_output_size = np.array(self.blocksize) + 1 - np.array(self.kernel_size)
+        output_size = self.block_output_size * num_of_blocks
+        return tuple(output_size)
 
     @staticmethod
-    def __get_image_transform_multichannel(image, x):
-        if image.ndim == 2:
-            return x[0].T @ image @ x[1]
-        elif image.ndim == 3:
-            return tensorly.tenalg.multi_mode_dot(image, [_ for _ in x], list(range(image.ndim)))
+    def __transform_multichannel(block: np.ndarray, x: List[np.ndarray]):
+        """Returns the image transform for a multichannel image.
+
+        Args:
+            block: The image to transform.
+            x: The image transform matrices.
+        """
+
+        # if block.ndim == 2:
+        #     return x[0].T @ block @ x[1]
+        # elif block.ndim == 3:
+        #     return tensorly.tenalg.multi_mode_dot(block, x, list(range(block.ndim)))
+
+        return np.array([tensorly.tenalg.multi_mode_dot(block[i, j, 0], x, list(range(3))) for j in range(block.shape[1])
+                         for i in range(block.shape[0])])
+
+    @staticmethod
+    def __transform_grayscale(block: np.ndarray, x: List[np.ndarray]):
+        """Returns the image transform for a multichannel image.
+
+        Args:
+            block: The image to transform.
+            x: The image transform matrices.
+        """
+
+        # if block.ndim == 2:
+        #     return x[0].T @ block @ x[1]
+        # elif block.ndim == 3:
+        #     return tensorly.tenalg.multi_mode_dot(block, x, list(range(block.ndim)))
+
+        return np.array([x[0].T @ block[i, j] @ x[1] for j in range(block.shape[1]) for i in range(block.shape[0])])
+
+    @staticmethod
+    def __transform_filter(filter: np.ndarray, m: List[np.ndarray]):
+        """Returns the image transform for a multichannel image.
+
+        Args:
+            filter: The filter to transform.
+            m: The image transform matrices.
+        """
+
+        if filter.ndim == 2:
+            return m[0] @ filter @ m[1].T
+        elif filter.ndim == 3:
+            return tensorly.tenalg.multi_mode_dot(filter, m, list(range(filter.ndim)))
 
     def set_block_size(self):
         num_of_passes = (self.image_size[0] - self.kernel_size[0], self.image_size[1] - self.kernel_size[1])
@@ -105,6 +153,15 @@ class WinogradConvolutioner(Convolutioner):
                  kernel: np.ndarray,
                  using_batches: bool = True,
                  **kwargs) -> np.ndarray:
+        """Returns the convolution of the image and kernel.
+
+        Args:
+            x: The image to convolve.
+            kernel: The kernel to convolve with.
+            using_batches: Whether or not x is a batch of images.
+
+
+        """
 
         # Add padding to the image if necessary
         if self.padding != (0, 0):
@@ -112,24 +169,54 @@ class WinogradConvolutioner(Convolutioner):
 
         if using_batches:
             if x.ndim == 4:
-                return np.array([self.convolve_multichannel(image, kernel, self.stride, **kwargs,
-                                                            image_transform=self.__get_image_transform_multichannel(x,
-                                                                                                                    self.__w),
-                                                            yt=self.__yt, x=self.__x) for image in x])
+
+                # get the blocks
+                n_channels = x.shape[3]  # The only data format allowed is 'channels_last'
+
+                # blocks contains 'batch_size' number of numpy arrays each one containing the
+                # blocks of the image (views)
+                blocks = [view_as_blocks(image, (*self.blocksize, n_channels)) for image in x]
+
+                if self.batch_count != kwargs.get('batch_count', None):
+                    # blocks contains 'batch_size' number of numpy arrays each one containing the
+                    # blocks of the image (views)
+                    self.blocks = [view_as_blocks(image, (*self.blocksize, n_channels)) for image in x]
+                    self.batch_count = kwargs['batch_count']
+                    self.__transformed_images = [
+                        WinogradConvolutioner.__transform_multichannel(block, self.__image_transformers,)
+                        for block in blocks]
+
+                return np.array([self.convolve_multichannel(x[i],
+                                                            self.__transformed_filter,
+                                                            self.stride,
+                                                            **kwargs,
+                                                            image_transform=self.__transformed_images[i],
+                                                            y_t_matrices=self.__y_t_matrices)
+                                 for i in range(x.shape[0])])
             elif x.ndim == 3:
-                return np.array([self.convolve_grayscale(image, kernel, self.stride, **kwargs,
-                                                         image_transform=self.__get_image_transform_multichannel(x,
-                                                                                                                 self.__w),
-                                                         yt=self.__yt, x=self.__x) for image in x])
+
+                # get the blocks
+                blocks = [view_as_blocks(image, self.blocksize) for image in x]
+                self.__transformed_images = [WinogradConvolutioner.__transform_grayscale(block,
+                                                                                            self.__image_transformers)
+                                             for block in blocks]
+                return np.array([self.convolve_grayscale(image, self.__transformed_filter, self.stride, **kwargs,
+                                                         image_transform=self.__transform_multichannel(x,
+                                                                                                       self.__filter_transformers),
+                                                         y_t_matrix=self.__y_t_matrices,
+                                                         image_transformer=self.__image_transformers) for image in x])
         else:
             if x.ndim == 2:
                 return self.convolve_grayscale(x, kernel, self.stride, **kwargs,
-                                               image_transform=self.__get_image_transform_multichannel(x, self.__w),
-                                               yt=self.__yt, x=self.__x)
+                                               image_transform=self.__transform_multichannel(x,
+                                                                                             self.__filter_transformers),
+                                               y_t_matrix=self.__y_t_matrices,
+                                               image_transformer=self.__image_transformers)
             elif x.ndim == 3:
                 return self.convolve_multichannel(x, kernel, self.stride, **kwargs,
-                                                  image_transform=self.__get_image_transform_multichannel(x, self.__w),
-                                                  yt=self.__yt, x=self.__x)
+                                                  image_transform=self.__transform_multichannel(x,
+                                                                                                self.__filter_transformers),
+                                                  yt=self.__y_t_matrices, x=self.__image_transformers)
 
         raise ValueError("Image must be 2D or 3D.")
 

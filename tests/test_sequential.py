@@ -168,34 +168,83 @@ def test_cancer():
     print(y_test[:5])
 
 
-def test_mnist_denses():
+def load_mnist(reshape=True):
     from keras.utils import np_utils
 
     # LOAD DATA
     from keras.datasets import mnist
 
-
-    (X_train, y_train), (X_test, y_test) = mnist.load_data()
-    num_train_image = X_train.shape[0]
-    num_test_image = X_test.shape[0]
-    image_height = X_train.shape[1]
-    image_width = X_train.shape[2]
-    X_train = X_train.reshape(num_train_image, image_height * image_width).astype('float32')
-    X_test = X_test.reshape(num_test_image, image_height * image_width).astype('float32')
-    X_train = X_train / 255
-    X_test = X_test / 255
+    (x_train, y_train), (x_test, y_test) = mnist.load_data()
+    num_train_image = x_train.shape[0]
+    num_test_image = x_test.shape[0]
+    image_height = x_train.shape[1]
+    image_width = x_train.shape[2]
+    if reshape:
+        x_train = x_train.reshape(num_train_image, image_height * image_width).astype('float32')
+        x_test = x_test.reshape(num_test_image, image_height * image_width).astype('float32')
+    x_train = x_train / 255
+    x_test = x_test / 255
     y_train = np_utils.to_categorical(y_train)
     y_test = np_utils.to_categorical(y_test)
-    num_classes = y_test.shape[1]
 
+    return (x_train, y_train), (x_test, y_test)
+
+
+def test_mnist_denses():
+
+    (x_train, y_train), (x_test, y_test) = load_mnist()
+    image_height = x_train.shape[1]
+    image_width = x_train.shape[2]
     model = Sequential()
+
     model.add(Dense(500, input_shape=(image_height * image_width,), activation='relu'))
     model.add(Dense(10, activation='softmax'))
     model.summary()
     model.compile(loss='categorical_crossentropy', optimizer=SGDMomentum(learning_rate=0.05),
                   metrics=['accuracy'])
-    model.fit(X_train, y_train, epochs=5, batch_size=100, verbose=2)
+    model.fit(x_train, y_train, epochs=5, batch_size=100, verbose=2)
 
 
-if __name__ == "__main__":
-    test_mnist_denses()
+def test_cifar10():
+    import tensorflow as tf
+
+    from tensorflow.keras import datasets, layers, models
+    (train_images, train_labels), (test_images, test_labels) = datasets.cifar10.load_data()
+    print(test_labels[:5])
+
+    # Normalize pixel values to be between 0 and 1
+    train_images, test_images = train_images / 255.0, test_images / 255.0
+    class_names = ['airplane', 'automobile', 'bird', 'cat', 'deer',
+                   'dog', 'frog', 'horse', 'ship', 'truck']
+
+    model = models.Sequential()
+    model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(32, 32, 3)))
+    model.add(layers.Conv2D(64, (3, 3), activation='relu'))
+    model.add(layers.Conv2D(64, (3, 3), activation='relu'))
+    model.add(layers.Flatten())
+    model.add(layers.Dense(64, activation='relu'))
+    model.add(layers.Dense(10), activation='softmax')
+    model.compile(optimizer='adam',
+                  loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+                  metrics=['accuracy'])
+
+    model.fit(train_images, train_labels, epochs=10,
+              validation_data=(test_images, test_labels))
+
+
+def test_mnist_conv():
+    from dlfs.layers import Conv2D, Flatten, Dense
+
+    (x_train, y_train), (x_test, y_test) = load_mnist(reshape=False)
+
+    model = Sequential()
+
+    model.add(Conv2D(16, (3, 3), activation='relu', input_shape=(28, 28, 1), convolution_type='simple'))
+    model.add(Conv2D(32, (3, 3), activation='relu', convolution_type='simple'))
+    model.add(Flatten())
+    model.add(Dense(64, activation='relu'))
+    model.add(Dense(10, activation='softmax'))
+    model.summary()
+    model.compile(loss='categorical_crossentropy', optimizer=SGDMomentum(learning_rate=0.05),
+                  metrics=['accuracy'])
+    model.fit(x_train, y_train, epochs=5, batch_size=2, verbose=2, validation_data=(x_test, y_test))

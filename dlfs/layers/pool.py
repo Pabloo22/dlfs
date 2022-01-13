@@ -17,6 +17,9 @@ class MaxPooling2D(Layer):
     map.
     """
 
+    def get_d_inputs(self, delta: np.ndarray) -> np.ndarray:
+        pass
+
     def __init__(self,
                  pool_size: Union[int, tuple] = 2,
                  stride: Union[int, tuple] = 2,

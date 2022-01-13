@@ -253,8 +253,7 @@ class Dense(Layer):
         return self.weights.size + self.bias.size
 
     def summary(self) -> str:
-        """
-        Summary of the layer.
+        """Summary of the layer.
 
         Returns:
             str: summary of the layer

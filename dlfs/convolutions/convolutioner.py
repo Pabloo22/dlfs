@@ -34,12 +34,14 @@ class Convolutioner(ABC):
                  image_size: Union[int, tuple],
                  kernel_size: Union[int, tuple],
                  padding: Union[int, tuple] = (0, 0),
-                 stride: Union[int, tuple] = (1, 1)):
+                 stride: Union[int, tuple] = (1, 1),
+                 data_format: str = "channels_last"):
 
         self.image_size = image_size if isinstance(image_size, tuple) else (image_size, image_size)
         self.kernel_size = kernel_size if isinstance(kernel_size, tuple) else (kernel_size, kernel_size)
         self.padding = padding if isinstance(padding, tuple) else (padding, padding)
         self.stride = (stride, stride) if isinstance(stride, int) else stride
+        self.data_format = data_format
 
     @staticmethod
     @abstractmethod
@@ -93,7 +95,7 @@ class Convolutioner(ABC):
 
         # Add padding to the image if necessary
         if self.padding != (0, 0):
-            x = self.pad_image(x, self.padding, using_batches)
+            x = self.pad_image(x, self.padding, self.data_format, using_batches)
 
         if using_batches:
             if x.ndim == 4:
@@ -111,39 +113,49 @@ class Convolutioner(ABC):
         raise ValueError("Image must be 2D or 3D.")
 
     @staticmethod
-    def pad_image(image: np.ndarray, padding: Union[int, tuple], using_batches: bool = False) -> np.ndarray:
+    def pad_image(x: np.ndarray,
+                  padding: Union[int, tuple],
+                  data_format: str = "channels_last",
+                  using_batches: bool = False) -> np.ndarray:
 
         padding = (padding, padding) if isinstance(padding, int) else padding
 
+        # If data format is channels_last, then we need to convert the image to channels_first
+
         if not using_batches:
-            if image.ndim == 3:
-                image = np.pad(image, ((0, 0), (padding[0], padding[0]), (padding[1], padding[1])),
-                               'constant', constant_values=0)
-            elif image.ndim == 2:
-                image = np.pad(image, ((padding[0], padding[0]), (padding[1], padding[1])),
-                               'constant', constant_values=0)
+            if x.ndim == 3:  # A single multichannel image
+                # If the data format is channels_last, then we need to convert the image to channels_first
+                x = np.transpose(x, (2, 0, 1)) if data_format == "channels_last" else x
+
+                x = np.pad(x, ((0, 0), (padding[0], padding[0]), (padding[1], padding[1])))
+
+            elif x.ndim == 2:  # A single grayscale image
+                x = np.pad(x, ((padding[0], padding[0]), (padding[1], padding[1])))
             else:
                 raise ValueError("Image must be 2D or 3D.")
         else:
-            if image.ndim == 4:
-                image = np.pad(image, ((0, 0), (padding[0], padding[0]), (padding[1], padding[1]), (0, 0)),
-                               'constant', constant_values=0)
-            elif image.ndim == 3:
-                image = np.pad(image, ((0, 0), (padding[0], padding[0]), (padding[1], padding[1])),
-                               'constant', constant_values=0)
+            if x.ndim == 4:  # A batch of multichannel images
+
+                # If the data format is channels_last, then we need to convert the image to channels_first
+                x = np.transpose(x, (0, 3, 1, 2)) if data_format == "channels_last" else x
+
+                # The first dimension is the batch dimension
+                x = np.pad(x, ((0, 0), (0, 0), (padding[0], padding[0]), (padding[1], padding[1])))
+
+            elif x.ndim == 3:  # Batch of grayscale images
+                x = np.pad(x, ((0, 0), (padding[0], padding[0]), (padding[1], padding[1])))
             else:
                 raise ValueError("Image must be 2D or 3D.")
 
-        return image
-
-    @staticmethod
-    def extract_blocks(matrix: np.ndarray, blocksize: Tuple[int, int], keep_as_view=False):
-        m, n = matrix.shape
-        b0, b1 = blocksize
-        if not keep_as_view:
-            return matrix.reshape((m // b0, b0, n // b1, b1)).swapaxes(1, 2).reshape(-1, b0, b1)
+        # reconvert the image to channels_last if necessary
+        if not using_batches:
+            if x.ndim == 3:  # A single multichannel image
+                x = np.transpose(x, (1, 2, 0)) if data_format == "channels_last" else x
         else:
-            return matrix.reshape((m // b0, b0, n // b1, b1)).swapaxes(1, 2)
+            if x.ndim == 4:  # A batch of multichannel images
+                x = np.transpose(x, (0, 2, 3, 1)) if data_format == "channels_last" else x
+
+        return x
 
     def __call__(self, image: np.ndarray, kernel: np.ndarray) -> np.ndarray:
         return self.convolve(image, kernel)
