@@ -48,6 +48,7 @@ class Convolutioner(ABC):
     def convolve_grayscale(image: np.ndarray,
                            kernel: np.ndarray,
                            stride: Union[int, tuple] = (1, 1),
+                           data_format: str = "channels_last",
                            **kwargs) -> np.ndarray:
         pass
 
@@ -56,6 +57,7 @@ class Convolutioner(ABC):
     def convolve_multichannel(image: np.ndarray,
                               kernel: np.ndarray,
                               stride: Union[int, tuple] = (1, 1),
+                              data_format: str = "channels_last",
                               **kwargs) -> np.ndarray:
         pass
 
@@ -91,6 +93,7 @@ class Convolutioner(ABC):
                  x: np.ndarray,
                  kernel: np.ndarray,
                  using_batches: bool = True,
+                 data_format: str = "channels_last",
                  **kwargs) -> np.ndarray:
 
         # Add padding to the image if necessary
@@ -99,10 +102,10 @@ class Convolutioner(ABC):
 
         if using_batches:
             if x.ndim == 4:
-                return np.array([self.convolve_multichannel(image, kernel, self.stride, **kwargs)
+                return np.array([self.convolve_multichannel(image, kernel, self.stride, data_format, **kwargs)
                                  for image in x])
             elif x.ndim == 3:
-                return np.array([self.convolve_grayscale(image, kernel, self.stride, **kwargs)
+                return np.array([self.convolve_grayscale(image, kernel, self.stride, data_format, **kwargs)
                                  for image in x])
         else:
             if x.ndim == 2:

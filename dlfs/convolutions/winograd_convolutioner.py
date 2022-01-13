@@ -42,20 +42,20 @@ class WinogradConvolutioner(Convolutioner):
 
     @staticmethod
     def convolve_multichannel(image: np.ndarray,
-                              kernel: np.ndarray, #
+                              kernel: np.ndarray,
                               stride: Union[int, tuple] = (1, 1),
                               blocksize: Tuple[int, int] = None,
-                              image_transform: np.ndarray = None, #
-                              y_t_matrices: List[np.ndarray] = None, #
+                              transformed_image: np.ndarray = None,
+                              y_t_matrices: List[np.ndarray] = None,
                               image_transformers=None) -> np.ndarray:
-        out = np.array([tensorly.tenalg.multi_mode_dot(i, y_t_matrices, list(range(3))) for i in image_transform])
+        out = np.array([tensorly.tenalg.multi_mode_dot(i, y_t_matrices, list(range(3))) for i in transformed_image])
 
     @staticmethod
     def convolve_grayscale(image: np.ndarray,
                            kernel: np.ndarray,
                            stride: Union[int, tuple] = (1, 1),
                            blocksize: Tuple[int, int] = None,
-                           image_transform: np.ndarray = None,
+                           transformed_image: np.ndarray = None,
                            y_t_matrix=None,
                            image_transformer=None) -> np.ndarray:
         ...
@@ -123,18 +123,18 @@ class WinogradConvolutioner(Convolutioner):
         return np.array([x[0].T @ block[i, j] @ x[1] for j in range(block.shape[1]) for i in range(block.shape[0])])
 
     @staticmethod
-    def __transform_filter(filter: np.ndarray, m: List[np.ndarray]):
+    def __transform_filter(kernel: np.ndarray, m: List[np.ndarray]):
         """Returns the image transform for a multichannel image.
 
         Args:
-            filter: The filter to transform.
+            kernel: The filter to transform.
             m: The image transform matrices.
         """
 
-        if filter.ndim == 2:
-            return m[0] @ filter @ m[1].T
-        elif filter.ndim == 3:
-            return tensorly.tenalg.multi_mode_dot(filter, m, list(range(filter.ndim)))
+        if kernel.ndim == 2:
+            return m[0] @ kernel @ m[1].T
+        elif kernel.ndim == 3:
+            return tensorly.tenalg.multi_mode_dot(kernel, m, list(range(kernel.ndim)))
 
     def set_block_size(self):
         num_of_passes = (self.image_size[0] - self.kernel_size[0], self.image_size[1] - self.kernel_size[1])
@@ -154,6 +154,7 @@ class WinogradConvolutioner(Convolutioner):
                  x: np.ndarray,
                  kernel: np.ndarray,
                  using_batches: bool = True,
+                 data_format: str = 'channels_last',
                  **kwargs) -> np.ndarray:
         """Returns the convolution of the image and kernel.
 
@@ -161,18 +162,26 @@ class WinogradConvolutioner(Convolutioner):
             x: The image to convolve.
             kernel: The kernel to convolve with.
             using_batches: Whether or not x is a batch of images.
-
+            data_format: The data format of the image.
+            **kwargs: Additional keyword arguments. Allowed keywords are:
+                - 'batch_count': Used to know whether or not a preprocessing step is needed. If the batch count is
+                    different from the last batch count or if it is not provided, we are dealing with a new batch,
+                    so we need to preprocess the images and kernels.
 
         """
 
         # Add padding to the image if necessary
         if self.padding != (0, 0):
-            x = self.pad_image(x, self.padding, using_batches)
+            x = self.pad_image(x, self.padding, data_format=data_format, using_batches=using_batches)
 
             self.__transformed_filter = WinogradConvolutioner.__transform_filter(kernel, self.__filter_transformers)
 
         if using_batches:
             if x.ndim == 4:
+
+                # currently only supports data_format = 'channels_last'. So...
+                if data_format != 'channels_last':
+                    x = np.moveaxis(x, 1, -1)
 
                 # get the blocks
                 n_channels = x.shape[3]  # The only data format allowed is 'channels_last'
@@ -194,7 +203,7 @@ class WinogradConvolutioner(Convolutioner):
                                                             self.__transformed_filter,
                                                             self.stride,
                                                             **kwargs,
-                                                            image_transform=self.__transformed_images[i],
+                                                            transformed_image=self.__transformed_images[i],
                                                             y_t_matrices=self.__y_t_matrices)
                                  for i in range(x.shape[0])])
             elif x.ndim == 3:
@@ -205,21 +214,21 @@ class WinogradConvolutioner(Convolutioner):
                                                                                             self.__image_transformers)
                                              for block in blocks]
                 return np.array([self.convolve_grayscale(image, self.__transformed_filter, self.stride, **kwargs,
-                                                         image_transform=self.__transform_multichannel(x,
-                                                                                                       self.__filter_transformers),
+                                                         transformed_image=self.__transform_multichannel(x,
+                                                                                                         self.__filter_transformers),
                                                          y_t_matrix=self.__y_t_matrices,
                                                          image_transformer=self.__image_transformers) for image in x])
         else:
             if x.ndim == 2:
                 return self.convolve_grayscale(x, kernel, self.stride, **kwargs,
-                                               image_transform=self.__transform_multichannel(x,
-                                                                                             self.__filter_transformers),
+                                               transformed_image=self.__transform_multichannel(x,
+                                                                                               self.__filter_transformers),
                                                y_t_matrix=self.__y_t_matrices,
                                                image_transformer=self.__image_transformers)
             elif x.ndim == 3:
                 return self.convolve_multichannel(x, kernel, self.stride, **kwargs,
-                                                  image_transform=self.__transform_multichannel(x,
-                                                                                                self.__filter_transformers),
+                                                  transformed_image=self.__transform_multichannel(x,
+                                                                                                  self.__filter_transformers),
                                                   yt=self.__y_t_matrices, x=self.__image_transformers)
 
         raise ValueError("Image must be 2D or 3D.")
@@ -245,16 +254,15 @@ class WinogradConvolutioner(Convolutioner):
 
     @staticmethod
     def gen_points(num_points: int) -> List[Tuple[float, int]]:
-        """
-        This function generates homogeneous coordinates, starting from (0, 1), then, (1/2, 1), then (-1/2, 1), and the infinite point (0, 1).
+        """Returns a list of homogeneous coordinates of size num_points
+
+        This function generates homogeneous coordinates, starting from (0, 1), then, (1/2, 1), then (-1/2, 1),
+        and the infinite point (0, 1).
 
             [(f_0, g_0), ..., (f_a-1, g_a-1)]
 
         Args:
             num_points (int): The desired number of points
-
-        Returns:
-            list[tuple[Union[int, float]]]: List of homogeneous coordinates
         """
         points = [(0, 1)]
         if num_points % 2:

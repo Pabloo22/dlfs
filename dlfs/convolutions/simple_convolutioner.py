@@ -34,6 +34,7 @@ class SimpleConvolutioner(Convolutioner):
     def convolve_grayscale(image: np.ndarray,
                            kernel: np.ndarray,
                            stride: Union[int, tuple] = (0, 0),
+                           data_format: str = 'channels_last',
                            **kwargs) -> np.ndarray:
         """
         Performs a valid convolution on an image (with only a channel) with a kernel.
@@ -42,6 +43,7 @@ class SimpleConvolutioner(Convolutioner):
             image: A grayscale image.
             kernel: A kernel.
             stride: convolution stride size.
+            data_format: The data format of the image. Either 'channels_last' or 'channels_first'.
 
         Returns:
             A grayscale image.
@@ -68,6 +70,7 @@ class SimpleConvolutioner(Convolutioner):
     def convolve_multichannel(image: np.ndarray,
                               kernel: np.ndarray,
                               stride: Union[int, tuple] = (1, 1),
+                              data_format: str = 'channels_last',
                               **kwargs) -> np.ndarray:
         """
         Performs a valid convolution on an image (with multiple channels) with a kernel.
@@ -75,9 +78,8 @@ class SimpleConvolutioner(Convolutioner):
         Args:
             image: A multichannel image.
             kernel: A kernel.
-            padding: Whether to pad the image.
             stride: convolution stride size.
-            using_batches: Whether to use batches.
+            data_format: The data format of the image. Either 'channels_last' or 'channels_first'.
 
         Returns:
             A multichannel image.
