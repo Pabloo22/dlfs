@@ -1,7 +1,8 @@
 import numpy as np
 
 from dlfs.layers import Conv2D
-from dlfs.convolutions import SimpleConvolutioner
+from dlfs.layers import MaxPooling2D
+from dlfs.convolutions import SimpleConvolutioner, Convolutioner
 from skimage.util.shape import view_as_windows
 from dlfs.convolutions import winograd_alvaro as WinogradVandermonde
 

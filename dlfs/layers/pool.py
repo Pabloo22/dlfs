@@ -91,11 +91,13 @@ class MaxPooling2D(Layer):
                 self.outputs[:, i, j, :] = np.max(x[:, i * self.stride[0]:i * self.stride[0] + self.pool_size[0],
                                               j * self.stride[1]:j * self.stride[1] + self.pool_size[1], :],
                                                   axis=(1, 2))
+
         return self.outputs if self.activation is None else self.activation(self.outputs)
 
     def get_delta(self, last_delta: np.ndarray, dz_da: np.ndarray) -> np.ndarray:
         # TODO: Implement backward pass
-        pass
+        arr = np.zeros((self.output_shape))
+
 
     def set_weights(self, weights: np.ndarray = None, bias: np.ndarray = None):
         pass

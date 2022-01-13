@@ -111,16 +111,14 @@ class SimpleConvolutioner(Convolutioner):
         output_width = (image_width - kernel_width) // stride[1] + 1
         convolved_image = np.zeros((output_height, output_width))
 
-        # Perform the convolution
-        for i in range(output_height):
-            for j in range(output_width):
-                for k in range(kernel_channels):
-                    convolved_image[i, j] += np.sum(image[k,
-                                                          i * stride[0]:i * stride[0] + kernel_height,
-                                                          j * stride[1]:j * stride[1] + kernel_width] * kernel[k],
-                                                    axis=(0, 1))
+        for y in range(output_height):
+            for x in range(output_width):
+                convolved_image[y][x] = sum(
+                    [np.sum(im[y * stride[0]:y * stride[0] + kernel_height, x * stride[1]:x * stride[1] + kernel_width]
+                            * kern) for im, kern in zip(image, kernel)])
 
-        # convert image and kernel to channel last
-        convolved_image = np.moveaxis(convolved_image, 0, -1)
+        # convert image to channel last if necessary
+        if data_format == 'channels_last':
+            convolved_image = np.moveaxis(convolved_image, 0, -1)
 
         return convolved_image
