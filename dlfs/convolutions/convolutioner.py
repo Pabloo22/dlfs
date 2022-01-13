@@ -38,7 +38,7 @@ class Convolutioner(ABC):
 
         self.image_size = image_size if isinstance(image_size, tuple) else (image_size, image_size)
         self.kernel_size = kernel_size if isinstance(kernel_size, tuple) else (kernel_size, kernel_size)
-        self.padding = padding
+        self.padding = padding if isinstance(padding, tuple) else (padding, padding)
         self.stride = (stride, stride) if isinstance(stride, int) else stride
 
     @staticmethod

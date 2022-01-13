@@ -8,9 +8,10 @@ from typing import Union
 from .layer import Layer
 
 
-class MaxPool2D(Layer):
-    """
-    MaxPool2D class. This is the most common form of pooling. It is based on the idea of extracting the
+class MaxPooling2D(Layer):
+    """MaxPooling2D class.
+
+    This is the most common form of pooling. It is based on the idea of extracting the
     largest number from all of the cells that covers the filter. Therefore, if a feature is present
     on the image, this type of pooling will boost its significance in the resulting activation
     map.

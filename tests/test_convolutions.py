@@ -100,16 +100,23 @@ def test_conv_multichannel():
                     [[2, 2, 1, 3],
                      [0, 3, 2, 1],
                      [1, 1, 0, 2],
-                     [2, 0, 0, 1]]]).reshape((4, 4, 2))
-    print(img)
+                     [2, 0, 0, 1]]])
 
     k = np.array([[[1,  0],
                    [2, -2]],
                   [[1, 0],
-                   [2, -2]]]).reshape((2, 2, 2))
+                   [2, -2]]])
+
+    # convert image to channels last
+    img = np.moveaxis(img, 0, -1)  # image shape (4, 4, 2)
+    print(img.shape)
 
     convolutioner = SimpleConvolutioner(img.shape, k.shape, stride=1, padding=0)
-    # print(convolutioner.convolve(img, k, using_batches=False))
+    convolved_image = convolutioner.convolve(img, k, using_batches=False)
+
+    # convert image to channels first
+    convolved_image = np.moveaxis(convolved_image, -1, 0)
+    print(convolved_image)
 
 
 def test_winograd_3d():
@@ -120,4 +127,4 @@ def test_winograd_3d():
 
 
 if __name__ == '__main__':
-    test_winograd_3d()
+    test_conv_multichannel()
