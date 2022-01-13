@@ -131,7 +131,7 @@ class Conv2D(Layer):
         self.backward_conv = None
         self.update_conv = None
         self.data_format = data_format
-        self._batch_counter = 0  # needed to preprocess the data in the winograd algorithm
+        self._batch_count = 0  # needed to preprocess the data in the winograd algorithm
 
     def initialize(self, input_shape: tuple, weights: np.ndarray = None, bias: np.ndarray = None):
         """Initializes the layer.
@@ -297,7 +297,8 @@ class Conv2D(Layer):
         if self.data_format == "channels_last":
             self.outputs = np.array([self.forward_conv.convolve(x,
                                                                 self.weights[..., i],
-                                                                batch_count=self._batch_counter) + self.bias[i]
+                                                                batch_count=self._batch_count,
+                                                                data_format=self.data_format) + self.bias[i]
                                      for i in range(self.n_filters)])
 
             # the shape of self.outputs.shape is (n_filters, batch_size, height, width). So we need to move the axis
@@ -306,21 +307,19 @@ class Conv2D(Layer):
         else:  # data_format == "channels_first"
             self.outputs = np.array([self.forward_conv.convolve(x,
                                                                 self.weights[i],
-                                                                batch_count=self._batch_counter) + self.bias[i]
+                                                                batch_count=self._batch_count,
+                                                                data_format=self.data_format) + self.bias[i]
                                      for i in range(self.n_filters)])
 
             # the shape of self.outputs.shape is (n_filters, batch_size, height, width). So we need to move the axis
             # to (batch_size, n_filters, height, width)
             self.outputs = np.moveaxis(self.outputs, 0, 1)
 
-        self._batch_counter += 1
-        self._batch_counter %= 2
+        self._batch_count += 1
+        # Take the modulo 2 to reduce memory usage. We only need to pass a batch count different from the previous one
+        # to the update convolution, in order to indicate that the batch has changed. That's why we can do this.
+        self._batch_count %= 2
 
-        # the shape of self.outputs.shape is (n_filters, batch_size, height, width). So we need to transpose it.
-        if self.data_format == "channels_last":
-            self.outputs = self.outputs.transpose((1, 2, 3, 0))
-        else:  # channels_first
-            self.outputs = self.outputs.transpose((1, 0, 2, 3))
         return self.outputs if self.activation is None else self.activation(self.outputs)
 
     def get_d_inputs(self, delta: np.ndarray) -> np.ndarray:
