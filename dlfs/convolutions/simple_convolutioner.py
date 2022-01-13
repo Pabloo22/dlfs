@@ -84,7 +84,6 @@ class SimpleConvolutioner(Convolutioner):
         Returns:
             A multichannel image.
         """
-        data_format = kwargs.get('data_format', 'channels_last')
 
         # convert image and kernel to channel first if necessary
         if data_format == 'channels_last':
