@@ -21,6 +21,8 @@ class WinogradConvolutioner(Convolutioner):
                  blocksize: Tuple[int, int] = None,
                  data_format: str = 'channels_last'):
 
+        super().__init__(image_size, kernel_size, padding, stride, data_format=data_format)
+
         if blocksize is None:
             self.blocksize = None
             self.set_block_size()
@@ -34,11 +36,7 @@ class WinogradConvolutioner(Convolutioner):
         self.__image_transformers = []  # X
         self.__filter_transformers = []  # W
         self.__get_matrices()  # List of arrays
-        self.image_size = image_size
-        self.kernel_size = kernel_size
         self.batch_count = 0
-
-        super().__init__(image_size, kernel_size, padding, stride, data_format=data_format)
 
     @staticmethod
     def convolve_multichannel(image: np.ndarray,
@@ -82,10 +80,10 @@ class WinogradConvolutioner(Convolutioner):
 
         num_of_blocks = np.array((self.image_size[0] / self.blocksize[0], self.image_size[1] / self.blocksize[1]))
 
-        if np.prod(num_of_blocks).dtype != int:
-            raise ValueError('The image size must be divisible by the blocksize.')
+        if not float(np.prod(num_of_blocks)).is_integer():
+            raise ValueError(f'The image size must be divisible by the blocksize. {self.image_size} is not divisible '
+                             f'by {self.block_output_size}.')
 
-        self.block_output_size = np.array(self.blocksize) + 1 - np.array(self.kernel_size)
         output_size = self.block_output_size * num_of_blocks
         return tuple(output_size)
 
@@ -177,11 +175,14 @@ class WinogradConvolutioner(Convolutioner):
             self.__transformed_filter = WinogradConvolutioner.__transform_filter(kernel, self.__filter_transformers)
 
         if using_batches:
+            # Move batch dimension to the last dimension
+            x = np.moveaxis(x, 0, -1)
+
             if x.ndim == 4:
 
                 # currently only supports data_format = 'channels_last'. So...
                 if data_format != 'channels_last':
-                    x = np.moveaxis(x, 1, -1)
+                    x = np.moveaxis(x, 0, 2)
 
                 # get the blocks
                 n_channels = x.shape[3]  # The only data format allowed is 'channels_last'
@@ -227,9 +228,10 @@ class WinogradConvolutioner(Convolutioner):
                                                image_transformer=self.__image_transformers)
             elif x.ndim == 3:
                 return self.convolve_multichannel(x, kernel, self.stride, **kwargs,
-                                                  transformed_image=self.__transform_multichannel(x,
-                                                                                                  self.__filter_transformers),
-                                                  yt=self.__y_t_matrices, x=self.__image_transformers)
+                                                  transformed_image=
+                                                  self.__transform_multichannel(x, self.__filter_transformers),
+                                                  y_t_matrices=self.__y_t_matrices,
+                                                  image_transformers=self.__image_transformers)
 
         raise ValueError("Image must be 2D or 3D.")
 

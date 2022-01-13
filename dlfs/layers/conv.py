@@ -180,7 +180,8 @@ class Conv2D(Layer):
             self.weights = weights
         elif self.weights_init == "xavier":
             self.weights = np.random.normal(loc=0,
-                                            scale=np.sqrt(1 / (input_shape[3] * self.kernel_size[0] * self.kernel_size[1])),
+                                            scale=np.sqrt(
+                                                1 / (input_shape[3] * self.kernel_size[0] * self.kernel_size[1])),
                                             size=weights_shape)
         elif self.weights_init == "zeros":
             self.weights = np.zeros(weights_shape)
@@ -226,7 +227,7 @@ class Conv2D(Layer):
 
         # initialize the backward convolution. This convolution is used to compute the gradient of the loss
         # with respect to the input.
-        self.backward_conv = get_convolution("simple",
+        self.backward_conv = get_convolution(self.convolution_type,
                                              image_size=self.output_shape,  # delta.shape
                                              kernel_size=self.kernel_size,
                                              stride=self.stride,
@@ -237,14 +238,18 @@ class Conv2D(Layer):
         # This convolution is used to compute the gradient of the loss with respect to the weights.
 
         # The image size is the size of the output of the convolution but after applying the padding.
-        image_size = (self.output_shape[0] + 2 * padding_backward[0],
-                      self.output_shape[1] + 2 * padding_backward[1])
+        if self.data_format == "channels_first":
+            image_height, image_width = (self.output_shape[1], self.output_shape[2])
+        else:
+            image_height, image_width = (self.output_shape[2], self.output_shape[3])
 
-        self.update_conv = get_convolution("simple",
+        # compute the image size after applying the padding
+        image_size = (image_height + 2 * padding_backward[0], image_width + 2 * padding_backward[1])
+
+        self.update_conv = get_convolution(self.convolution_type,
                                            image_size=image_size,
                                            kernel_size=self.kernel_size,
                                            stride=self.stride,
-                                           padding=padding_backward,
                                            data_format=self.data_format)
 
         self.initialized = True
@@ -283,6 +288,41 @@ class Conv2D(Layer):
 
             self.bias = bias
 
+    def _convolve(self, x: np.ndarray, kernel: np.ndarray, convolutioner: Convolutioner) -> np.ndarray:
+        """Convolve a batch of multichannel images given a 'Convolutioner'
+
+        Args:
+            x (np.ndarray): batch of images.
+            kernel (np.ndarray): kernel to convolve with.
+            convolutioner (Convolutioner): convolutioner used to convolve the images.
+
+        Returns:
+            np.ndarray: batch of convolved images.
+        """
+
+        if self.data_format == "channels_last":
+            outputs = np.array([convolutioner.convolve(x,
+                                                       kernel[..., i],
+                                                       batch_count=self._batch_count,
+                                                       data_format=self.data_format) + self.bias[i]
+                                for i in range(self.n_filters)])
+
+            # the shape of self.outputs.shape is (n_filters, batch_size, height, width). So we need to move the axis
+            # to (batch_size, height, width, n_filters)
+            outputs = np.moveaxis(outputs, 0, -1)
+        else:  # data_format == "channels_first"
+            outputs = np.array([convolutioner.convolve(x,
+                                                       kernel[i],
+                                                       batch_count=self._batch_count,
+                                                       data_format=self.data_format) + self.bias[i]
+                                for i in range(self.n_filters)])
+
+            # the shape of self.outputs.shape is (n_filters, batch_size, height, width). So we need to move the axis
+            # to (batch_size, n_filters, height, width)
+            outputs = np.moveaxis(outputs, 0, 1)
+
+        return outputs
+
     def forward(self, x: np.ndarray, training: bool = False) -> np.ndarray:
         """Forward pass
 
@@ -294,27 +334,9 @@ class Conv2D(Layer):
             output data
         """
         self.inputs = x
-        if self.data_format == "channels_last":
-            self.outputs = np.array([self.forward_conv.convolve(x,
-                                                                self.weights[..., i],
-                                                                batch_count=self._batch_count,
-                                                                data_format=self.data_format) + self.bias[i]
-                                     for i in range(self.n_filters)])
+        self.outputs = self._convolve(x, self.weights, self.forward_conv)
 
-            # the shape of self.outputs.shape is (n_filters, batch_size, height, width). So we need to move the axis
-            # to (batch_size, height, width, n_filters)
-            self.outputs = np.moveaxis(self.outputs, 0, -1)
-        else:  # data_format == "channels_first"
-            self.outputs = np.array([self.forward_conv.convolve(x,
-                                                                self.weights[i],
-                                                                batch_count=self._batch_count,
-                                                                data_format=self.data_format) + self.bias[i]
-                                     for i in range(self.n_filters)])
-
-            # the shape of self.outputs.shape is (n_filters, batch_size, height, width). So we need to move the axis
-            # to (batch_size, n_filters, height, width)
-            self.outputs = np.moveaxis(self.outputs, 0, 1)
-
+        # update the batch count
         self._batch_count += 1
         # Take the modulo 2 to reduce memory usage. We only need to pass a batch count different from the previous one
         # to the update convolution, in order to indicate that the batch has changed. That's why we can do this.
@@ -328,12 +350,17 @@ class Conv2D(Layer):
         Args:
             delta: derivative of the cost function with respect to the output of the layer.
         """
-        flipped_weights = np.rot90(self.weights, 2, axes=(1, 2))  # 180° rotation of the filters
+        # 180° rotation of the filters
+        rotated_weights = np.rot90(self.weights, 2, axes=(1, 2)) if self.data_format == "channels_last" else \
+            np.rot90(self.weights, 2, axes=(2, 3))
 
-        d_inputs = np.array([self.backward_conv.convolve(delta, flipped_weights[..., i])
-                             for i in range(self.n_filters)])
-        # change the shape of the output to be compatible with the next layer (move the first dimension to the end)
-        d_inputs = d_inputs.transpose((1, 2, 3, 0))
+        # The current shape of the rotated weights is (height, width, n_input_channels, n_output_channels).
+        # We need to move the axis to (n_output_channels, height, width, n_input_channels) or
+        # to (height, width, n_output_channels, n_input_channels) depending on the data format.
+        rotated_weights = np.moveaxis(rotated_weights, -1, 0) if self.data_format == "channels_last" else \
+            np.moveaxis(rotated_weights, -1, 2)
+
+        d_inputs = self._convolve(delta, rotated_weights, self.backward_conv)
         return d_inputs
 
     def count_params(self) -> int:
@@ -369,8 +396,10 @@ class Conv2D(Layer):
         if not self.initialized:
             raise ValueError("The layer is not initialized")
 
-        dw = np.array([self.backward_conv.convolve(self.inputs, delta[i], using_batches=False)
-                       for i in range(self.n_filters)])
+        # compute the mean of the delta for the batch
+        delta = np.mean(delta, axis=0)
+
+        dw = self._convolve(self.inputs, delta, self.update_conv)
         db = np.sum(delta, axis=(1, 2))
 
         optimizer.update(self, (dw, db))

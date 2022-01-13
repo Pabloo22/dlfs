@@ -2,7 +2,7 @@ import numpy as np
 
 from dlfs.layers import Conv2D
 from dlfs.layers import MaxPooling2D
-from dlfs.convolutions import SimpleConvolutioner, Convolutioner
+from dlfs.convolutions import SimpleConvolutioner, Convolutioner, WinogradConvolutioner
 from skimage.util.shape import view_as_windows
 from dlfs.convolutions import winograd_alvaro as WinogradVandermonde
 
@@ -84,7 +84,30 @@ def test_conv():
 
 
 def test_get_patches():
-    pass
+    img = np.array([[[2, 2, 1, 3],
+                     [0, 3, 2, 1],
+                     [1, 1, 0, 2],
+                     [2, 0, 0, 1]],
+                    [[2, 2, 1, 3],
+                     [0, 3, 2, 1],
+                     [1, 1, 0, 2],
+                     [2, 0, 0, 1]]])
+
+    k = np.array([[[1, 0],
+                   [2, -2]],
+                  [[1, 0],
+                   [2, -2]]])
+
+    # convert image to channels last
+    img = np.moveaxis(img, 0, -1)  # image shape (4, 4, 2)
+
+    convolutioner = SimpleConvolutioner(img.shape, k.shape, stride=1, padding=0)
+    patches = convolutioner.get_patches(img, k.shape, using_batches=False)
+
+    # convert image to channels first
+    # convolved_image = np.moveaxis(convolved_image, -1, 0)
+    print(patches)
+    print(patches.shape)
 
 
 def load_cifar10():
@@ -105,13 +128,13 @@ def test_conv_multichannel():
                      [1, 1, 0, 2],
                      [2, 0, 0, 1]]])
 
-    k = np.array([[[1,  0],
+    k = np.array([[[1, 0],
                    [2, -2]],
                   [[1, 0],
                    [2, -2]]])
 
     # convert image to channels last
-    img = np.moveaxis(img, 0, -1)  # image shape (4, 4, 2)
+    # img = np.moveaxis(img, 0, -1)  # image shape (4, 4, 2)
     print(k)
     print(img.shape)
 
@@ -123,9 +146,27 @@ def test_conv_multichannel():
     print(convolved_image)
 
 
+def test_winograd_conv_multichannel():
+    img = np.arange(28 * 28 *3*2 ).reshape((2,28, 28, 3))
+
+    k = np.arange(3 * 3 * 3).reshape((3, 3, 3))
+
+    # convert image to channels last
+    # img = np.moveaxis(img, 0, -1)  # image shape (4, 4, 2)
+    print(k)
+    print(img.shape)
+
+    convolutioner = WinogradConvolutioner(img.shape, k.shape, stride=1, padding=0)
+    convolved_image = convolutioner.convolve(img, k, using_batches=True)
+
+    # convert image to channels first
+    # convolved_image = np.moveaxis(convolved_image, -1, 0)
+    print(convolved_image)
+
+
 def test_winograd_3d():
     # F (3x4x5, 2,2,2), input size (4x5x6), filter size (2x2x2) output size(3x4x5)
-    test_image = np.arange(4 * 4).reshape(4,4)
+    test_image = np.arange(4 * 4).reshape(4, 4)
     test_filter = np.arange(2 * 2).reshape(2, 2)
     print(WinogradVandermonde.winograd_convolution(test_image, test_filter))
 

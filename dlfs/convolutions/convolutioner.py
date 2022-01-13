@@ -132,6 +132,9 @@ class Convolutioner(ABC):
 
                 x = np.pad(x, ((0, 0), (padding[0], padding[0]), (padding[1], padding[1])))
 
+                if data_format == "channels_last":
+                    x = np.moveaxis(x, 0, -1)
+
             elif x.ndim == 2:  # A single grayscale image
                 x = np.pad(x, ((padding[0], padding[0]), (padding[1], padding[1])))
             else:
@@ -144,6 +147,9 @@ class Convolutioner(ABC):
 
                 # The first dimension is the batch dimension
                 x = np.pad(x, ((0, 0), (0, 0), (padding[0], padding[0]), (padding[1], padding[1])))
+
+                if data_format == "channels_last":
+                    x = np.moveaxis(x, 1, -1)
 
             elif x.ndim == 3:  # Batch of grayscale images
                 x = np.pad(x, ((0, 0), (padding[0], padding[0]), (padding[1], padding[1])))

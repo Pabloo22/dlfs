@@ -5,8 +5,6 @@ from dlfs.layers import Dense, Dropout, Flatten
 from dlfs.optimizers import SGD, SGDMomentum
 
 
-
-
 def get_dataset():
     def f(x_0, x_1):
         return x_0 * x_1

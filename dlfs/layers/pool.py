@@ -26,7 +26,7 @@ class MaxPooling2D(Layer):
                  padding: Union[int, tuple] = 0,
                  name="MaxPool2D",
                  activation: str = None,
-                 input_shape: tuple = None,):
+                 input_shape: tuple = None, ):
         """
         MaxPool2D class constructor.
         Args:
@@ -89,7 +89,7 @@ class MaxPooling2D(Layer):
         for i in range(self.output_shape[1]):
             for j in range(self.output_shape[2]):
                 self.outputs[:, i, j, :] = np.max(x[:, i * self.stride[0]:i * self.stride[0] + self.pool_size[0],
-                                              j * self.stride[1]:j * self.stride[1] + self.pool_size[1], :],
+                                                  j * self.stride[1]:j * self.stride[1] + self.pool_size[1], :],
                                                   axis=(1, 2))
 
         return self.outputs if self.activation is None else self.activation(self.outputs)
@@ -97,7 +97,6 @@ class MaxPooling2D(Layer):
     def get_delta(self, last_delta: np.ndarray, dz_da: np.ndarray) -> np.ndarray:
         # TODO: Implement backward pass
         arr = np.zeros((self.output_shape))
-
 
     def set_weights(self, weights: np.ndarray = None, bias: np.ndarray = None):
         pass
