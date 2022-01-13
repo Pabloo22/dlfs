@@ -1,9 +1,10 @@
 import numpy as np
 
 
+
 def train_test_split(x: np.ndarray, y: np.ndarray, test_size: float = 0.3, random_state: int = None):
-	"""
-	Split the dataset into train and test sets.
+	"""Splits the dataset into train and test sets.
+
 	Args:
 		x: input data
 		y: labels

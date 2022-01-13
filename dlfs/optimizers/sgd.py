@@ -14,8 +14,7 @@ class SGD(Optimizer):
         super(SGD, self).__init__(learning_rate=learning_rate)
 
     def update(self, layer: Layer, gradients: Tuple[np.ndarray, np.ndarray]):
-        """
-        Update parameters using SGD
+        """Updates parameters using SGD
 
         Args:
             layer: The layer to update.
@@ -23,8 +22,8 @@ class SGD(Optimizer):
         """
         dw, db = gradients
 
-        layer.__weights -= self.learning_rate * dw
-        layer.__bias -= self.learning_rate * db
+        layer.weights -= self.learning_rate * dw
+        layer.bias -= self.learning_rate * db
 
     def add_slot(self, layer: Layer):
         """

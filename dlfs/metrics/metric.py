@@ -3,6 +3,11 @@ import numpy as np
 
 
 class Metric(ABC):
+    """Base class for all metrics.
+
+    A metric is a function that takes two arguments, a prediction and a label,
+    and returns a scalar value.
+    """
 
     def __init__(self, name):
         self.name = name

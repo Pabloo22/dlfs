@@ -10,15 +10,11 @@ class BinaryCrossentropy(LossFunction):
 
     @staticmethod
     def compute_loss(y_true, y_pred):
-        """
-        Compute the binary cross entropy loss.
-        """
+        """Compute the binary cross entropy loss."""
         y_pred_clipped = np.clip(y_pred, 1e-7, 1 - 1e-7)
         return np.mean(-y_true * np.log(y_pred_clipped) - (1 - y_true) * np.log(1 - y_pred_clipped))
 
     @staticmethod
     def gradient(y_true, y_pred):
-        """
-        Compute the gradient of the binary cross entropy loss.
-        """
+        """Compute the gradient of the binary cross entropy loss."""
         return y_pred - y_true

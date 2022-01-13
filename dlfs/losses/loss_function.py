@@ -3,8 +3,10 @@ from numpy import ndarray
 
 
 class LossFunction(ABC):
-    """
-    Base class for loss functions.
+    """Base class for loss functions.
+
+    Loss functions are used to compute the loss between the prediction and the
+    target. They can also be used as metrics.
     """
 
     def __init__(self, name):

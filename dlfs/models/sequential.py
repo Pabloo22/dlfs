@@ -54,8 +54,6 @@ class Sequential(Model):
         >>> model.compile(optimizer='sgd', loss='mse', metrics=['mae'])
 
         >>> model.fit(x_train, y_train, epochs=10)
-
-
     """
 
     layers: List[Layer]
@@ -94,7 +92,7 @@ class Sequential(Model):
             layer.trainable = value
 
     def add(self, layer: Layer):
-        """Adds a layer to the model
+        """Adds a layer to the model and initializes it.
 
         Args:
             layer (Layer): the layer to add
@@ -128,8 +126,7 @@ class Sequential(Model):
         self.layers += model.layers
 
     def compile(self, optimizer: Optimizer or str, loss: LossFunction or str, metrics: List[str] = None):
-        """
-        Compile the model
+        """Sets the optimizer, loss function and metrics.
 
         Args:
             optimizer: the optimizer to use
@@ -151,9 +148,7 @@ class Sequential(Model):
             self.optimizer.add_slot(layer)
 
     def summary(self):
-        """
-        Print the summary of the model as a table
-        """
+        """Prints the summary of the model as a table."""
         print(f"Model: {self.name}")
         print("-" * len(self.name))
         print("Layers:")
@@ -167,8 +162,14 @@ class Sequential(Model):
         print("-" * len(self.name))
 
     def get_deltas(self, y_pred: np.ndarray, y_true: np.ndarray) -> deque:
-        """
-        Backpropagation of the loss function
+        """Iterates over the layers and returns the deltas of the output of each layer.
+
+        Delta is the gradient of the loss function with respect to the output of the layer (z).
+
+        The deltas are returned in a deque, where the first element is the delta of the first layer,
+        the second element is the delta of the second layer and so on.
+
+
         Args:
             y_pred: the predictions
             y_true: the true labels
@@ -193,8 +194,7 @@ class Sequential(Model):
         return deltas
 
     def train_on_batch(self, x_batch: np.ndarray, y_batch: np.ndarray) -> Dict[str, float]:
-        """
-        Train the model on a batch of data
+        """Trains the model on a batch of data.
 
         Args:
             x_batch: the batch of inputs
@@ -224,6 +224,7 @@ class Sequential(Model):
         return {**{'loss': loss}, **metrics}
 
     def __check_data(self, x: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+        """Checks that the data is valid and adds a batch dimension if needed."""
 
         if isinstance(self.layers[0], Conv2D) and len(x.shape) == 3:
             # add a channel dimension
@@ -245,8 +246,8 @@ class Sequential(Model):
         return x, y
 
     def __update_io_shapes(self, batch_size: int):
-        """
-        Update the input and output shapes of the layers to match the batch size
+        """Updates the input and output shapes of the layers to match the batch size.
+
         Args:
             batch_size: the batch size
         """
@@ -261,8 +262,8 @@ class Sequential(Model):
                         progress: int = 0,
                         total: int = 0,
                         history: Dict[str, list] = None) -> None:
-        """
-        Print the results of the training and update the history
+        """Prints the results of the training and updates the history.
+
         Args:
             metrics: the metrics (and loss) of the current epoch
             val_metrics: the metrics of the validation set
@@ -303,23 +304,23 @@ class Sequential(Model):
             validation_split: float = 0.,
             shuffle: bool = True,
             initial_epoch: int = 0) -> Dict[str, List[float]]:
-        """
-        Fit the model to the data
+        """Trains the model.
 
         Args:
-            x: the input data. With shape (n_samples, n_features)
-            y: the labels
-            epochs: the number of epochs to train the model
-            batch_size: the batch size
+            x: the input data. The first dimension is the batch size.
+            y: The expected values. The first dimension is the batch size.
+            epochs: the number of epochs to train the model.
+            batch_size: The number of samples in each batch.
             verbose: the verbosity mode:
                 * 0 doesn't show anything.
                 * 1 prints one line per batch.
                 * 2 prints one line per epoch.
                 * 3 shows the progress bar (per epoch).
-            validation_data: the validation data
-            validation_split: the validation split
-            shuffle: whether to shuffle the data
-            initial_epoch: the initial epoch
+            validation_data: the validation data. Only used if validation_split is not 0 because its function is
+                to see how the model performs on the validation set.
+            validation_split: the percentage of the training set to use as validation data.
+            shuffle: whether to shuffle the data before each epoch.
+            initial_epoch: the initial epoch.
         """
         # CHECKS:
         # check if the model has been compiled
@@ -444,8 +445,8 @@ class Sequential(Model):
 
     @staticmethod
     def batch_generator(x: np.ndarray, y: np.ndarray, batch_size: int, shuffle: bool = True):
-        """
-        Generates batches of data
+        """Generates batches of data.
+
         Args:
             x: the input data
             y: the labels
@@ -480,7 +481,8 @@ class Sequential(Model):
                  batch_size: int = None,
                  verbose: int = 1,
                  prefix: str = "") -> dict:
-        """
+        """Evaluates the model on the given data.
+
         Args:
             x: the input data
             y: the labels
@@ -539,7 +541,7 @@ class Sequential(Model):
         return {prefix + 'loss': avg_loss, **avg_metrics}
 
     def predict(self, x: np.ndarray, training: bool = False) -> np.ndarray:
-        """
+        """Predicts the output of the model on the given data.
 
         Args:
             x : the input data
@@ -557,8 +559,8 @@ class Sequential(Model):
         return last_input
 
     def set_weights(self, weights: list, layers: list = None, only_weights: bool = False, only_biases: bool = False):
-        """
-        Sets the weights and biases of the model. The weights and biases are in the same order as the layers.
+        """Sets the weights and biases of the model. The weights and biases are in the same order as the layers.
+
         Args:
             weights: the weights of the model (list of numpy arrays) [layer_0_weights, layer_0_bias, ...]
                 The weights and biases of all the layers that have them must be included in the list
@@ -582,8 +584,8 @@ class Sequential(Model):
                 layer.set_weights(weights[i], weights[i + len(layers_with_weights)])
 
     def save(self, path: str):
-        """
-        Saves the model to the given path using the pickle module
+        """Saves the model to the given path using the pickle module.
+
         Args:
             path: the path to save the model
         """
@@ -591,9 +593,9 @@ class Sequential(Model):
             pickle.dump(self, f)
 
     @staticmethod
-    def load(path: str):
-        """
-        Loads the model from the given path using the pickle module
+    def load(path: str) -> 'Sequential':
+        """Loads the model from the given path using the pickle module.
+
         Args:
             path: the path to load the model
         """

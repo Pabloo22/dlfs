@@ -1,3 +1,19 @@
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ==============================================================================
+"""Contains the functions related to the Winograd algorithm using Vandermonde matrices. The function of this file
+    is to show an implementation of some functions rather than to provide a full implementation of the Winograd
+    algorithm."""
+
 # Source: On Improving the Numerical Stability of Winograd Convolutions
 # By: Kevin Vincent and Kevin J. Stephano and Michael A. Frumkin and Boris Ginsburg and Julien Demouth
 # (https://openreview.net/pdf?id=H1ZaRZVKg)
@@ -5,7 +21,6 @@
 import numpy as np
 from typing import Union, List, Tuple
 import tensorly
-from skimage.util import view_as_blocks
 
 np.set_printoptions(formatter={
     'float': lambda x: "{0:0.3f}".format(x)

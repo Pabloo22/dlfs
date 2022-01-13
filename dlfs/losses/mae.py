@@ -28,6 +28,8 @@ class MAE(LossFunction):
         Args:
             y_true: labels
             y_pred: predictions
-        
+
+        Returns:
+            The gradient of the loss with respect to the predictions.
         """
         return np.sign(y_pred - y_true)

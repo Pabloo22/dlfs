@@ -6,14 +6,18 @@ from dlfs.layers import Layer
 
 
 class Optimizer(ABC):
-    """Base class for all optimizers."""
+    """Base class for all optimizers.
+
+    Args:
+        learning_rate (float): learning rate for the optimizer.
+    """
 
     def __init__(self, learning_rate):
         self.learning_rate = learning_rate
 
     @abstractmethod
     def update(self, layer: Layer, gradients: Tuple[np.ndarray, np.ndarray]):
-        """Update parameters based on delta.
+        """Updates parameters based on delta.
         Args:
             layer: The layer to update.
             gradients: Gradients of the parameters passed as a tuple of two numpy arrays composed of the delta of
@@ -23,7 +27,8 @@ class Optimizer(ABC):
 
     @abstractmethod
     def add_slot(self, layer: Layer):
-        """Add a slot to the optimizer.
+        """Adds a slot to the optimizer.
+
         Args:
             layer: The layer to add a slot to.
         """

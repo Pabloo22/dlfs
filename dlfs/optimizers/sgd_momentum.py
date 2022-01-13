@@ -13,8 +13,8 @@ class SGDMomentum(Optimizer):
         self.__v = {}
 
     def update(self, layer: Layer, gradients: Tuple[np.ndarray, np.ndarray]):
-        """
-        Update the weights of the layer using the delta.
+        """Updates the weights of the layer using the delta.
+
         Args:
             layer: The layer to update.
             gradients: The delta of the layer.

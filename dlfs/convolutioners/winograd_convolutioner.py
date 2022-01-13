@@ -11,6 +11,8 @@ class WinogradConvolutioner(Convolutioner):
 
     The Winograd algorithm reduces the number of multiplication operations by transforming the input feature map and
     executing a series of transformations on the filter. The result is a much faster convolution.
+
+    This class is not ready for use yet.
     """
 
     def __init__(self,
