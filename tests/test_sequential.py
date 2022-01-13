@@ -237,12 +237,11 @@ def test_mnist_conv():
 
     model = Sequential()
 
-    model.add(Conv2D(16, (3, 3), activation='relu', input_shape=(28, 28, 1), convolution_type='simple'))
-    model.add(Conv2D(32, (3, 3), activation='relu', convolution_type='simple'))
+    model.add(Conv2D(1, (3, 3), activation='relu', input_shape=(28, 28, 1), convolution_type='simple'))
     model.add(Flatten())
-    model.add(Dense(64, activation='relu'))
+    model.add(Dense(100, activation='relu'))
     model.add(Dense(10, activation='softmax'))
     model.summary()
-    model.compile(loss='categorical_crossentropy', optimizer=SGDMomentum(learning_rate=0.05),
+    model.compile(loss='categorical_crossentropy', optimizer=SGDMomentum(learning_rate=0.2),
                   metrics=['accuracy'])
-    model.fit(x_train, y_train, epochs=5, batch_size=2, verbose=2, validation_data=(x_test, y_test))
+    model.fit(x_train, y_train, epochs=5, batch_size=100, verbose=1)

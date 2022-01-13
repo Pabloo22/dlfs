@@ -156,18 +156,10 @@ class Convolutioner(ABC):
             else:
                 raise ValueError("Image must be 2D or 3D.")
 
-        # reconvert the image to channels_last if necessary
-        if not using_batches:
-            if x.ndim == 3:  # A single multichannel image
-                x = np.moveaxis(x, 0, -1) if data_format == "channels_last" else x
-        else:
-            if x.ndim == 4:  # A batch of multichannel images
-                x = np.moveaxis(x, 1, -1) if data_format == "channels_last" else x
-
         return x
 
-    def __call__(self, image: np.ndarray, kernel: np.ndarray) -> np.ndarray:
-        return self.convolve(image, kernel)
+    def __call__(self, image: np.ndarray, kernel: np.ndarray, **kwargs) -> np.ndarray:
+        return self.convolve(image, kernel, **kwargs)
 
     def __str__(self):
         return f"{self.__class__.__name__}({self.kernel_size}, {self.padding}, {self.stride})"
