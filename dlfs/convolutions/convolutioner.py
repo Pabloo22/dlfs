@@ -125,7 +125,7 @@ class Convolutioner(ABC):
         if not using_batches:
             if x.ndim == 3:  # A single multichannel image
                 # If the data format is channels_last, then we need to convert the image to channels_first
-                x = np.transpose(x, (2, 0, 1)) if data_format == "channels_last" else x
+                x = np.moveaxis(x, -1, 0) if data_format == "channels_last" else x
 
                 x = np.pad(x, ((0, 0), (padding[0], padding[0]), (padding[1], padding[1])))
 
@@ -137,7 +137,7 @@ class Convolutioner(ABC):
             if x.ndim == 4:  # A batch of multichannel images
 
                 # If the data format is channels_last, then we need to convert the image to channels_first
-                x = np.transpose(x, (0, 3, 1, 2)) if data_format == "channels_last" else x
+                x = np.moveaxis(x, -1, 1) if data_format == "channels_last" else x
 
                 # The first dimension is the batch dimension
                 x = np.pad(x, ((0, 0), (0, 0), (padding[0], padding[0]), (padding[1], padding[1])))
@@ -150,10 +150,10 @@ class Convolutioner(ABC):
         # reconvert the image to channels_last if necessary
         if not using_batches:
             if x.ndim == 3:  # A single multichannel image
-                x = np.transpose(x, (1, 2, 0)) if data_format == "channels_last" else x
+                x = np.moveaxis(x, 0, -1) if data_format == "channels_last" else x
         else:
             if x.ndim == 4:  # A batch of multichannel images
-                x = np.transpose(x, (0, 2, 3, 1)) if data_format == "channels_last" else x
+                x = np.moveaxis(x, 1, -1) if data_format == "channels_last" else x
 
         return x
 

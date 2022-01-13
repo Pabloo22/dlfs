@@ -63,14 +63,9 @@ def test_padding2():
     img = np.moveaxis(img, 0, -1)
     print(img)
 
-    kernel = np.array([[[1, 2],
-                        [3, 4]],
-                       [[5, 6],
-                        [7, 8]]])
-
     padded_img = Convolutioner.pad_image(img, padding=1)
-
-    # convert to data format 'channel first'
+    print(padded_img)
+    # convert to data format 'channel first' to see if the result is correct
     padded_img = np.moveaxis(padded_img, -1, 0)
     print(padded_img)
 
