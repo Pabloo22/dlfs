@@ -70,7 +70,7 @@ class Dense(Layer):
     # Methods
     # ----------------------------------------------------------------------------------------------------
     def initialize(self, input_shape: tuple, weights: np.ndarray = None, bias: np.ndarray = None):
-        """Initialize the layer. This method is called by the model when the model is being compiled.
+        """Initializes the layer. This method is called by the model when the model is being compiled.
 
         Args:
             input_shape (tuple): input shape of the layer, it has the form (n_samples (None), n_features)
@@ -134,8 +134,7 @@ class Dense(Layer):
         self.initialized = True
 
     def set_weights(self, weights: np.ndarray = None, bias: np.ndarray = None):
-        """
-        Set the weights and bias of the layer.
+        """Sets the weights and bias of the layer.
 
         Args:
             weights (np.ndarray): weights of the layer.
@@ -196,8 +195,7 @@ class Dense(Layer):
         return self.outputs if self.activation is None else self.activation(self.outputs)
 
     def get_d_inputs(self, delta: np.ndarray) -> np.ndarray:
-        """
-        Compute the gradient of the loss with respect to the inputs of the layer.
+        """Computes the gradient of the loss with respect to the inputs of the layer.
 
         Args:
             delta (np.ndarray): delta of the layer.
@@ -225,8 +223,7 @@ class Dense(Layer):
         return self.weights.T
 
     def update(self, optimizer: Optimizer, delta: np.ndarray):
-        """
-        Update the weights and biases of the layer.
+        """Updates the weights and biases of the layer.
 
         Args:
             optimizer (Optimizer): optimizer used to update the weights and biases.
@@ -251,8 +248,7 @@ class Dense(Layer):
             raise OverflowError("An overflow occurred during the update")
 
     def count_params(self) -> int:
-        """
-        Count the number of parameters of the layer.
+        """Counts the number of parameters of the layer.
 
         Returns:
             int: number of parameters of the layer
