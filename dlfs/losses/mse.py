@@ -24,8 +24,8 @@ class MSE(LossFunction):
 
     @staticmethod
     def compute_loss(y_true, y_pred):
-        """
-        Calculates the Mean Squared Error loss
+        """Calculates the Mean Squared Error loss
+        
         Args:
             y_true: expected outputs
             y_pred: predictions
